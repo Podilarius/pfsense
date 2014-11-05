@@ -161,7 +161,7 @@ $status = ipsec_smp_dump_status();
 							gettext('Port: ') . htmlspecialchars($ikesa['local']['port']);
 					else
 						echo gettext("Unknown");
-					if ($ikesa['local']['nat'] != 'false')
+					if ($ikesa['local']['port'] == '4500')
 						echo " NAT-T";
 				}
 ?>
@@ -201,7 +201,7 @@ $status = ipsec_smp_dump_status();
 							gettext('Port: ') . htmlspecialchars($ikesa['remote']['port']);
 					else
 						echo gettext("Unknown");
-					if ($ikesa['remote']['nat'] != 'false')
+					if ($ikesa['remote']['port'] == '4500')
 						echo " NAT-T";
 				}
 ?>
@@ -389,6 +389,8 @@ $status = ipsec_smp_dump_status();
 
 	$rgmap = array();
 	foreach ($a_phase1 as $ph1ent):
+		if (isset($ph1ent['disabled']))
+			continue;
 		$rgmap[$ph1ent['remote-gateway']] = $ph1ent['remote-gateway'];
 		if ($ipsecconnected[$ph1ent['ikeid']])
 			continue;
@@ -446,8 +448,8 @@ $status = ipsec_smp_dump_status();
 ?>
 				<td class="listr">
 					<center>
-						<img src ="/themes/<?php echo $g['theme']; ?>/images/icons/icon_pass.gif" title=<?php echo gettext("Waiting connections");?> alt=""/>
-						<br/><?php echo gettext("Waiting connections");?>
+						<img src ="/themes/<?php echo $g['theme']; ?>/images/icons/icon_pass.gif" title=<?php echo gettext("Awaiting connections");?> alt=""/>
+						<br/><?php echo gettext("Awaiting connections");?>
 					</center>
 				</td>
 				<td valign="middle" class="list nowrap">
