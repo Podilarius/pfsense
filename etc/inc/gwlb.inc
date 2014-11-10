@@ -699,7 +699,7 @@ function return_gateways_array($disabled = false, $localhost = false, $inactive 
 					$found_defaultv4 = 1;
 				}
 			}
-			if (($gateway['friendlyiface'] == "wan") && ($found_defaultv6 == 0) && ($gateway['ipprotocol'] == "inet6")) {
+			else if (($gateway['friendlyiface'] == "wan") && ($found_defaultv6 == 0) && ($gateway['ipprotocol'] == "inet6")) {
 				if (file_exists("{$g['tmp_path']}/{$gateway['interface']}_defaultgwv6")) {
 					$gateway['defaultgw'] = true;
 					$found_defaultv6 = 1;
@@ -732,7 +732,8 @@ function fixup_default_gateway($ipprotocol, $gateways_status, $gateways_arr) {
 	 * NOTE: The code below is meant to replace the default gateway when it goes down.
 	 *	This facilitates services running on pfSense itself and are not handled by a PBR to continue working.
 	 */
-	$upgw = "";
+	$upgw = '';
+	$dfltgwname = '';
 	$dfltgwdown = false;
 	$dfltgwfound = false;
 	foreach ($gateways_arr as $gwname => $gwsttng) {
@@ -766,15 +767,14 @@ function fixup_default_gateway($ipprotocol, $gateways_status, $gateways_arr) {
 			}
 			mwexec("/sbin/route change {$inetfamily} default {$gateways_arr[$upgw]['gateway']}");
 		}
-	} else {
+	} else if (!empty($dftgwname)) {
 		$defaultgw = trim(exec("/sbin/route -n get -{$ipprotocol} default | /usr/bin/awk '/gateway:/ {print $2}'"), " \n");
-		if(is_ipaddrv6($gateways_arr[$dfltgwname]['gateway'])) {
-			$inetfamily = "-inet6";
-		} else {
-			$inetfamily = "-inet";
-		}
+		if ($ipprotocol == 'inet6' && !is_ipaddrv6($gateways_arr[$dfltgwname]['gateway']))
+			return;
+		if ($ipprotocol == 'inet' && !is_ipaddrv4($gateways_arr[$dfltgwname]['gateway']))
+			return;
 		if ($defaultgw != $gateways_arr[$dfltgwname]['gateway'])
-			mwexec("/sbin/route change {$inetfamily} default {$gateways_arr[$dfltgwname]['gateway']}");
+			mwexec("/sbin/route change -{$ipprotocol} default {$gateways_arr[$dfltgwname]['gateway']}");
 	}
 }
 
@@ -966,7 +966,7 @@ function get_interface_gateway($interface, &$dynamic = false) {
 	}
 
 	// for dynamic interfaces we handle them through the $interface_router file.
-	if (!is_ipaddrv4($gw) && !is_ipaddrv4($gwcfg['ipaddr'])) {
+	if (($gw == NULL || !is_ipaddrv4($gw)) && !is_ipaddrv4($gwcfg['ipaddr'])) {
 		$realif = get_real_interface($interface);
 		if (file_exists("{$g['tmp_path']}/{$realif}_router")) {
 				$gw = trim(file_get_contents("{$g['tmp_path']}/{$realif}_router"), " \n");
@@ -996,7 +996,7 @@ function get_interface_gateway_v6($interface, &$dynamic = false) {
 	}
 
 	// for dynamic interfaces we handle them through the $interface_router file.
-	if (!is_ipaddrv6($gw) && !is_ipaddrv6($gwcfg['ipaddrv6'])) {
+	if (($gw == NULL || !is_ipaddrv6($gw)) && !is_ipaddrv6($gwcfg['ipaddrv6'])) {
 			$realif = get_real_interface($interface);
 			if (file_exists("{$g['tmp_path']}/{$realif}_routerv6")) {
 				$gw = trim(file_get_contents("{$g['tmp_path']}/{$realif}_routerv6"), " \n");
