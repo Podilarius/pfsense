@@ -288,7 +288,8 @@ charon {
 	threads = 16
 	ikesa_table_size = 32
 	ikesa_table_segments = 4
-	init_limit_half_open = 1000;
+	init_limit_half_open = 1000
+	install_routes = no
 
 	# XXX: There is not much choice here really users win their security!
 	i_dont_care_about_security_and_use_aggressive_mode_psk=yes
@@ -585,7 +586,7 @@ EOD;
 					$ikelifeline = "ikelifetime = {$ph1ent['lifetime']}s";
 
 				$rightsourceip = NULL;
-				if (!empty($a_client['pool_address'])) 
+				if (isset($ph1ent['mobile']) && !empty($a_client['pool_address'])) 
 					$rightsourceip = "\trightsourceip = {$a_client['pool_address']}/{$a_client['pool_netbits']}\n";
 
 				$authentication = "";
@@ -840,6 +841,7 @@ EOD;
 		/* Read secrets */
 		mwexec("/usr/local/sbin/ipsec rereadall", false);
 		/* Update configuration changes */
+		mwexec("/usr/local/sbin/ipsec update", false);
 		mwexec("/usr/local/sbin/ipsec reload", false);
 	} else {
 		mwexec("/usr/local/sbin/ipsec start", false); 
@@ -1181,7 +1183,7 @@ function vpn_pppoe_configure(&$pppoecfg) {
 		if (!$pppoecfg['mode'] || ($pppoecfg['mode'] == "off"))
 			return 0;
 
-		echo gettext("Configuring PPPoE VPN service... ");
+		echo gettext("Configuring PPPoE Server service... ");
 	} else {
 		/* kill mpd */
 		killbypid("{$g['varrun_path']}/pppoe{$pppoecfg['pppoeid']}-vpn.pid");

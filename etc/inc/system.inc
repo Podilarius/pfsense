@@ -172,11 +172,19 @@ function system_resolvconf_generate($dynupdate = false) {
 					/* dns server array starts at 0 */
 					$dnscountermo = $dnscounter - 1;
 					mwexec("/sbin/route change -host " . $syscfg['dnsserver'][$dnscountermo] . " {$gatewayip}");
+					if (isset($config['system']['route-debug'])) {
+						$mt = microtime();
+						log_error("ROUTING debug: $mt - route change -host {$syscfg['dnsserver'][$dnscountermo]} $gatewayip ");
+					}
 				}
 				if (is_ipaddrv6($gatewayip)) {
 					/* dns server array starts at 0 */
 					$dnscountermo = $dnscounter - 1;
 					mwexec("/sbin/route change -host -inet6 " . $syscfg['dnsserver'][$dnscountermo] . " {$gatewayip}");
+					if (isset($config['system']['route-debug'])) {
+						$mt = microtime();
+						log_error("ROUTING debug: $mt - route change -host -inet6 {$syscfg['dnsserver'][$dnscountermo]} $gatewayip ");
+					}					
 				}
 			}
 		}
@@ -541,12 +549,21 @@ function system_staticroutes_configure($interface = "", $update_dns = false) {
 				if (in_array($ip, $ips))
 					continue;
 				mwexec("/sbin/route delete " . escapeshellarg($ip), true);
+				if (isset($config['system']['route-debug'])) {
+					$mt = microtime();
+					log_error("ROUTING debug: $mt - route delete $ip ");
+				}
 			}
 
 			if (isset($rtent['disabled'])) {
 				/* XXX: This can break things by deleting routes that shouldn't be deleted - OpenVPN, dynamic routing scenarios, etc. redmine #3709 */
-				foreach ($ips as $ip)
+				foreach ($ips as $ip) {
 					mwexec("/sbin/route delete " . escapeshellarg($ip), true);
+					if (isset($config['system']['route-debug'])) {
+						$mt = microtime();
+						log_error("ROUTING debug: $mt - route delete $ip ");
+					}
+				}
 				continue;
 			}
 
@@ -561,10 +578,19 @@ function system_staticroutes_configure($interface = "", $update_dns = false) {
 				$cmd = "/sbin/route change {$inet} {$blackhole} " . escapeshellarg($ip) . " ";
 
 				if (is_subnet($ip))
-					if (is_ipaddr($gatewayip))
+					if (is_ipaddr($gatewayip)) {
 						mwexec($cmd . escapeshellarg($gatewayip));
-					else if (!empty($interfacegw))
+						if (isset($config['system']['route-debug'])) {
+							$mt = microtime();
+							log_error("ROUTING debug: $mt - $cmd $gatewayip");
+						}
+					} else if (!empty($interfacegw)) {
 						mwexec($cmd . "-iface " . escapeshellarg($interfacegw));
+						if (isset($config['system']['route-debug'])) {
+							$mt = microtime();
+							log_error("ROUTING debug: $mt - $cmd -iface $interfacegw ");
+						}
+					}
 			}
 		}
 		unset($gateways_arr);
@@ -667,7 +693,7 @@ function system_syslogd_start() {
 
 	$syslogd_extra = "";
 	if (isset($syslogcfg)) {
-		$separatelogfacilities = array('ntp','ntpd','ntpdate','charon','openvpn','pptps','poes','l2tps','relayd','hostapd','dnsmasq','filterdns','unbound','dhcpd','dhcrelay','dhclient','dhcp6c','apinger','radvd','routed','olsrd','zebra','ospfd','bgpd','miniupnpd','filterlog');
+		$separatelogfacilities = array('ntp','ntpd','ntpdate','charon','ipsec_starter','openvpn','pptps','poes','l2tps','relayd','hostapd','dnsmasq','filterdns','unbound','dhcpd','dhcrelay','dhclient','dhcp6c','apinger','radvd','routed','olsrd','zebra','ospfd','bgpd','miniupnpd','filterlog');
 		$syslogconf = "";
 		if($config['installedpackages']['package']) {
 			foreach($config['installedpackages']['package'] as $package) {
@@ -703,7 +729,7 @@ function system_syslogd_start() {
 		if (!isset($syslogcfg['disablelocallogging'])) 
 			$syslogconf .= "*.*								{$log_directive}{$g['varlog_path']}/l2tps.log\n";
 
-		$syslogconf .= "!charon\n";
+		$syslogconf .= "!charon,ipsec_starter\n";
 		if (!isset($syslogcfg['disablelocallogging'])) 
 			$syslogconf .= "*.*								{$log_directive}{$g['varlog_path']}/ipsec.log\n";
 		if (isset($syslogcfg['vpn']))

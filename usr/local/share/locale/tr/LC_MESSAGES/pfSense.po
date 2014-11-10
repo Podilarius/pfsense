@@ -2959,8 +2959,8 @@ msgstr "Hata: vpn_pptpd_configure(). içinde mpd.secret açılamadı."
 
 #: etc/inc/vpn.inc:1279 etc/inc/vpn.inc:1285 etc/inc/vpn.inc:1283
 #: etc/inc/vpn.inc:1295
-msgid "Configuring PPPoE VPN service... "
-msgstr "PPPoE VPN servisi yapılandırılıyor..."
+msgid "Configuring PPPoE Server service... "
+msgstr "PPPoE Server servisi yapılandırılıyor..."
 
 #: etc/inc/vpn.inc:1303 etc/inc/vpn.inc:1309 etc/inc/vpn.inc:1307
 #: etc/inc/vpn.inc:1319
@@ -23979,7 +23979,7 @@ msgstr "yeni PPPoE ekle"
 
 #: usr/local/www/vpn_pppoe.php:131 usr/local/www/vpn_pppoe.php:132
 #: usr/local/www/vpn_pppoe.php:133
-msgid "edit pppoe instance"
+msgid "edit PPPoE instance"
 msgstr "PPPoE düzenle"
 
 #: usr/local/www/vpn_pppoe.php:132 usr/local/www/vpn_pppoe.php:133
