@@ -995,16 +995,18 @@ function interface_gif_configure(&$gif, $gifkey = "") {
 	else
 		log_error(gettext("could not bring gifif up -- variable not defined"));
 
-	$iflist = get_configured_interface_list();
-	foreach($iflist as $ifname) {
-		if($config['interfaces'][$ifname]['if'] == $gifif) {
-			if(get_interface_gateway($ifname)) {
-				system_routing_configure($ifname);
-				break;
-			}
-			if(get_interface_gateway_v6($ifname)) {
-				system_routing_configure($ifname);
-				break;
+	if (!$g['booting']) {
+		$iflist = get_configured_interface_list();
+		foreach($iflist as $ifname) {
+			if($config['interfaces'][$ifname]['if'] == $gifif) {
+				if(get_interface_gateway($ifname)) {
+					system_routing_configure($ifname);
+					break;
+				}
+				if(get_interface_gateway_v6($ifname)) {
+					system_routing_configure($ifname);
+					break;
+				}
 			}
 		}
 	}
@@ -2166,12 +2168,12 @@ function interface_ipalias_configure(&$vip) {
 		$af = 'inet6';
 	$iface = $vip['interface'];
 	$vipadd = '';
-	if (stripos($vip['interface'], '_vip')) {
+	if (strpos($vip['interface'], '_vip')) {
 		$carpvip = get_configured_carp_interface_list($vip['interface'], $af, 'vip');
 		$iface = $carpvip['interface'];
 		$vipadd = "vhid {$carpvip['vhid']}";
 	}
-	$if = get_real_interface($vip['interface']);
+	$if = get_real_interface($iface);
 	mwexec("/sbin/ifconfig " . escapeshellarg($if) ." {$af} ". escapeshellarg($vip['subnet']) ."/" . escapeshellarg($vip['subnet_bits']) . " alias {$vipadd}");
 	unset($iface, $af, $if, $carpvip, $vipadd);
 }
