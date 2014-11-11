@@ -5,6 +5,7 @@
 	part of pfSense (https://www.pfsense.org/)
 
 	Copyright (C) 2005 Bill Marquette <bill.marquette@gmail.com>.
+        Copyright (C) 2013-2014 Electric Sheep Fencing, LP
 	All rights reserved.
 
 	Includes code from m0n0wall which is:
@@ -250,6 +251,9 @@ include("head.inc");
 		</tr>
 		<?php
 			$interfaces = get_configured_interface_with_descr(false, true);
+			$carplist = get_configured_carp_interface_list();
+			foreach ($carplist as $cif => $carpip)
+				$interfaces[$cif] = $carpip." (".get_vip_descr($carpip).")";
 			$interfaces['lo0'] = "Localhost";
 		?>
 			  <?php $i = 0; foreach ($a_vip as $vipent): ?>

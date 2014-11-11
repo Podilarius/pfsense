@@ -5,6 +5,8 @@
     firewall_virtual_ip_edit.php
     part of pfSense (https://www.pfsense.org/)
 
+    Copyright (C) 2013-2014 Electric Sheep Fencing, LP
+
     Copyright (C) 2005 Bill Marquette <bill.marquette@gmail.com>.
     All rights reserved.
 
@@ -191,7 +193,7 @@ if ($_POST) {
 		if ($_POST['interface'] == 'lo0')
 			$input_errors[] = gettext("For this type of vip localhost is not allowed.");
 		else if (strpos($_POST['interface'], '_vip'))
-			$input_errors[] = gettext("For this type of vip a carp parent is not allowed.");
+			$input_errors[] = gettext("A CARP parent interface can only be used with IP Alias type Virtual IPs.");
 		break;
 	case 'ipalias':
 		if (strstr($_POST['interface'], "_vip")) {
@@ -215,7 +217,7 @@ if ($_POST) {
 		if ($_POST['interface'] == 'lo0')
 			$input_errors[] = gettext("For this type of vip localhost is not allowed.");
 		else if (strpos($_POST['interface'], '_vip'))
-			$input_errors[] = gettext("For this type of vip a carp parent is not allowed.");
+			$input_errors[] = gettext("A CARP parent interface can only be used with IP Alias type Virtual IPs.");
 		break;
 	}
 

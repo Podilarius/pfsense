@@ -72,20 +72,50 @@ function get_default_sysctl_value($id) {
 		return $sysctls[$id];
 }
 
+function get_sysctl_descr($sysctl) {
+	unset($output);
+	$_gb = exec("/sbin/sysctl -nd {$sysctl}", $output);
+
+	return $output[0];
+}
+
+function system_get_sysctls() {
+	global $config, $sysctls;
+
+	$disp_sysctl = array();
+	$disp_cache = array();
+	if (is_array($config['sysctl']) && is_array($config['sysctl']['item'])) {
+		foreach($config['sysctl']['item'] as $id => $tunable) {
+			if ($tunable['value'] == "default")
+				$value = get_default_sysctl_value($tunable['tunable']);
+			else
+				$value = $tunable['value'];
+
+			$disp_sysctl[$id] = $tunable;
+			$disp_sysctl[$id]['modified'] = true;
+			$disp_cache[$tunable['tunable']] = 'set';
+		}
+	}
+
+	foreach ($sysctls as $sysctl => $value) {
+		if (isset($disp_cache[$sysctl]))
+			continue;
+
+		$disp_sysctl[$sysctl] = array('tunable' => $sysctl, 'value' => $value, 'descr' => get_sysctl_descr($sysctl));
+		
+		
+	}
+	unset($disp_cache);
+	return $disp_sysctl;
+}
+
 function activate_sysctls() {
-	global $config, $g;
+	global $config, $g, $sysctls;
 
 	if ($g['platform'] == 'jail')
 		return;
 
-	$sysctls = array(
-		"net.enc.out.ipsec_bpf_mask" => "0x0001",
-		"net.enc.out.ipsec_filter_mask" => "0x0001",
-		"net.enc.in.ipsec_bpf_mask" => "0x0002",
-		"net.enc.in.ipsec_filter_mask" => "0x0002"
-	);
-
-	if(is_array($config['sysctl'])) {
+	if (is_array($config['sysctl']) && is_array($config['sysctl']['item'])) {
 		foreach($config['sysctl']['item'] as $tunable) {
 			if($tunable['value'] == "default")
 				$value = get_default_sysctl_value($tunable['tunable']);
@@ -488,7 +518,7 @@ function system_routing_configure($interface = "") {
 			;
 		else if (is_ipaddrv6($gatewayipv6)) {
 			$ifscope = "";
-			if (is_linklocal($gatewayipv6))
+			if (is_linklocal($gatewayipv6) && !strpos($gatewayipv6, '%'))
 				$ifscope = "%{$defaultifv6}";
 			log_error("ROUTING: setting IPv6 default route to {$gatewayipv6}{$ifscope}");
 			mwexec("/sbin/route change -inet6 default " . escapeshellarg("{$gatewayipv6}{$ifscope}"));
