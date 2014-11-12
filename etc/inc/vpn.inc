@@ -537,8 +537,7 @@ EOD;
 				if (!empty($ph1ent['iketype']) && $ph1ent['iketype'] != "ikev1") {
 					$keyexchange = "ikev2";
 					//$passive = "start";
-				} else
-					$passive = "route";
+				}
 
 				if (isset($ph1ent['mobile'])) {
 					$right_spec = "%any";
