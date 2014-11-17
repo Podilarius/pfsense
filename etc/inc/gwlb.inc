@@ -194,7 +194,7 @@ EOD;
 			if ($gateway['monitor'] == $gateway['gateway']) {
 				/* link locals really need a different src ip */
 				if (is_linklocal($gateway['gateway'])) {
-					if (!strpos($gateway['gateway']))
+					if (!strpos($gateway['gateway'], '%'))
 						$gateway['gateway'] .= '%' . $gateway['interface'];
 					$gwifip = find_interface_ipv6_ll($gateway['interface'], true);
 				} else {
@@ -561,13 +561,15 @@ function return_gateways_array($disabled = false, $localhost = false, $inactive 
 				$ctype = strtoupper($ifcfg['ipaddr']);
 				break;
 			default:
+				$tunnelif = substr($ifcfg['if'], 0, 3);
 				if (substr($ifcfg['if'], 0, 4) ==  "ovpn") {
 					// if current iface is an ovpn server endpoint then skip it
 					if (substr($ifcfg['if'], 4, 1) == 's')
 						continue 2;							
 
 					$ctype = "VPNv4";
-				}
+				} else if ($tunnelif == "gif" || $tunnelif == "gre")
+					$ctype = "TUNNELv4";
 				break;
 		}
 		$ctype = "_". strtoupper($ctype);

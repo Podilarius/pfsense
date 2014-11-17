@@ -579,6 +579,8 @@ EOPP;
 			$dnscfg .= "	option domain-name-servers {$ifcfgip};";
 			if ($newzone['domain-name'] && is_array($syscfg['dnsserver']) && ($syscfg['dnsserver'][0]))
 				$newzone['dns-servers'] = $syscfg['dnsserver'];
+		} else if (isset($config['unbound']['enable'])) {
+			$dnscfg .= "	option domain-name-servers {$ifcfgip};";
 		} else if (!empty($dns_arrv4)) {
 			$dnscfg .= "	option domain-name-servers " . join(",", $dns_arrv4) . ";";
 			if ($newzone['domain-name'])
@@ -1771,6 +1773,10 @@ function services_dnsmasq_configure() {
 						$listen_addresses .= " --listen-address={$tmpaddrll6[0]} ";
 					} else 
 						$listen_addresses .= " --listen-address={$interface} ";
+				} else if (strstr($interface, "_vip")) {
+					$laddr = get_configured_carp_interface_list($interface);
+					if (is_ipaddr($laddr)) 
+						$listen_addresses .= " --listen-address={$laddr} ";
 				} else {
 					$if = get_real_interface($interface);
 					if (does_interface_exist($if)) {
