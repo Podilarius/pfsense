@@ -381,7 +381,7 @@ EOD;
 				$strongswan .= "\t\t28672 = {$a_client['login_banner']}\n";
 
 			if (isset($a_client['save_passwd']))
-				$strongswan .= "\t\t28673 = yes\n";
+				$strongswan .= "\t\t28673 = 1\n";
 
 			if ($a_client['pfs_group'])
 				$strongswan .= "\t\t28679 = {$a_client['pfs_group']}\n";
@@ -534,9 +534,12 @@ EOD;
 				$ikeid = $ph1ent['ikeid'];
 				$keyexchange = "ikev1";
 				$passive = "route";
-				if (!empty($ph1ent['iketype']) && $ph1ent['iketype'] != "ikev1") {
-					$keyexchange = "ikev2";
-					//$passive = "start";
+				if (!empty($ph1ent['iketype']) {
+					if ($ph1ent['iketype'] == "ikev2") {
+						$keyexchange = "ikev2";
+						//$passive = "start";
+					} else if ($ph1ent['iketype'] == "auto")
+						$keyexchange = "ike";
 				}
 
 				if (isset($ph1ent['mobile'])) {
