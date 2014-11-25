@@ -83,6 +83,11 @@
 			<message>Domain name field is invalid</message>
 		</field>
 		<field>
+			<name>DNS Resolver Behavior</name>
+			<type>text</type>
+			<description>The default behavior of the DNS Resolver will ignore manually configured DNS servers for client queries and query root DNS servers directly. To use the manually configured DNS servers below for client queries, visit Services &gt; DNS Resolver and enable DNS Query Forwarding after completing the wizard.</description>
+		</field>
+		<field>
 			<name>Primary DNS Server</name>
 			<type>input</type>
 			<bindstofield>system->dnsserver</bindstofield>
@@ -651,8 +656,8 @@
 	<description>
 	<![CDATA[
 		Congratulations!  pfSense is now configured.<p/>
-		Please consider donating to the project to help us with our overhead costs.<p/>
-		Click <a target='_new' href='https://www.pfsense.org/j.php?jumpto=donate'>here</a> to donate or purchase services offered by the pfSense team.<p/>
+		Please consider contributing back to the project!<p/>
+		Click <a target='_new' href='https://www.pfsense.org/get-involved/index.html'>here</a> to purchase services offered by the pfSense team and find other ways to contribute.<p/>
 		Click <a href='$myurl'>here</a> to continue on to pfSense webConfigurator.
 	]]>
 	</description>

@@ -388,15 +388,13 @@ function sync_package($pkg_name, $sync_depends = true, $show_message = false) {
 		$pkg_id = get_pkg_id($pkg_name);
 		if($pkg_id == -1)
 			return -1; // This package doesn't really exist - exit the function.
-	} else {
+	} else
 		$pkg_id = $pkg_name;
-		if(empty($config['installedpackages']['package'][$pkg_id]))
-			return;  // No package belongs to the pkg_id passed to this function.
-	}
-	if (is_array($config['installedpackages']['package'][$pkg_id]))
-		$package =& $config['installedpackages']['package'][$pkg_id];
-	else
-		return; /* empty package tag */
+
+	if(!is_array($config['installedpackages']['package'][$pkg_id]))
+		return;  // No package belongs to the pkg_id passed to this function.
+
+	$package =& $config['installedpackages']['package'][$pkg_id];
 	if(!file_exists("/usr/local/pkg/" . $package['configurationfile'])) {
 		log_error(sprintf(gettext("The %s package is missing its configuration file and must be reinstalled."), $package['name']));
 		force_remove_package($package['name']);
@@ -666,6 +664,7 @@ function install_package($package, $pkg_info = "", $force_install = false) {
 	if (!install_package_xml($package)) {
 		uninstall_package($package);
 		write_config($changedesc);
+		log_error(sprintf(gettext("Failed to install package: %s."), $pkg_info['name']));
 		$static_output .= gettext("Failed to install package.") . "\n";
 		update_output_window($static_output);
 		return -1;
@@ -673,6 +672,7 @@ function install_package($package, $pkg_info = "", $force_install = false) {
 		$static_output .= gettext("Writing configuration... ");
 		update_output_window($static_output);
 		write_config($changedesc);
+		log_error(sprintf(gettext("Successfully installed package: %s."), $pkg_info['name']));
 		$static_output .= gettext("done.") . "\n";
 		update_output_window($static_output);
 		if($pkg_info['after_install_info']) 
@@ -1249,7 +1249,7 @@ function pkg_reinstall_all() {
 				uninstall_package($pkgtodo['name']);
 				log_error(gettext("Finished uninstalling package") . " {$pkgtodo['name']}");
 				log_error(gettext("Reinstalling package") . " {$pkgtodo['name']}");
-				install_package($pkgtodo['name']);
+				install_package($pkgtodo['name'], '', true);
 				log_error(gettext("Finished installing package") . " {$pkgtodo['name']}");
 			}
 		}

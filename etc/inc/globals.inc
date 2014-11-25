@@ -154,6 +154,7 @@ $sysctls = array("net.inet.ip.portrange.first" => "1024",
 	"net.bpf.zerocopy_enable" => 1,
 	"net.inet.icmp.reply_from_interface" => 1,
 	"vfs.forcesync" => "0",
+	"net.inet6.ip6.rfc6204w3" => 1,
 	"net.enc.out.ipsec_bpf_mask" => "0x0001",
 	"net.enc.out.ipsec_filter_mask" => "0x0001",
 	"net.enc.in.ipsec_bpf_mask" => "0x0002",
@@ -163,6 +164,9 @@ $sysctls = array("net.inet.ip.portrange.first" => "1024",
 /* Include override values for the above if needed. If the file doesn't exist, don't try to load it. */
 if (file_exists("/etc/inc/globals_override.inc"))
 	@include("globals_override.inc");
+
+if (file_exists("{$g['varrun_path']}/booting"))
+        $g['booting'] = true;
 
 $config_parsed = false;
 
