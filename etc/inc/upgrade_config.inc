@@ -2021,7 +2021,7 @@ function upgrade_054_to_055() {
 		$xmldump = "{$database}.old.xml";
 		$xmldumpnew = "{$database}.new.xml";
 
-		if ($g['booting'])
+		if (platform_booting())
 			echo "Migrate RRD database {$database} to new format for IPv6 \n";
 		mwexec("$rrdtool tune {$rrddbpath}{$database} -r roundtrip:delay 2>&1");
 
@@ -2046,7 +2046,8 @@ function upgrade_054_to_055() {
 		unset($rrdold);
 	}
 	/* let apinger recreate required files */
-	setup_gateways_monitor();
+	if (!platform_booting())
+		setup_gateways_monitor();
 
 	/* build a list of traffic and packets databases */
 	$databases = return_dir_as_array($rrddbpath, '/-(traffic|packets)\.rrd$/');
@@ -2057,7 +2058,7 @@ function upgrade_054_to_055() {
 		$xmldumptmp = "{$database}.tmp.xml";
 		$xmldumpnew = "{$database}.new.xml";
 
-		if ($g['booting'])
+		if (platform_booting())
 			echo "Migrate RRD database {$database} to new format \n";
 		/* rename DS source */
 		mwexec("$rrdtool tune {$rrddbpath}/{$database} -r in:inpass 2>&1");
@@ -2106,12 +2107,13 @@ function upgrade_054_to_055() {
 		mwexec("$rrdtool resize {$rrddbpath}/{$database} 3 GROW 2000;/bin/mv resize.rrd {$rrddbpath}/{$database} 2>&1");
 		unset($rrdxmlarray);
 	}
-	enable_rrd_graphing();
+	if (!platform_booting())
+		enable_rrd_graphing();
 	/* Let's save the RRD graphs after we run enable RRD graphing */
 	/* The function will restore the rrd.tgz so we will save it after */
 	exec("cd /; LANG=C NO_REMOUNT=1 RRDDBPATH='{$rrddbpath}' CF_CONF_PATH='{$g['cf_conf_path']}' /etc/rc.backup_rrd.sh");
 	unlink_if_exists("{$g['vardb_path']}/rrd/*.xml");
-	if ($g['booting'])
+	if (platform_booting())
 		echo "Updating configuration...";
 }
 
@@ -2676,7 +2678,7 @@ function upgrade_080_to_081() {
 		$xmldump = "{$database}.old.xml";
 		$xmldumpnew = "{$database}.new.xml";
 
-		if ($g['booting'])
+		if (platform_booting())
 			echo "Migrate RRD database {$database} to new format for IPv6.\n";
 
 		/* dump contents to xml and move database out of the way */
@@ -2792,11 +2794,12 @@ function upgrade_080_to_081() {
 		unlink_if_exists("{$g['tmp_path']}/{$xmldump}");
 		unlink_if_exists("{$g['tmp_path']}/{$xmldumpnew}");
 	}
-	enable_rrd_graphing();
+	if (!platform_booting())
+		enable_rrd_graphing();
 	/* Let's save the RRD graphs after we run enable RRD graphing */
 	/* The function will restore the rrd.tgz so we will save it after */
 	exec("cd /; LANG=C NO_REMOUNT=1 RRDDBPATH='{$rrddbpath}' CF_CONF_PATH='{$g['cf_conf_path']}' /etc/rc.backup_rrd.sh");
-	if ($g['booting'])
+	if (platform_booting())
 		echo "Updating configuration...";
 	foreach($config['filter']['rule'] as & $rule) {
 		if (isset($rule['protocol']) && !empty($rule['protocol']))
@@ -3071,7 +3074,8 @@ function upgrade_092_to_093() {
 			rename("{$g['vardb_path']}/rrd/captiveportal-{$suffix}.rrd",
 				"{$g['vardb_path']}/rrd/captiveportal-cpZone-{$suffix}.rrd");
 
-	enable_rrd_graphing();
+	if (!platform_booting())
+		enable_rrd_graphing();
 }
 
 function upgrade_093_to_094() {
@@ -3119,7 +3123,7 @@ function upgrade_095_to_096() {
 	$databases = return_dir_as_array($rrddbpath, '/-(traffic|packets)\.rrd$/');
 	rsort($databases);
 	foreach($databases as $database) {
-		if ($g['booting'])
+		if (platform_booting())
 			echo "Update RRD database {$database}.\n";
 
 		$cmd = "{$rrdtool} tune {$rrddbpath}/{$database}";
@@ -3128,7 +3132,8 @@ function upgrade_095_to_096() {
 		mwexec("{$cmd} 2>&1");
 
 	}
-	enable_rrd_graphing();
+	if (!platform_booting())
+		enable_rrd_graphing();
 	/* Let's save the RRD graphs after we run enable RRD graphing */
 	/* The function will restore the rrd.tgz so we will save it after */
 	exec("cd /; LANG=C NO_REMOUNT=1 RRDDBPATH='{$rrddbpath}' CF_CONF_PATH='{$g['cf_conf_path']}' /etc/rc.backup_rrd.sh");

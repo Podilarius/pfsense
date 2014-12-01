@@ -157,7 +157,7 @@ function vpn_ipsec_configure($ipchg = false)
 			mkdir("{$g['varetc_path']}/ipsec/ipsec.d/reqs");
 		
 
-		if ($g['booting'])
+		if (platform_booting())
 			echo gettext("Configuring IPsec VPN... ");
 
 		/* fastforwarding is not compatible with ipsec tunnels */
@@ -168,6 +168,7 @@ function vpn_ipsec_configure($ipchg = false)
 		$rgmap = array();
 		$filterdns_list = array();
 		$listeniflist = array();
+		$aggressive_mode_psk = false;
 		unset($iflist);
 		if (is_array($a_phase1) && count($a_phase1)) {
 
@@ -176,6 +177,9 @@ function vpn_ipsec_configure($ipchg = false)
 			foreach ($a_phase1 as $ph1ent) {
 				if (isset($ph1ent['disabled']))
 					continue;
+
+				if ($ph1ent['mode'] == "aggressive" && ($ph1ent['authentication_method'] == "pre_shared_key" || $ph1ent['authentication_method'] == "xauth_psk_server")) 
+					$aggressive_mode_psk = true;
 
 				$ikeid = $ph1ent['ikeid'];
 				$listeniflist = get_real_interface($a_phase1['interface']);
@@ -198,7 +202,7 @@ function vpn_ipsec_configure($ipchg = false)
 				if (!is_ipaddr($rg)) {
 					$filterdns_list[] = "{$rg}";
 					add_hostname_to_watch($rg);
-					if(! $g['booting'])
+					if (!platform_booting())
 						$rg = resolve_retry($rg);
 					if (!is_ipaddr($rg))
 						continue;
@@ -276,6 +280,11 @@ function vpn_ipsec_configure($ipchg = false)
 		if (isset($config['ipsec']['acceptunencryptedmainmode']))
 			$accept_unencrypted = "accept_unencrypted_mainmode_messages = yes";
 
+		$i_dont_care_about_security_and_use_aggressive_mode_psk = "";
+		if ($aggressive_mode_psk) {
+			log_error("WARNING: Setting i_dont_care_about_security_and_use_aggressive_mode_psk option because a phase 1 is configured using aggressive mode with pre-shared keys. This is not a secure configuration.");
+			$i_dont_care_about_security_and_use_aggressive_mode_psk = "i_dont_care_about_security_and_use_aggressive_mode_psk=yes";
+		} 
 		$strongswan = <<<EOD
 
 # Automatically generated config file - DO NOT MODIFY. Changes will be overwritten. 
@@ -290,10 +299,7 @@ charon {
 	ikesa_table_segments = 4
 	init_limit_half_open = 1000
 	install_routes = no
-
-	# XXX: There is not much choice here really users win their security!
-	i_dont_care_about_security_and_use_aggressive_mode_psk=yes
-
+	{$i_dont_care_about_security_and_use_aggressive_mode_psk}
 	{$accept_unencrypted}
 	cisco_unity = yes
 
@@ -800,7 +806,6 @@ EOD;
 					$ipsecconf .=<<<EOD
 
 conn con{$ph1ent['ikeid']}
-	aggressive = {$aggressive}
 	fragmentation = yes
 	keyexchange = {$keyexchange}
 	{$reauth}
@@ -837,6 +842,8 @@ EOD;
 						$ipsecconf .= "\t{$authentication}\n";
 					if (!empty($peerid_spec))
 						$ipsecconf .= "\trightid = {$peerid_spec}\n";
+					if ($keyexchange == 'ikev1')
+						$ipsecconf .= "\taggressive = {$aggressive}\n";
 			}
 		}
 	}
@@ -880,7 +887,7 @@ EOD;
 		@unlink("{$g['varrun_path']}/filterdns-ipsec.pid");
 	}
 
-	if ($g['booting'])
+	if (platform_booting())
 		echo "done\n";
 
 	return count($filterdns_list);
@@ -952,7 +959,7 @@ function vpn_pptpd_configure() {
 	$syscfg = $config['system'];
 	$pptpdcfg = $config['pptpd'];
 
-	if ($g['booting']) {
+	if (platform_booting()) {
 		if (!$pptpdcfg['mode'] || ($pptpdcfg['mode'] == "off"))
 			return 0;
 
@@ -1163,7 +1170,7 @@ EOD;
 			break;
 	}
 
-	if ($g['booting'])
+	if (platform_booting())
 		echo "done\n";
 
 	return 0;
@@ -1187,7 +1194,7 @@ function vpn_pppoe_configure(&$pppoecfg) {
 	if (!is_dir("{$g['varetc_path']}/pppoe{$pppoecfg['pppoeid']}-vpn"))
 		mkdir("{$g['varetc_path']}/pppoe{$pppoecfg['pppoeid']}-vpn");
 
-	if ($g['booting']) {
+	if (platform_booting()) {
 		if (!$pppoecfg['mode'] || ($pppoecfg['mode'] == "off"))
 			return 0;
 
@@ -1383,7 +1390,7 @@ EOD;
 			break;
 	}
 
-	if ($g['booting'])
+	if (platform_booting())
 		echo gettext("done") . "\n";
 
 	return 0;
@@ -1399,7 +1406,7 @@ function vpn_l2tp_configure() {
 	if (!is_dir("{$g['varetc_path']}/l2tp-vpn"))
 		mkdir("{$g['varetc_path']}/l2tp-vpn");
 
-	if ($g['booting']) {
+	if (platform_booting()) {
 		if (!$l2tpcfg['mode'] || ($l2tpcfg['mode'] == "off"))
 			return 0;
 
@@ -1580,7 +1587,7 @@ EOD;
 			break;
 	}
 
-	if ($g['booting'])
+	if (platform_booting())
 		echo "done\n";
 
 	return 0;

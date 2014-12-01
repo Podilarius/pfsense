@@ -313,7 +313,7 @@ EOD;
 				$config['interfaces']['lan'] = array();
 			$config['interfaces']['lan']['if'] = $lanif;
 			$config['interfaces']['lan']['enable'] = true;
-		} elseif (!$g['booting'] && !$auto_assign) {
+		} elseif (!platform_booting() && !$auto_assign) {
 
 echo <<<EODD
 
@@ -411,13 +411,10 @@ EODD;
 
 		fclose($fp);
 
-		if($g['booting'])
+		if(platform_booting())
 			return;
 
 		echo gettext("One moment while we reload the settings...");
-
-		$g['booting'] = false;
-
 		echo gettext(" done!") . "\n";
 
 		touch("{$g['tmp_path']}/assign_complete");

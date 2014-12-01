@@ -39,7 +39,7 @@ $ipsec_loglevels = array("dmn" => "Daemon", "mgr" => "SA Manager", "ike" => "IKE
 	"job" => "Job Processing", "cfg" => "Configuration backend", "knl" => "Kernel Interface",
 	"net" => "Networking", "asn" => "ASN encoding", "enc" => "Message encoding",
 	"imc" => "Integrity checker", "imv" => "Integrity Verifier", "pts" => "Platform Trust Service",
-	"tls" => "TLS handler", "esp" => "IPsec traffic", "lib" => "StrongSWAN Lib");
+	"tls" => "TLS handler", "esp" => "IPsec traffic", "lib" => "StrongSwan Lib");
 
 $my_identifier_list = array(
 	'myaddress' => array( 'desc' => gettext('My IP address'), 'mobile' => true ),
@@ -60,9 +60,6 @@ $peer_identifier_list = array(
 
 $p1_ealgos = array(
 	'aes' => array( 'name' => 'AES', 'keysel' => array( 'lo' => 128, 'hi' => 256, 'step' => 64 ) ),
-	'aes128gcm' => array( 'name' => 'AES128-GCM', 'keysel' => array( 'lo' => 64, 'hi' => 128, 'step' => 32 ) ),
-	'aes192gcm' => array( 'name' => 'AES192-GCM', 'keysel' => array( 'lo' => 64, 'hi' => 128, 'step' => 32 ) ),
-	'aes256gcm' => array( 'name' => 'AES256-GCM', 'keysel' => array( 'lo' => 64, 'hi' => 128, 'step' => 32 ) ),
 	'blowfish' => array( 'name' => 'Blowfish', 'keysel' => array( 'lo' => 128, 'hi' => 256, 'step' => 64 ) ),
 	'3des' => array( 'name' => '3DES' ),
 	'cast128' => array( 'name' => 'CAST128' ),
@@ -200,7 +197,7 @@ function ipsec_get_phase1_dst(& $ph1ent) {
 		return false;
 	$rg = $ph1ent['remote-gateway'];
 	if (!is_ipaddr($rg)) {
-		if(! $g['booting'])
+		if(! platform_booting())
 			return resolve_retry($rg);
 	}
 	if(!is_ipaddr($rg))
@@ -369,14 +366,6 @@ function ipsec_phase2_status(&$ipsec_status, &$phase2) {
 }
 
 /*
- * Return ISAKMP SA details
- */
-function ipsec_lookup_isakmp_sa($in_srcip,$in_dstip) {
-	/* TODO : use racconctl to lookup iskamp SA */
-	return NULL;
-}
-
-/*
  * Return IPsec SA details
  */
 function ipsec_lookup_ipsec_sa(& $spd,& $sad,$dir,$in_srcip,$in_dstip,$in_srcid,$in_dstid) {
@@ -517,7 +506,8 @@ function ipsec_dump_spd()
 				$cursp['dstid'] = substr($linea[1], 0, strpos($linea[1], "["));
 				$i = 0;
 			} else if (is_array($cursp)) {
-				$linea = explode(" ", trim($line));
+				$line = trim($line, "\t\r\n ");
+				$linea = explode(" ", $line);
 				switch($i)
 				{
 					case 1:
@@ -564,31 +554,31 @@ function ipsec_dump_sad()
 					$sad[] = $cursa;
 				$cursa = array();
 				list($cursa['src'],$cursa['dst']) = explode(" ", $line);
-				$i = 0;
 			}
 			else
 			{
-				$linea = explode(" ", trim($line));
-				switch ($i) {
-					case 1:
-						$cursa['proto'] = $linea[0];
-						$cursa['spi'] = substr($linea[2], strpos($linea[2], "x")+1, -1);
-						$reqid = substr($linea[3], strpos($linea[3], "=")+1);
-						$cursa['reqid'] = substr($reqid, 0, strcspn($reqid,"("));
+				$line = trim($line, "\t\n\r ");
+				$linea = explode(" ", $line);
+				foreach ($linea as $idx => $linee) {
+					if ($linee == 'esp' || $linee == 'ah' || $linee[0] == '#')
+						$cursa['proto'] = $linee;
+					else if (substr($linee, 0, 3) == 'spi')
+						$cursa['spi'] = substr($linee, strpos($linee, 'x') + 1, -1);
+					else if (substr($linee, 0, 5) == 'reqid')
+						$cursa['reqid'] = substr($linee, strpos($linee, 'x') + 1, -1);
+					else if (substr($linee, 0, 2) == 'E:') {
+						$cursa['ealgo'] = $linea[$idx + 1];
 						break;
-					case 2:
-						$cursa['ealgo'] = $linea[1];
+					} else if (substr($linee, 0, 2) == 'A:') {
+						$cursa['aalgo'] = $linea[$idx + 1];
 						break;
-					case 3:
-						$cursa['aalgo'] = $linea[1];
+					} else if (substr($linee, 0, 8) == 'current:') {
+						$cursa['data'] = substr($linea[$idx + 1], 0, strpos($linea[$idx + 1], 'bytes') - 1) . ' B';
 						break;
-					case 8:
-						$sadata = explode("(", $linea[1]);
-						$cursa['data'] = $sadata[0] . " B";
-						break;
+					}
+						
 				}
 			}
-			$i++;
 		}
 		if (is_array($cursa) && count($cursa))
 			$sad[] = $cursa;

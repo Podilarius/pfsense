@@ -165,8 +165,18 @@ $sysctls = array("net.inet.ip.portrange.first" => "1024",
 if (file_exists("/etc/inc/globals_override.inc"))
 	@include("globals_override.inc");
 
-if (file_exists("{$g['varrun_path']}/booting"))
-        $g['booting'] = true;
+function platform_booting($on_console = false) {
+	global $g;
+
+	if ($g['booting'] || file_exists("{$g['varrun_path']}/booting"))
+		if ($on_console == false || php_sapi_name() != 'fpm-fcgi')
+			return true;
+
+	return false;
+}
+
+if (file_exists("{$g['cf_conf_path']}/enableserial_force"))
+	$g['enableserial_force'] = true;
 
 $config_parsed = false;
 
