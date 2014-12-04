@@ -1178,7 +1178,7 @@ function interface_bring_down($interface = "wan", $destroy = false, $ifacecfg = 
 			interface_ipalias_cleanup($interface, "inet6");
 			if ($destroy == true)
 				pfSense_interface_flags($realif, -IFF_UP);
-			mwexec("/usr/sbin/arp -d -i " . escapeshellarg($realif) . " -a");
+			//mwexec("/usr/sbin/arp -d -i " . escapeshellarg($realif) . " -a");
 		}
 		$track6 = link_interface_to_track6($interface);
 		break;
@@ -1205,7 +1205,7 @@ function interface_bring_down($interface = "wan", $destroy = false, $ifacecfg = 
 			interface_ipalias_cleanup($interface, "inet6");
 			if ($destroy == true)
 				pfSense_interface_flags($realif, -IFF_UP);
-			mwexec("/usr/sbin/arp -d -i " . escapeshellarg($realif) . " -a");
+			//mwexec("/usr/sbin/arp -d -i " . escapeshellarg($realif) . " -a");
 		}
 		$track6 = link_interface_to_track6($interface);
 		break;
@@ -3142,9 +3142,12 @@ function interface_track6_configure($interface = "lan", $wancfg, $linkupevent = 
 		break;
 	}
 
-	if (!platform_booting() && $linkupevent == false) {
+	if ($linkupevent == false) {
 		if (!function_exists('services_dhcpd_configure'))
 			require_once("services.inc");
+
+                if (isset($config['unbound']['enable']))
+                        services_unbound_configure();
 
 		services_dhcpd_configure("inet6");
 	}
@@ -4795,6 +4798,10 @@ function ip_in_interface_alias_subnet($interface, $ipalias) {
 }
 
 function get_interface_ip($interface = "wan") {
+	// if we get passed an IP for some reason, return the IP. 
+	if (is_ipaddr($interface))
+		return $interface;
+	
 	$realif = get_failover_interface($interface);
 	if (!$realif) {
 		if (strstr($interface, "_vip"))
@@ -4812,6 +4819,10 @@ function get_interface_ip($interface = "wan") {
 
 function get_interface_ipv6($interface = "wan", $flush = false) {
 	global $config;
+
+	// if we get passed an IP for some reason, return the IP. 
+	if (is_ipaddr($interface))
+		return $interface;
 
 	$realif = get_failover_interface($interface, "inet6");
 	if (!$realif) {

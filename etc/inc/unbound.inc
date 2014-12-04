@@ -148,12 +148,17 @@ EOF;
 			$bindints .= "interface: ::0\n";
 		} else {
 			foreach($active_interfaces as $ubif) {
-				$intip = get_interface_ip($ubif);
-				if (is_ipaddrv4($intip))
-					$bindints .= "interface: $intip\n";
-				$intip = get_interface_ipv6($ubif);
-				if (is_ipaddrv6($intip))
-					$bindints .= "interface: $intip\n";
+				if (is_ipaddr($ubif)) {
+					//$bindints .= "interface: $ubif\n";  -- until redmine #4062 is fixed, then uncomment this. 
+				} else {
+					$intip = get_interface_ip($ubif);
+					if (is_ipaddrv4($intip))
+						$bindints .= "interface: $intip\n";
+					$intip = get_interface_ipv6($ubif);
+					if (is_ipaddrv6($intip))
+						if (substr($intip, 0, 4) != "fe80")  // skipping link local for the moment to not break people's configs: https://redmine.pfsense.org/issues/4062
+							$bindints .= "interface: $intip\n";
+				}
 			}	
 		}
 	} else {
@@ -617,11 +622,13 @@ function unbound_acls_config() {
 			}
 			$ifip = get_interface_ipv6($ubif);
 			if (is_ipaddrv6($ifip)) {
-				$subnet_bits = get_interface_subnetv6($ubif);
-				$subnet_ip = gen_subnetv6($ifip, $subnet_bits);
-				// only add LAN-type interfaces 
-				if (!interface_has_gateway($ubif))
-					$aclcfg .= "access-control: {$subnet_ip}/{$subnet_bits} allow\n";
+				if (!is_linklocal($ifip)) {
+					$subnet_bits = get_interface_subnetv6($ubif);
+					$subnet_ip = gen_subnetv6($ifip, $subnet_bits);
+					// only add LAN-type interfaces 
+					if (!interface_has_gateway($ubif))
+						$aclcfg .= "access-control: {$subnet_ip}/{$subnet_bits} allow\n";
+				}
 				// add for IPv6 static routes to local networks
 				// for safety, we include only routes reachable on an interface with no
 				// gateway specified - read: not an Internet connection. 
