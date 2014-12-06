@@ -1844,8 +1844,10 @@ EOD;
 		if(preg_match("/zte/i", implode("\n", $usbmodemoutput))) {
 			$mondev  = substr(basename($port), 0, -1) . "1";
 		}
-		log_error("Starting 3gstats.php on device '{$mondev}' for interface '{$interface}'");
-		mwexec_bg("/usr/local/bin/3gstats.php {$mondev} {$interface}");
+		if($mondev != '') {
+			log_error("Starting 3gstats.php on device '{$mondev}' for interface '{$interface}'");
+			mwexec_bg("/usr/local/bin/3gstats.php {$mondev} {$interface}");
+		}
 	}
 
 	return 1;
@@ -3146,8 +3148,8 @@ function interface_track6_configure($interface = "lan", $wancfg, $linkupevent = 
 		if (!function_exists('services_dhcpd_configure'))
 			require_once("services.inc");
 
-                if (isset($config['unbound']['enable']))
-                        services_unbound_configure();
+		if (isset($config['unbound']['enable']))
+			services_unbound_configure();
 
 		services_dhcpd_configure("inet6");
 	}
@@ -4798,9 +4800,6 @@ function ip_in_interface_alias_subnet($interface, $ipalias) {
 }
 
 function get_interface_ip($interface = "wan") {
-	// if we get passed an IP for some reason, return the IP. 
-	if (is_ipaddr($interface))
-		return $interface;
 	
 	$realif = get_failover_interface($interface);
 	if (!$realif) {
@@ -4819,10 +4818,6 @@ function get_interface_ip($interface = "wan") {
 
 function get_interface_ipv6($interface = "wan", $flush = false) {
 	global $config;
-
-	// if we get passed an IP for some reason, return the IP. 
-	if (is_ipaddr($interface))
-		return $interface;
 
 	$realif = get_failover_interface($interface, "inet6");
 	if (!$realif) {
