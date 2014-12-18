@@ -1054,7 +1054,18 @@ function interface_reconfigure($interface = "wan", $reloadall = false) {
 function interface_vip_bring_down($vip) {
 	global $g;
 
-	$vipif = get_real_interface($vip['interface']);
+	if (strpos($vip['interface'], '_vip')) {
+		if (is_ipaddrv6($vip['subnet']))
+			$family = 'inet6';
+		else
+			$family = 'inet';
+
+		$carpvip = get_configured_carp_interface_list($vip['interface'], $family, 'vip');
+		$iface = $carpvip['interface'];
+	} else
+		$iface = $vip['interface'];
+
+	$vipif = get_real_interface($iface);
 	switch ($vip['mode']) {
 	case "proxyarp":
 		if (file_exists("{$g['varrun_path']}/choparp_{$vipif}.pid"))
@@ -3963,7 +3974,7 @@ function interface_group_setup(&$groupname /* The parameter is an array */) {
 	$members = explode(" ", $groupname['members']);
 	foreach($members as $ifs) {
 		$realif = get_real_interface($ifs);
-		if ($realif)
+		if ($realif && does_interface_exist($realif))
 			mwexec("/sbin/ifconfig {$realif} group {$groupname['ifname']}");
 	}
 
@@ -3984,7 +3995,8 @@ function is_interface_group($if) {
 
 function interface_group_add_member($interface, $groupname) {
 	$interface = get_real_interface($interface);
-	mwexec("/sbin/ifconfig {$interface} group " . escapeshellarg($groupname), true);
+	if (does_interface_exist($interface))
+		mwexec("/sbin/ifconfig {$interface} group " . escapeshellarg($groupname), true);
 }
 
 /* COMPAT Function */

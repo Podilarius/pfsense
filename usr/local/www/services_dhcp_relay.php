@@ -57,9 +57,12 @@ $iflist = get_configured_interface_with_descr();
  */
 $dhcpd_enabled = false;
 if (is_array($config['dhcpd'])) {
-	foreach($config['dhcpd'] as $dhcp) 
-		if (isset($dhcp['enable'])) 
+	foreach($config['dhcpd'] as $dhcpif => $dhcp) {
+		if (isset($dhcp['enable']) && isset($config['interfaces'][$dhcpif]['enable'])) {
 			$dhcpd_enabled = true;
+			break;
+		}
+	}
 }
 
 if ($_POST) {
@@ -183,7 +186,7 @@ function enable_change(enable_over) {
                         <td width="78%" class="vtable">
                           <input name="server" type="text" class="formfld unknown" id="server" size="20" value="<?=htmlspecialchars($pconfig['server']);?>" />
                           <br />
-			  <?=gettext("This is the IP address of the server to which DHCP requests are relayed. You can enter multiple server IP addresses, separated by commas. Select \"Proxy requests to DHCP server on WAN subnet\" to relay DHCP packets to the server that was used on the WAN interface.");?>
+			  <?=gettext("This is the IP address of the server to which DHCP requests are relayed. You can enter multiple server IP addresses, separated by commas.");?>
                         </td>
 		</tr>
 		<tr>
