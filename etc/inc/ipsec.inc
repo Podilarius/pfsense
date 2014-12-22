@@ -363,89 +363,6 @@ function ipsec_phase2_status(&$ipsec_status, &$phase2) {
 	return false;
 }
 
-/*
- * Return IPsec SA details
- */
-function ipsec_lookup_ipsec_sa(& $spd,& $sad,$dir,$in_srcip,$in_dstip,$in_srcid,$in_dstid) {
-
-	/* match the phase1/2 to an SP */
-	$in_srcip = ipsec_fixup_ip($in_srcip);
-	$in_dstip = ipsec_fixup_ip($in_dstip);
-	$in_srcid = ipsec_fixup_ip($in_srcid);
-	$in_dstid = ipsec_fixup_ip($in_dstid);
-
-	foreach($spd as $sp) {
-
-		/* match direction */
-
-		if($dir != $sp['dir'])
-			continue;
-
-		/* match IPs */
-
-		if($in_srcip != ipsec_fixup_ip($sp['src']))
-			continue;
-		if($in_dstip != ipsec_fixup_ip($sp['dst']))
-			continue;
-
-		/* add netbits for address IDs */
-
-		$sp_srcid = $sp['srcid'];
-		$sp_dstid = $sp['dstid'];
-
-		if (!strstr($sp_srcid,"/")) {
-			if (is_ipaddrv4($sp_srcid))
-				$sp_srcid .= '/32';
-			elseif (is_ipaddrv6($sp_srcid))
-				$sp_srcid .= '/128';
-		}
-		if (!strstr($sp_dstid,"/")) {
-			if (is_ipaddrv4($sp_dstid))
-				$sp_dstid .= '/32';
-			elseif (is_ipaddrv6($sp_dstid))
-				$sp_dstid .= '/128';
-		}
-
-		/* match IDs */
-
-		if($in_srcid != ipsec_fixup_ip($sp_srcid))
-			continue;
-		if($in_dstid != ipsec_fixup_ip($sp_dstid))
-			continue;
-
-		/* match the SP to a unique SA by reqid */
-
-		foreach($sad as $sa) {
-
-			/* match REQIDs */
-
-			if($sa[reqid] != $sp[reqid])
-				continue;
-
-			/* sanitize for NAT-T ports */
-
-			$sa_srcip = $sa['src'];
-			$sa_dstip = $sa['dst'];
-
-			if (strstr($sa_srcip,"["))
-				$sa_srcip = substr($sa_srcip,0,strcspn($sa_srcip,"["));
-			if (strstr($sa_dstip,"["))
-				$sa_dstip = substr($sa_dstip,0,strcspn($sa_dstip,"["));
-
-			/* match IPs */
-
-			if($in_srcip != ipsec_fixup_ip($sa_srcip))
-				continue;
-			if($in_dstip != ipsec_fixup_ip($sa_dstip))
-				continue;
-
-			return $sa;
-		}
-	}
-
-	return NULL;
-}
-
 function ipsec_smp_dump_status() {
 	global $config, $g, $custom_listtags;
 
@@ -652,6 +569,22 @@ function ipsec_get_descr($ikeid) {
 	unset($a_phase1);
 
 	return $descr;
+}
+
+function ipsec_get_phase1($ikeid) {
+        global $config;
+
+        if (!isset($config['ipsec']['phase1']) ||
+            !is_array($config['ipsec']['phase1']))
+                return '';
+
+        $a_phase1 = $config['ipsec']['phase1'];
+        foreach ($a_phase1 as $p1) {
+                if ($p1['ikeid'] == $ikeid) {
+                        return $p1;
+                }
+        }
+        unset($a_phase1);
 }
 
 function ipsec_fixup_ip($ipaddr) {

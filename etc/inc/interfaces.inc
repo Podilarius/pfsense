@@ -3079,7 +3079,7 @@ function interface_configure($interface = "wan", $reloadall = false, $linkupeven
 			system_routing_configure($interface);
 
 			/* reload ipsec tunnels */
-			vpn_ipsec_configure();
+			send_event("service reload ipsecdns");
 
 			/* restart dnsmasq or unbound */
 			if (isset($config['dnsmasq']['enable']))
@@ -3090,9 +3090,10 @@ function interface_configure($interface = "wan", $reloadall = false, $linkupeven
 			/* update dyndns */
 			send_event("service reload dyndns {$interface}");
 
-			/* XXX: which CPZONE? Needed? */
 			/* reload captive portal */
-			captiveportal_init_rules();
+			if (!function_exists('captiveportal_init_rules_byinterface'))
+				require_once('captiveportal.inc');
+			captiveportal_init_rules_byinterface($interface);
 		}
 	}
 
