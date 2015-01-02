@@ -484,10 +484,14 @@ EOD;
 				if (empty($peerid_data))
 					continue;
 
-				$myid = isset($ph1ent['mobile']) ? trim($myid_data) . " " : "";
+				$myid = isset($ph1ent['mobile']) ? trim($myid_data) : "%any";
 				$peerid = ($peerid_data != "allusers") ? trim($peerid_data) : "";
-				if (!empty($ph1ent['pre-shared-key']))
-					$pskconf .= $myid . $peerid . " : PSK \"" . trim($ph1ent['pre-shared-key']) . "\"\n";
+				if (!empty($ph1ent['pre-shared-key'])) {
+					if ($myid_type == 'fqdn' && !empty($myid_data))
+						$pskconf .= "@{$myid} {$peerid} : PSK 0s" . base64_encode(trim($ph1ent['pre-shared-key'])) . "\n";
+					else
+						$pskconf .= "{$myid} {$peerid} : PSK 0s" . base64_encode(trim($ph1ent['pre-shared-key'])) . "\n";
+				}
 			}
 		}
 	}
@@ -496,7 +500,7 @@ EOD;
 	if (is_array($config['system']) && is_array($config['system']['user'])) {
 		foreach ($config['system']['user'] as $user) {
 			if (!empty($user['ipsecpsk'])) {
-				$pskconf .= "{$myid} {$user['name']} : PSK \"{$user['ipsecpsk']}\"\n";
+				$pskconf .= "%any {$user['name']} : PSK 0s" . base64_encode($user['ipsecpsk']) . "\n";
 			}
 		}
 		unset($user);
@@ -506,8 +510,8 @@ EOD;
 	if (is_array($ipseccfg['mobilekey'])) {
 		foreach ($ipseccfg['mobilekey'] as $key) {
 			if ($key['ident'] == "allusers")
-				$key['ident'] = '';
-			$pskconf .= "{$myid} {$key['ident']} : PSK \"{$key['pre-shared-key']}\"\n";
+				$key['ident'] = '%any';
+			$pskconf .= "%any {$key['ident']} : PSK 0s" . base64_encode($key['pre-shared-key']) . "\n";
 		}
 		unset($key);
 	}
@@ -556,7 +560,11 @@ EOD;
 				$right_spec = $ph1ent['remote-gateway'];
 
 			list ($myid_type, $myid_data) = ipsec_find_id($ph1ent, "local");
+			if ($myid_type == 'fqdn')
+				$myid_data = "@{$myid_data}";
 			list ($peerid_type, $peerid_data) = ipsec_find_id($ph1ent, "peer", $rgmap);
+			if ($peerid_type == 'fqdn')
+				$peerid_data = "@{$peerid_data}";
 
 			/* Only specify peer ID if we are not dealing with a mobile PSK-only tunnel */
 			$peerid_spec = '';
