@@ -81,13 +81,6 @@ function unbound_optimization() {
 	// Size of the RRset cache
 	$optimization['rrset_cache_size'] = "rrset-cache-size: 8m";
 
-	// More outgoing connections per thread otherwise assign a default of 4096 for a single thread
-	if ($numprocs > 0) {
-		$or = (1024/$numprocs) - 50;
-		$optimization['outgoing_range'] = "outgoing-range: {$or}";
-	} else
-		$optimization['outgoing_range'] = "outgoing-range: {4096}";
-
 	/*
 	 * Larger socket buffer for busy servers
 	 * Check that it is set to 4MB (by default the OS has it configured to 4MB)
@@ -95,16 +88,16 @@ function unbound_optimization() {
 	if (is_array($config['sysctl']) && is_array($config['sysctl']['item'])) {
 		foreach ($config['sysctl']['item'] as $tunable) {
 			if ($tunable['tunable'] == 'kern.ipc.maxsockbuf') {
-				$so = floor(($tunable['value']/1024/1024)-1);
+				$so = floor(($tunable['value']/1024/1024)-4);
 				// Check to ensure that the number is not a negative
-				if ($so > 0) {
-					// Limit to 8MB, users might set maxsockbuf very high for other reasons.
+				if ($so >= 4) {
+					// Limit to 32MB, users might set maxsockbuf very high for other reasons.
 					// We do not want unbound to fail because of that.
-					$so = min($so, 8);
+					$so = min($so, 32);
 					$optimization['so_rcvbuf'] = "so-rcvbuf: {$so}m";
-				}
-				else
+				} else {
 					unset($optimization['so_rcvbuf']);
+				}
 			}
 		}
 	}
@@ -313,7 +306,7 @@ msg-cache-size: {$msg_cache_size}m
 {$optimization['infra_cache_slabs']}
 {$optimization['key_cache_slabs']}
 {$optimization['rrset_cache_size']}
-{$optimization['outgoing_range']}
+outgoing-range: 4096
 {$optimization['so_rcvbuf']}
 {$anchor_file}
 prefetch: {$prefetch}
