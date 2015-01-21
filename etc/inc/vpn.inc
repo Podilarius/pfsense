@@ -180,8 +180,15 @@ function vpn_ipsec_configure($ipchg = false)
 			if (isset($ph1ent['disabled']))
 				continue;
 
-			$ifacesuse[] = get_real_interface($ph1ent['interface']);
-
+			if (strpos($ph1ent['interface'], '_vip')) {
+				$vpninterface = explode('_vip', $ph1ent['interface']);
+				$ifacesuse[] = get_real_interface($vpninterface[0]);
+                        } else {
+                                $vpninterface = get_failover_interface($ph1ent['interface']);
+				if (!empty($vpninterface))
+					$ifacesuse[] = $vpninterface;
+			}
+				
 			if ($ph1ent['mode'] == "aggressive" && ($ph1ent['authentication_method'] == "pre_shared_key" || $ph1ent['authentication_method'] == "xauth_psk_server")) 
 				$aggressive_mode_psk = true;
 
@@ -574,8 +581,57 @@ EOD;
 			if (isset($ph1ent['mobile'])) {
 				$right_spec = "%any";
 				$passive = 'add';
-			} else
+			} else {
 				$right_spec = $ph1ent['remote-gateway'];
+				if (is_ipaddr($right_spec))
+					$sourcehost = $right_spec;
+				else
+					$sourcehost = $rgmap['remote-gateway'];
+
+				if ($ph1ent['protocol'] == 'inet') {
+					if (strpos($ph1ent['interface'], '_vip')) {
+						$vpninterface = explode('_vip', $ph1ent['interface']);
+						$ifacesuse = get_real_interface($vpninterface[0]);
+					} else {
+						$ifacesuse = get_failover_interface($ph1ent['interface']);
+					}
+					
+					if (!empty($ifacesuse) && interface_has_gateway($parentinterface)) {
+						$gatewayip = get_interface_gateway($ifacesuse);
+						$interfaceip = get_interface_ip($ifacesuse);
+						$subnet_bits = get_interface_subnet($ifacesuse);
+						$subnet_ip = gen_subnetv4($interfaceip, $subnet_bits);
+						/* if the remote gateway is in the local subnet, then don't add a route */
+						if (!ip_in_subnet($rgip, "{$subnet_ip}/{$subnet_bits}")) {
+							if (is_ipaddrv4($gatewayip)) {
+								// log_error("IPSEC interface is not WAN but {$parentinterface}, adding static route for VPN endpoint {$rgip} via {$gatewayip}");
+								mwexec("/sbin/route change -host {$rgip} {$gatewayip}", true);
+							}
+						}
+					}
+				} else if ($ph1ent['protocol'] == 'inet6') {
+					if (strpos($ph1ent['interface'], '_vip')) {
+						$vpninterface = explode('_vip', $ph1ent['interface']);
+						$ifacesuse = get_real_interface($vpninterface[0]);
+					} else {
+						$ifacesuse = get_failover_interface($ph1ent['interface']);
+					}
+					
+					if (!empty($ifacesuse) && interface_has_gateway($parentinterface)) {
+						$gatewayip = get_interface_gateway_v6($ifacesuse);
+						$interfaceip = get_interface_ipv6($ifacesuse);
+						$subnet_bits = get_interface_subnetv6($ifacesuse);
+						$subnet_ip = gen_subnetv6($interfaceip, $subnet_bits);
+						/* if the remote gateway is in the local subnet, then don't add a route */
+						if (!ip_in_subnet($rgip, "{$subnet_ip}/{$subnet_bits}")) {
+							if (is_ipaddrv6($gatewayip)) {
+								// log_error("IPSEC interface is not WAN but {$parentinterface}, adding static route for VPN endpoint {$rgip} via {$gatewayip}");
+								mwexec("/sbin/route change -inet6 -host {$rgip} {$gatewayip}", true);
+							}
+						}
+					}
+				}
+			}
 
 			list ($myid_type, $myid_data) = ipsec_find_id($ph1ent, 'local');
 			if ($myid_type != 'address')
