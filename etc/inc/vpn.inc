@@ -302,7 +302,7 @@ function vpn_ipsec_configure($ipchg = false)
 		$unity_enabled = 'no';
 
 	if (!empty($ifacesuse))
-		$ifacesuse = 'interfaces_use = ' . implode(',', $ifacesuse);
+		$ifacesuse = 'interfaces_use = ' . implode(',', array_unique($ifacesuse));
 	else
 		$ifacesuse = '';
 
@@ -592,20 +592,22 @@ EOD;
 					if (strpos($ph1ent['interface'], '_vip')) {
 						$vpninterface = explode('_vip', $ph1ent['interface']);
 						$ifacesuse = get_real_interface($vpninterface[0]);
+						$vpninterface = $vpninterface[0];
 					} else {
 						$ifacesuse = get_failover_interface($ph1ent['interface']);
+						$vpninterface = convert_real_interface_to_friendly_interface_name($ifacesuse);
 					}
 					
-					if (!empty($ifacesuse) && interface_has_gateway($parentinterface)) {
-						$gatewayip = get_interface_gateway($ifacesuse);
-						$interfaceip = get_interface_ip($ifacesuse);
-						$subnet_bits = get_interface_subnet($ifacesuse);
+					if (!empty($ifacesuse) && interface_has_gateway($vpninterface)) {
+						$gatewayip = get_interface_gateway($vpninterface);
+						$interfaceip = get_interface_ip($vpninterface);
+						$subnet_bits = get_interface_subnet($vpninterface);
 						$subnet_ip = gen_subnetv4($interfaceip, $subnet_bits);
 						/* if the remote gateway is in the local subnet, then don't add a route */
-						if (!ip_in_subnet($rgip, "{$subnet_ip}/{$subnet_bits}")) {
+						if (!ip_in_subnet($sourcehost, "{$subnet_ip}/{$subnet_bits}")) {
 							if (is_ipaddrv4($gatewayip)) {
-								// log_error("IPSEC interface is not WAN but {$parentinterface}, adding static route for VPN endpoint {$rgip} via {$gatewayip}");
-								mwexec("/sbin/route change -host {$rgip} {$gatewayip}", true);
+								// log_error("IPSEC interface is not WAN but {$ifacesuse}, adding static route for VPN endpoint {$rgip} via {$gatewayip}");
+								mwexec("/sbin/route change -host {$sourcehost} {$gatewayip}", true);
 							}
 						}
 					}
@@ -613,20 +615,22 @@ EOD;
 					if (strpos($ph1ent['interface'], '_vip')) {
 						$vpninterface = explode('_vip', $ph1ent['interface']);
 						$ifacesuse = get_real_interface($vpninterface[0]);
+						$vpninterface = $vpninterface[0];
 					} else {
 						$ifacesuse = get_failover_interface($ph1ent['interface']);
+						$vpninterface = convert_real_interface_to_friendly_interface_name($ifacesuse);
 					}
 					
-					if (!empty($ifacesuse) && interface_has_gateway($parentinterface)) {
-						$gatewayip = get_interface_gateway_v6($ifacesuse);
-						$interfaceip = get_interface_ipv6($ifacesuse);
-						$subnet_bits = get_interface_subnetv6($ifacesuse);
+					if (!empty($ifacesuse) && interface_has_gateway($vpninterface)) {
+						$gatewayip = get_interface_gateway_v6($vpninterface);
+						$interfaceip = get_interface_ipv6($vpninterface);
+						$subnet_bits = get_interface_subnetv6($vpninterface);
 						$subnet_ip = gen_subnetv6($interfaceip, $subnet_bits);
 						/* if the remote gateway is in the local subnet, then don't add a route */
-						if (!ip_in_subnet($rgip, "{$subnet_ip}/{$subnet_bits}")) {
+						if (!ip_in_subnet($sourcehost, "{$subnet_ip}/{$subnet_bits}")) {
 							if (is_ipaddrv6($gatewayip)) {
-								// log_error("IPSEC interface is not WAN but {$parentinterface}, adding static route for VPN endpoint {$rgip} via {$gatewayip}");
-								mwexec("/sbin/route change -inet6 -host {$rgip} {$gatewayip}", true);
+								// log_error("IPSEC interface is not WAN but {$ifacesuse}, adding static route for VPN endpoint {$rgip} via {$gatewayip}");
+								mwexec("/sbin/route change -inet6 -host {$sourcehost} {$gatewayip}", true);
 							}
 						}
 					}
