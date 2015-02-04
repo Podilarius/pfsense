@@ -2036,7 +2036,7 @@ function system_identify_specific_platform() {
 	
 	/* Try to guess from smbios strings */
 	unset($output);
-	$_gb = exec('/bin/kenv smbios.system.product', $output);
+	$_gb = exec('/bin/kenv smbios.system.product 2>/dev/null', $output);
 	switch ($output[0]) {
 	case 'FW7541':
 		return (array('name' => 'FW7541', 'descr' => 'Netgate FW7541'));
@@ -2066,7 +2066,14 @@ function system_identify_specific_platform() {
 		
 	if (preg_match("/Soekris net55../", $dmesg, $matches))
 		return array('name' => 'net55xx', 'descr' => $matches[0]);
-	
+
+	unset($dmesg);
+
+	$dmesg_boot = system_get_dmesg_boot();
+	if (strpos($dmesg_boot, "PC Engines ALIX") !== false)
+		return array('name' => 'alix', 'descr' => gettext('PC Engines ALIX'));
+	unset($dmesg_boot);
+
 	/* unknown embedded platform */
 	return array('name' => 'embedded', 'descr' => gettext('embedded (unknown)'));
 }
