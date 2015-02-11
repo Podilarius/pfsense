@@ -307,15 +307,26 @@ function system_hosts_generate() {
 		$cfgip = get_interface_ip("lan");
 		if (is_ipaddr($cfgip))
 			$hosts .= "{$cfgip}	{$syscfg['hostname']}.{$syscfg['domain']} {$syscfg['hostname']}\n";
+		$cfgipv6 = get_interface_ipv6("lan");
+		if (is_ipaddrv6($cfgipv6))
+			$hosts .= "{$cfgipv6}	{$syscfg['hostname']}.{$syscfg['domain']} {$syscfg['hostname']}\n";
 	} else {
 		$sysiflist = get_configured_interface_list();
+		$hosts_if_found = false;
 		foreach ($sysiflist as $sysif) {
 			if (!interface_has_gateway($sysif)) {
 				$cfgip = get_interface_ip($sysif);
 				if (is_ipaddr($cfgip)) {
 					$hosts .= "{$cfgip}	{$syscfg['hostname']}.{$syscfg['domain']} {$syscfg['hostname']}\n";
-					break;
+					$hosts_if_found = true;
 				}
+				$cfgipv6 = get_interface_ipv6($sysif);
+				if (is_ipaddrv6($cfgipv6)) {
+					$hosts .= "{$cfgipv6}	{$syscfg['hostname']}.{$syscfg['domain']} {$syscfg['hostname']}\n";
+					$hosts_if_found = true;
+				}
+				if ($hosts_if_found == true)
+					break;
 			}
 		}
 	}
@@ -1716,12 +1727,12 @@ function system_ntp_configure($start_ntpd=true) {
 	}
 	
 
-	if (empty($config['ntpd']['interface']))
+	if (empty($config['ntpd']['interface'])) {
 		if (is_array($config['installedpackages']['openntpd']) && !empty($config['installedpackages']['openntpd']['config'][0]['interface']))
 			$interfaces = explode(",", $config['installedpackages']['openntpd']['config'][0]['interface']);
 		else
 			$interfaces = array();
-	else
+	} else
 		$interfaces = explode(",", $config['ntpd']['interface']);
 
 	if (is_array($interfaces) && count($interfaces)) {
