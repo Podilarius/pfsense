@@ -309,9 +309,7 @@ function filter_configure_sync($delete_states_if_needed = true) {
 
 	if (!empty($config['system']['adaptivestart']) && !empty($config['system']['adaptiveend'])) {
 		$limitrules .= "set timeout { adaptive.start {$config['system']['adaptivestart']}, adaptive.end {$config['system']['adaptiveend']} }\n";
-	} else {
-		$limitrules .= "set timeout { adaptive.start 0, adaptive.end 0 }\n";
-	}
+	} 
 
 	if ($config['system']['maximumstates'] <> "" && is_numeric($config['system']['maximumstates'])) {
 		/* User defined maximum states in Advanced menu. */
@@ -707,6 +705,11 @@ function filter_generate_aliases() {
 			$extralias = "";
 			$aliasnesting = array();
 			$aliasaddrnesting = array();
+			if (is_numericint($aliased['name'])) {
+				// skip aliases with numeric-only names. redmine #4289
+				file_notice("Filter_Reload", "Aliases with numeric-only names are not valid. Skipping alias " . $aliased['name']);
+				continue;
+			}
 			$addrlist = filter_generate_nested_alias($aliased['name'], $aliased['address'], $aliasnesting, $aliasaddrnesting);
 			switch ($aliased['type']) {
 			case "host":

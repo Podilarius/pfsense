@@ -213,9 +213,9 @@ function restore_config_section_xmlrpc($raw_params) {
 			foreach ($config['virtualip']['vip'] as $vipindex => $vip) {
 				if ($vip['mode'] == "carp")
 					$oldvips["{$vip['interface']}_vip{$vip['vhid']}"] = "{$vip['password']}{$vip['advskew']}{$vip['subnet']}{$vip['subnet_bits']}{$vip['advbase']}";
-				else if ($vip['mode'] == "ipalias" && (substr($vip['interface'], 0, 4) == '_vip') || strpos($vip['interface'], "lo0")))
+				else if ($vip['mode'] == "ipalias" && (substr($vip['interface'], 0, 4) == '_vip') || strpos($vip['interface'], "lo0"))
 					$oldvips[$vip['subnet']] = "{$vip['interface']}{$vip['subnet']}{$vip['subnet_bits']}";
-				else if (($vip['mode'] == "ipalias" || $vip['mode'] == 'proxyarp') && !(substr($vip['interface'], 0, 4) == '_vip') || strpos($vip['interface'], "lo0")))
+				else if (($vip['mode'] == "ipalias" || $vip['mode'] == 'proxyarp') && !(substr($vip['interface'], 0, 4) == '_vip') || strpos($vip['interface'], "lo0"))
 					$vipbackup[] = $vip;
 			}
 		}
@@ -279,8 +279,12 @@ function restore_config_section_xmlrpc($raw_params) {
 			}
 		}
 		/* Cleanup remaining old carps */
-		foreach ($oldvips as $oldvipif => $oldvippar) {
-			$oldvipif = get_real_interface($oldvippar['interface']);
+		foreach ($oldvips as $oldvipif => $oldvipar) {
+			if (strstr($oldvipar['interface'], '_vip')) {
+				$oldvipif = explode('_vip', $oldvipar['interface']);
+				$oldvipif = $oldvipif[0];
+			} else
+				$oldvipif = get_real_interface($oldvipar['interface']);
 			if (!empty($oldvipif)) {
 				if (is_ipaddrv6($oldvipif))
 					 mwexec("/sbin/ifconfig " . escapeshellarg($oldvipif) . " inet6 " . escapeshellarg($oldvipar['subnet']) . " delete");

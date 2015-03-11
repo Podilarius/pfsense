@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <pfsense>
-	<version>11.7</version>
+	<version>11.8</version>
 	<lastchange/>
 	<theme>pfsense_ng</theme>
 	<system>
@@ -41,6 +41,7 @@
 		<webgui>
 			<protocol>https</protocol>
 			<loginautocomplete/>
+			<beast_protection//>
 		</webgui>
 		<disablenatreflection>yes</disablenatreflection>
 		<disablesegmentationoffloading/>
@@ -274,7 +275,6 @@
 		<custom_options/>
 		<hideidentity/>
 		<hideversion/>
-		<hardenglue/>
 		<dnssecstripped/>
 	</unbound>
 </pfsense>
