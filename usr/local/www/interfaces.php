@@ -771,9 +771,45 @@ if ($_POST['apply']) {
 		if ($_POST['mode'] == 'hostap') {
 			$reqdfields[] = "ssid";
 			$reqdfieldsn[] = gettext("SSID");
+			if (stristr($_POST['standard'], '11n')) {
+				if (!($_POST['wme_enable'])) {
+					$input_errors[] = gettext("802.11n standards require enabling WME.");
+				}
+			}
 		}
 		do_input_validation($_POST, $reqdfields, $reqdfieldsn, $input_errors);
 		check_wireless_mode();
+		if (isset($_POST['wpa_group_rekey']) && (!is_numericint($_POST['wpa_group_rekey']) || $_POST['wpa_group_rekey'] < 1 || $_POST['wpa_group_rekey'] > 9999)) {
+			$input_errors[] = gettext("Key Rotation must be an integer between 1 and 9999.");
+		}
+		if (isset($_POST['wpa_gmk_rekey']) && (!is_numericint($_POST['wpa_gmk_rekey']) || $_POST['wpa_gmk_rekey'] < 1 || $_POST['wpa_gmk_rekey'] > 9999)) {
+			$input_errors[] = gettext("Master Key Regeneration must be an integer between 1 and 9999.");
+		}
+		if (isset($_POST['wpa_group_rekey']) && isset($_POST['wpa_gmk_rekey'])) {
+			if ($_POST['wpa_group_rekey'] > $_POST['wpa_gmk_rekey']) {
+				$input_errors[] = gettext("Master Key Regeneration must be greater than Key Rotation.");
+			}
+		}
+		if (!empty($_POST['auth_server_addr'])) {
+			if (!is_domain($_POST['auth_server_addr']) && !is_ipaddr($_POST['auth_server_addr'])) {
+				$input_errors[] = gettext("802.1X Authentication Server must be an IP or hostname.");
+			}
+		}
+		if (!empty($_POST['auth_server_addr2'])) {
+			if (!is_domain($_POST['auth_server_addr2']) && !is_ipaddr($_POST['auth_server_addr2'])) {
+				$input_errors[] = gettext("Secondary 802.1X Authentication Server must be an IP or hostname.");
+			}
+		}
+		if (!empty($_POST['auth_server_port'])) {
+			if (!is_port($_POST['auth_server_port'])) {
+				$input_errors[] = gettext("802.1X Authentication Server Port must be a valid port number (1-65535).");
+			}
+		}
+		if (!empty($_POST['auth_server_port2'])) {
+			if (!is_port($_POST['auth_server_port2'])) {
+				$input_errors[] = gettext("Secondary 802.1X Authentication Server Port must be a valid port number (1-65535).");
+			}
+		}
 		/* loop through keys and enforce size */
 		for ($i = 1; $i <= 4; $i++) {
 			if ($_POST['key' . $i]) {
@@ -3277,7 +3313,7 @@ $types6 = array("none" => gettext("None"), "staticv6" => gettext("Static IPv6"),
 							<td valign="top" class="vncell"><?=gettext("Enable IEEE802.1X Authentication"); ?></td>
 							<td class="vtable">
 								<input name="ieee8021x" type="checkbox" value="yes"  class="formfld" id="ieee8021x" <?php if ($pconfig['ieee8021x']) echo "checked=\"checked\"";?> />
-								<br /><?=gettext("Setting this option will enable 802.1x authentication."); ?>
+								<br /><?=gettext("Setting this option will enable 802.1X authentication."); ?>
 								<br /><span class="red"><strong><?=gettext("NOTE"); ?>:</strong></span> <?=gettext("this option requires checking the \"Enable WPA box\"."); ?>
 							</td>
 						</tr>
@@ -3292,7 +3328,7 @@ $types6 = array("none" => gettext("None"), "staticv6" => gettext("Static IPv6"),
 							<td valign="top" class="vncell"><?=gettext("802.1X Authentication Server Port"); ?></td>
 							<td class="vtable">
 								<input name="auth_server_port" id="auth_server_port" type="text" class="formfld unknown" size="66" value="<?=htmlspecialchars($pconfig['auth_server_port']);?>" />
-								<br /><?=gettext("Leave blank for the default 1812 port."); ?>
+								<br /><?=gettext("Leave blank for the default port 1812."); ?>
 							</td>
 						</tr>
 						<tr>
@@ -3313,7 +3349,7 @@ $types6 = array("none" => gettext("None"), "staticv6" => gettext("Static IPv6"),
 							<td valign="top" class="vncell"><?=gettext("Secondary 802.1X Authentication Server Port"); ?></td>
 							<td class="vtable">
 								<input name="auth_server_port2" id="auth_server_port2" type="text" class="formfld unknown" size="66" value="<?=htmlspecialchars($pconfig['auth_server_port2']);?>" />
-								<br /><?=gettext("Leave blank for the default 1812 port."); ?>
+								<br /><?=gettext("Leave blank for the default port 1812."); ?>
 							</td>
 						</tr>
 						<tr>
