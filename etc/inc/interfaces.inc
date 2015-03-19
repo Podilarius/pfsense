@@ -2630,9 +2630,12 @@ function interface_wireless_configure($if, &$wl, &$wlcfg) {
 	}
 
 	/* handle txpower setting */
-	/* if ($wlcfg['txpower'] <> "")
+	// or don't. this has issues at the moment.
+	/*
+	if($wlcfg['txpower'] <> "" && is_numeric($wlcfg['txpower'])) {
 		$wlcmd[] = "txpower " . escapeshellarg($wlcfg['txpower']);
-	*/
+	}*/
+	
 	/* handle wme option */
 	if (isset($wlcfg['wme']['enable'])) {
 		$wlcmd[] = "wme";
@@ -2662,6 +2665,8 @@ function interface_wireless_configure($if, &$wl, &$wlcfg) {
 			$i++;
 		}
 		$wlcmd[] = $wepset;
+	} else if (isset($wlcfg['wpa']['enable'])) {
+		$wlcmd[] = "authmode wpa wepmode off ";
 	} else {
 		$wlcmd[] = "authmode open wepmode off ";
 	}
@@ -5261,10 +5266,8 @@ function get_possible_traffic_source_addresses($include_ipv6_link_local=false) {
 		if (is_array($config['openvpn']["openvpn-{$mode}"])) {
 			foreach ($config['openvpn']["openvpn-{$mode}"] as $id => $setting) {
 				if (!isset($setting['disable'])) {
-					$vpn = array();
-					$vpn['value'] = 'ovpn' . substr($mode, 0, 1) . $setting['vpnid'];
-					$vpn['name'] = gettext("OpenVPN") . " ".$mode.": ".htmlspecialchars($setting['description']);
-					$sourceips[] = $vpn;
+					$sourceips_key = 'ovpn' . substr($mode, 0, 1) . $setting['vpnid'];
+					$sourceips[$sourceips_key] = gettext("OpenVPN") . " ".$mode.": ".htmlspecialchars($setting['description']);
 				}
 			}
 		}

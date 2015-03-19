@@ -771,10 +771,14 @@ if ($_POST['apply']) {
 		if ($_POST['mode'] == 'hostap') {
 			$reqdfields[] = "ssid";
 			$reqdfieldsn[] = gettext("SSID");
-			if (stristr($_POST['standard'], '11n')) {
-				if (!($_POST['wme_enable'])) {
-					$input_errors[] = gettext("802.11n standards require enabling WME.");
-				}
+			if (isset($_POST['channel']) && $_POST['channel'] == "0") {
+				// auto channel with hostap is broken, prevent this for now.
+				$input_errors[] = gettext("A specific channel, not auto, must be selected for Access Point mode.");
+			}
+		}
+		if (stristr($_POST['standard'], '11n')) {
+			if (!($_POST['wme_enable'])) {
+				$input_errors[] = gettext("802.11n standards require enabling WME.");
 			}
 		}
 		do_input_validation($_POST, $reqdfields, $reqdfieldsn, $input_errors);
@@ -810,6 +814,31 @@ if ($_POST['apply']) {
 				$input_errors[] = gettext("Secondary 802.1X Authentication Server Port must be a valid port number (1-65535).");
 			}
 		}
+		if (isset($_POST['channel']) && !is_numericint($_POST['channel'])) {
+			if (!is_numericint($_POST['channel'])) {
+				$input_errors[] = gettext("Invalid channel specified.");
+			} else {
+				if ($_POST['channel'] > 255 || $_POST['channel'] < 0) {
+					$input_errors[] = gettext("Channel must be between 0-255.");
+				}
+			}
+		}
+		if (!empty($_POST['distance']) && !is_numericint($_POST['distance'])) {
+			$input_errors[] = gettext("Distance must be an integer.");
+		}
+		if (isset($_POST['standard']) && (stristr($_POST['standard'], '11na') || stristr($_POST['standard'], '11a'))) {
+			if ($_POST['channel'] != 0 && $_POST['channel'] < 15) {
+				$input_errors[] = gettext("Channel selected is not valid for 802.11a or 802.11na.");
+			}
+		}
+		if (isset($_POST['standard']) && ($_POST['standard'] == "11b" || $_POST['standard'] == "11g")) {
+			if ($_POST['channel'] > 14) {
+				$input_errors[] = gettext("Channel selected is not valid for 802.11b or 802.11g.");
+			}
+		}
+		if (!empty($_POST['protmode']) && !in_array($_POST['protmode'], array("off", "cts", "rtscts"))) {
+			$input_errors[] = gettext("Invalid option chosen for OFDM Protection Mode");
+		}
 		/* loop through keys and enforce size */
 		for ($i = 1; $i <= 4; $i++) {
 			if ($_POST['key' . $i]) {
@@ -841,7 +870,7 @@ if ($_POST['apply']) {
 				}
 				if(strlen($_POST['key' . $i]) == 28)
 					continue;
-				$input_errors[] =  gettext("Invalid WEP key size.   Sizes should be 40 (64) bit keys or 104 (128) bit.");
+				$input_errors[] =  gettext("Invalid WEP key. Enter a valid 40, 64, 104 or 128 bit WEP key.");
 				break;
 			}
 		}
@@ -849,7 +878,12 @@ if ($_POST['apply']) {
 		if ($_POST['passphrase']) {
 			$passlen = strlen($_POST['passphrase']);
 			if ($passlen < 8 || $passlen > 63)
-				$input_errors[] = gettext("The length of the passphrase should be between 8 and 63 characters.");
+				$input_errors[] = gettext("The WPA passphrase must be between 8 and 63 characters long.");
+		}
+		if ($_POST['wpa_enable'] == "yes") {
+			if (empty($_POST['passphrase']) && stristr($_POST['wpa_key_mgmt'], "WPA-PSK")) {
+				$input_errors[] = gettext("A WPA Passphrase must be specified when WPA PSK is enabled.");
+			}
 		}
 	}
 	if (!$input_errors) {
@@ -2919,8 +2953,14 @@ $types6 = array("none" => gettext("None"), "staticv6" => gettext("Static IPv6"),
 								foreach($wl_modes as $wl_standard => $wl_channels) {
 									$rowIndex++;
 									echo "<option ";
-									if ($pconfig['standard'] == "$wl_standard")
+									if ($pconfig['standard'] == "$wl_standard") {
 										echo "selected=\"selected\" ";
+									}
+									if ($pconfig['standard'] == "") {
+										if ($wl_standard == "11ng") {
+											echo "selected=\"selected\" ";
+										}
+									}
 									echo "value=\"$wl_standard\">802.$wl_standard</option>\n";
 								}
 								if ($rowIndex == 0)
@@ -2946,6 +2986,7 @@ $types6 = array("none" => gettext("None"), "staticv6" => gettext("Static IPv6"),
 						<?php else: ?>
 						<input name="protmode" type="hidden" id="protmode" value="off" />
 						<?php endif; ?>
+						<?php /* txpower is disabled because of issues with it.
 						<tr>
 							<td valign="top" class="vncellreq"><?=gettext("Transmit power"); ?></td>
 							<td class="vtable">
@@ -2962,7 +3003,8 @@ $types6 = array("none" => gettext("None"), "staticv6" => gettext("Static IPv6"),
 								</select><br />
 								<?=gettext("Note: Typically only a few discreet power settings are available and the driver will use the setting closest to the specified value.  Not all adapters support changing the transmit power setting."); ?>
 							</td>
-						</tr>
+						</tr>*/
+						?>
 						<tr>
 							<td valign="top" class="vncellreq"><?=gettext("Channel"); ?></td>
 							<td class="vtable">
@@ -3046,7 +3088,7 @@ $types6 = array("none" => gettext("None"), "staticv6" => gettext("Static IPv6"),
 								<input name="distance" type="text" class="formfld unknown" id="distance" size="5" value="<?=htmlspecialchars($pconfig['distance']);?>" />
 								<br />
 								<?=gettext("Note: This field can be used to tune ACK/CTS timers to fit the distance between AP and Client"); ?><br />
-								<?=gettext("(measured in Meters and works only for Atheros based cards !)"); ?>
+								<?=gettext("(measured in meters)"); ?>
 							</td>
 						</tr>
 						<?php endif; ?>
@@ -3244,7 +3286,7 @@ $types6 = array("none" => gettext("None"), "staticv6" => gettext("Static IPv6"),
 										</td>
 									</tr>
 								</table>
-								<br /><?=gettext("Passphrase must be from 8 to 63 characters."); ?>
+								<br /><?=gettext("WPA Passphrase must be between 8 and 63 characters long."); ?>
 							</td>
 						</tr>
 						<tr>
@@ -3252,7 +3294,7 @@ $types6 = array("none" => gettext("None"), "staticv6" => gettext("Static IPv6"),
 							<td class="vtable">
 								<select name="wpa_mode" class="formselect" id="wpa_mode">
 									<option <?php if ($pconfig['wpa_mode'] == '1') echo "selected=\"selected\"";?> value="1"><?=gettext("WPA"); ?></option>
-									<option <?php if ($pconfig['wpa_mode'] == '2') echo "selected=\"selected\"";?> value="2"><?=gettext("WPA2"); ?></option>
+									<option <?php if ($pconfig['wpa_mode'] == '2' || !isset($pconfig['wpa_mode'])) echo "selected=\"selected\"";?> value="2"><?=gettext("WPA2"); ?></option>
 									<option <?php if ($pconfig['wpa_mode'] == '3') echo "selected=\"selected\"";?> value="3"><?=gettext("Both"); ?></option>
 								</select>
 							</td>
@@ -3283,7 +3325,7 @@ $types6 = array("none" => gettext("None"), "staticv6" => gettext("Static IPv6"),
 							<td class="vtable">
 								<select name="wpa_pairwise" class="formselect" id="wpa_pairwise">
 									<option <?php if ($pconfig['wpa_pairwise'] == 'CCMP TKIP') echo "selected=\"selected\"";?> value="CCMP TKIP"><?=gettext("Both"); ?></option>
-									<option <?php if ($pconfig['wpa_pairwise'] == 'CCMP') echo "selected=\"selected\"";?> value="CCMP"><?=gettext("AES (recommended)"); ?></option>
+									<option <?php if ($pconfig['wpa_pairwise'] == 'CCMP' || !isset($pconfig['wpa_pairwise'])) echo "selected=\"selected\"";?> value="CCMP"><?=gettext("AES (recommended)"); ?></option>
 									<option <?php if ($pconfig['wpa_pairwise'] == 'TKIP') echo "selected=\"selected\"";?> value="TKIP"><?=gettext("TKIP"); ?></option>
 								</select>
 							</td>
@@ -3292,14 +3334,14 @@ $types6 = array("none" => gettext("None"), "staticv6" => gettext("Static IPv6"),
 							<td valign="top" class="vncell"><?=gettext("Key Rotation"); ?></td>
 							<td class="vtable">
 								<input name="wpa_group_rekey" type="text" class="formfld unknown" id="wpa_group_rekey" size="30" value="<?php echo $pconfig['wpa_group_rekey'] ? $pconfig['wpa_group_rekey'] : "60";?>" />
-								<br /><?=gettext("Allowed values are 1-9999 but should not be longer than Master Key Regeneration time."); ?>
+								<br /><?=gettext("Allowed values are 1-9999. Must be longer than Master Key Regeneration time."); ?>
 							</td>
 						</tr>
 						<tr>
 							<td valign="top" class="vncell"><?=gettext("Master Key Regeneration"); ?></td>
 							<td class="vtable">
 								<input name="wpa_gmk_rekey" type="text" class="formfld" id="wpa_gmk_rekey" size="30" value="<?php echo $pconfig['wpa_gmk_rekey'] ? $pconfig['wpa_gmk_rekey'] : "3600";?>" />
-								<br /><?=gettext("Allowed values are 1-9999 but should not be shorter than Key Rotation time."); ?>
+								<br /><?=gettext("Allowed values are 1-9999. Must be shorter than Key Rotation time."); ?>
 							</td>
 						</tr>
 						<tr>

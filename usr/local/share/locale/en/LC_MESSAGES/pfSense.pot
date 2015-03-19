@@ -13559,11 +13559,11 @@ msgstr ""
 
 #: usr/local/www/interfaces.php:805
 msgid ""
-"Invalid WEP key size.   Sizes should be 40 (64) bit keys or 104 (128) bit."
+"Invalid WEP key. Enter a valid 40, 64, 104 or 128 bit WEP key."
 msgstr ""
 
 #: usr/local/www/interfaces.php:813
-msgid "The length of the passphrase should be between 8 and 63 characters."
+msgid "The WPA passphrase must be between 8 and 63 characters long."
 msgstr ""
 
 #: usr/local/www/interfaces.php:1383
@@ -14540,7 +14540,7 @@ msgid ""
 msgstr ""
 
 #: usr/local/www/interfaces.php:3016
-msgid "(measured in Meters and works only for Atheros based cards !)"
+msgid "(measured in meters)"
 msgstr ""
 
 #: usr/local/www/interfaces.php:3021
@@ -14750,7 +14750,7 @@ msgid "PSK:"
 msgstr ""
 
 #: usr/local/www/interfaces.php:3214
-msgid "Passphrase must be from 8 to 63 characters."
+msgid "WPA Passphrase must be between 8 and 63 characters long."
 msgstr ""
 
 #: usr/local/www/interfaces.php:3218
@@ -14815,7 +14815,7 @@ msgstr ""
 
 #: usr/local/www/interfaces.php:3262
 msgid ""
-"Allowed values are 1-9999 but should not be longer than Master Key "
+"Allowed values are 1-9999. Must be longer than Master Key "
 "Regeneration time."
 msgstr ""
 
@@ -14825,7 +14825,7 @@ msgstr ""
 
 #: usr/local/www/interfaces.php:3269
 msgid ""
-"Allowed values are 1-9999 but should not be shorter than Key Rotation time."
+"Allowed values are 1-9999. Must be shorter than Key Rotation time."
 msgstr ""
 
 #: usr/local/www/interfaces.php:3273

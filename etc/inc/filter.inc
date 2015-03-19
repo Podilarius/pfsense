@@ -457,26 +457,28 @@ function filter_configure_sync($delete_states_if_needed = true) {
 	update_filter_reload_status(gettext("Starting up layer7 daemon"));
 	layer7_start_l7daemon();
 
-	if (!empty($filterdns)) {
-		@file_put_contents("{$g['varetc_path']}/filterdns.conf", implode("", $filterdns));
-		unset($filterdns);
-		if (isvalidpid("{$g['varrun_path']}/filterdns.pid")) {
-			sigkillbypid("{$g['varrun_path']}/filterdns.pid", "HUP");
-		} else {
-			/*
-			 * FilterDNS has three debugging levels. The default chosen is 1.
-			 * Available are level 2 and greater then 2.
-			 */
-			if (isset($config['system']['aliasesresolveinterval']) && is_numeric($config['system']['aliasesresolveinterval'])) {
-				$resolve_interval = $config['system']['aliasesresolveinterval'];
+	if (!platform_booting()) {
+		if (!empty($filterdns)) {
+			@file_put_contents("{$g['varetc_path']}/filterdns.conf", implode("", $filterdns));
+			unset($filterdns);
+			if (isvalidpid("{$g['varrun_path']}/filterdns.pid")) {
+				sigkillbypid("{$g['varrun_path']}/filterdns.pid", "HUP");
 			} else {
-				$resolve_interval = 300;
+				/*
+				 * FilterDNS has three debugging levels. The default chosen is 1.
+				 * Available are level 2 and greater then 2.
+				 */
+				if (isset($config['system']['aliasesresolveinterval']) && is_numeric($config['system']['aliasesresolveinterval'])) {
+					$resolve_interval = $config['system']['aliasesresolveinterval'];
+				} else {
+					$resolve_interval = 300;
+				}
+				mwexec("/usr/local/sbin/filterdns -p {$g['varrun_path']}/filterdns.pid -i {$resolve_interval} -c {$g['varetc_path']}/filterdns.conf -d 1");
 			}
-			mwexec("/usr/local/sbin/filterdns -p {$g['varrun_path']}/filterdns.pid -i {$resolve_interval} -c {$g['varetc_path']}/filterdns.conf -d 1");
+		} else {
+			killbypid("{$g['varrun_path']}/filterdns.pid");
+			@unlink("{$g['varrun_path']}/filterdns.pid");
 		}
-	} else {
-		killbypid("{$g['varrun_path']}/filterdns.pid");
-		@unlink("{$g['varrun_path']}/filterdns.pid");
 	}
 
 	/* run items scheduled for after filter configure run */
@@ -2428,11 +2430,11 @@ function filter_generate_address(& $rule, $target = "source", $isnat = false) {
 			$matches = "";
 			if ($rule['ipprotocol'] == "inet6") {
 				if (preg_match("/opt([0-9]*)$/", $rule[$target]['network'], $optmatch)) {
-					$opt_ip = $FilterIflist["opt{$optmatch[1]}"]['ipv6'];
-					if (!is_ipaddrv6($opt_ip)) {
+					$opt_sa = $FilterIflist["opt{$optmatch[1]}"]['sav6'];
+					if (!is_ipaddrv6($opt_sa)) {
 						return "";
 					}
-					$src = $opt_ip . "/" . $FilterIflist["opt{$optmatch[1]}"]['snv6'];
+					$src = $opt_sa . "/" . $FilterIflist["opt{$optmatch[1]}"]['snv6'];
 				/* check for opt$NUMip here */
 				} else if (preg_match("/opt([0-9]*)ip/", $rule[$target]['network'], $matches)) {
 					$src = $FilterIflist["opt{$matches[1]}"]['ipv6'];
@@ -2445,11 +2447,11 @@ function filter_generate_address(& $rule, $target = "source", $isnat = false) {
 				}
 			} else {
 				if (preg_match("/opt([0-9]*)$/", $rule[$target]['network'], $optmatch)) {
-					$opt_ip = $FilterIflist["opt{$optmatch[1]}"]['ip'];
-					if (!is_ipaddrv4($opt_ip)) {
+					$opt_sa = $FilterIflist["opt{$optmatch[1]}"]['sa'];
+					if (!is_ipaddrv4($opt_sa)) {
 						return "";
 					}
-					$src = $opt_ip . "/" . $FilterIflist["opt{$optmatch[1]}"]['sn'];
+					$src = $opt_sa . "/" . $FilterIflist["opt{$optmatch[1]}"]['sn'];
 				/* check for opt$NUMip here */
 				} else if (preg_match("/opt([0-9]*)ip/", $rule[$target]['network'], $matches)) {
 					$src = $FilterIflist["opt{$matches[1]}"]['ip'];

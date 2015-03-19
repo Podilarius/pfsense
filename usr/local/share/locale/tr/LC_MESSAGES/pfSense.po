@@ -14104,13 +14104,13 @@ msgstr "SSID"
 
 #: usr/local/www/interfaces.php:805
 msgid ""
-"Invalid WEP key size.   Sizes should be 40 (64) bit keys or 104 (128) bit."
+"Invalid WEP key. Enter a valid 40, 64, 104 or 128 bit WEP key."
 msgstr ""
 "WEP anahtar boyutu geçersiz. Anahtar boyutu 40 (64) bit ya da 104 (128) bit "
 "olmalıdır."
 
 #: usr/local/www/interfaces.php:813
-msgid "The length of the passphrase should be between 8 and 63 characters."
+msgid "The WPA passphrase must be between 8 and 63 characters long."
 msgstr "Şifre uzunluğu 8 ila 63 karakter arası olmalıdır."
 
 #: usr/local/www/interfaces.php:1383
@@ -15140,7 +15140,7 @@ msgstr ""
 "mesafeyi belielemek için ACK/CTS zamanlayıcılarını ayarlamada kullanılabilir"
 
 #: usr/local/www/interfaces.php:3016
-msgid "(measured in Meters and works only for Atheros based cards !)"
+msgid "(measured in meters)"
 msgstr ""
 "(metre cinsinden ölçülür ve sadece Atheros tabanlı kartlarda çalışır !)"
 
@@ -15380,7 +15380,7 @@ msgid "PSK:"
 msgstr "PSK:"
 
 #: usr/local/www/interfaces.php:3214
-msgid "Passphrase must be from 8 to 63 characters."
+msgid "WPA Passphrase must be between 8 and 63 characters long."
 msgstr "Şifre 8 ila 63 karakter olmalıdır."
 
 #: usr/local/www/interfaces.php:3218
@@ -15445,7 +15445,7 @@ msgstr "Anahtar Rotasyonu"
 
 #: usr/local/www/interfaces.php:3262
 msgid ""
-"Allowed values are 1-9999 but should not be longer than Master Key "
+"Allowed values are 1-9999. Must be longer than Master Key "
 "Regeneration time."
 msgstr ""
 "İzin verilen değerler 1 ile 9999 arasındadır ama Ana Anahtar Yenileme "
@@ -15457,7 +15457,7 @@ msgstr "Ana Anahtar Yenileme"
 
 #: usr/local/www/interfaces.php:3269
 msgid ""
-"Allowed values are 1-9999 but should not be shorter than Key Rotation time."
+"Allowed values are 1-9999. Must be shorter than Key Rotation time."
 msgstr ""
 "İzin verilen değerler 1 ile 9999 arasındadır ama Anahtar Rotasyon zamanından "
 "fazla olmamalıdır."

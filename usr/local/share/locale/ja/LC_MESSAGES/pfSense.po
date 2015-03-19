@@ -21626,7 +21626,7 @@ msgstr ""無効なWEPキーのサイズ。サイズは40 （ 64 ）ビットキ�
 #: usr/local/www/interfaces.php:662 usr/local/www/interfaces.php:677
 #: usr/local/www/interfaces.php:718 usr/local/www/interfaces.php:714
 #: usr/local/www/interfaces.php:714
-msgid "The length of the passphrase should be between 8 and 63 characters."
+msgid "The WPA passphrase must be between 8 and 63 characters long."
 msgstr "パスフレーズの長さは8 〜63文字にする必要があります。"
 
 #: usr/local/www/interfaces.php:659
@@ -22822,7 +22822,7 @@ msgstr "APとクライアント間の「注意このフィールドには、距�
 #: usr/local/www/interfaces.php:2271 usr/local/www/interfaces.php:2301
 #: usr/local/www/interfaces.php:2347 usr/local/www/interfaces.php:2336
 #: usr/local/www/interfaces.php:2336
-msgid "(measured in Meters and works only for Atheros based cards !)"
+msgid "(measured in meters)"
 msgstr "（メートルで測定し、唯一のAtherosベースのカードのために働く ！ ）"
 
 #: usr/local/www/interfaces.php:2110 usr/local/www/interfaces.php:2288
@@ -23167,7 +23167,7 @@ msgstr "PSK ："
 #: usr/local/www/interfaces.php:2469 usr/local/www/interfaces.php:2499
 #: usr/local/www/interfaces.php:2545 usr/local/www/interfaces.php:2534
 #: usr/local/www/interfaces.php:2534
-msgid "Passphrase must be from 8 to 63 characters."
+msgid "WPA Passphrase must be between 8 and 63 characters long."
 msgstr "パスフレーズは、8〜 63文字でなければなりません。"
 
 #: usr/local/www/interfaces.php:2305 usr/local/www/interfaces.php:2485
@@ -23278,7 +23278,7 @@ msgstr "キーローテーション"
 #: usr/local/www/interfaces.php:2593 usr/local/www/interfaces.php:2582
 #: usr/local/www/interfaces.php:2582
 msgid ""
-"Allowed values are 1-9999 but should not be longer than Master Key "
+"Allowed values are 1-9999. Must be longer than Master Key "
 "Regeneration time."
 msgstr ""指定できる値は1から9999ですが、マスターキーよりも長くすべきではない」再生時間。"
 
@@ -23294,7 +23294,7 @@ msgstr "マスターキーの再生成"
 #: usr/local/www/interfaces.php:2600 usr/local/www/interfaces.php:2589
 #: usr/local/www/interfaces.php:2589
 msgid ""
-"Allowed values are 1-9999 but should not be shorter than Key Rotation time."
+"Allowed values are 1-9999. Must be shorter than Key Rotation time."
 msgstr ""指定できる値は1から9999ですが、キーローテーション時間より短くすべきではない。"
 
 #: usr/local/www/interfaces.php:2360 usr/local/www/interfaces.php:2540
