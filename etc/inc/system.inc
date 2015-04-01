@@ -184,7 +184,7 @@ function system_resolvconf_generate($dynupdate = false) {
 	}
 	if (is_array($syscfg['dnsserver'])) {
 		foreach ($syscfg['dnsserver'] as $sys_dnsserver) {
-			if ($sys_dnsserver && (!in_array($sys_dnsserver, $ns)) {
+			if ($sys_dnsserver && (!in_array($sys_dnsserver, $ns))) {
 				$resolvconf .= "nameserver $sys_dnsserver\n";
 			}
 		}
@@ -2145,7 +2145,7 @@ function system_check_reset_button() {
 		case 'wrap':
 		case 'FW7541':
 		case 'APU':
-		case 'C2358':
+		case 'RCC-VE':
 			break;
 		default:
 			return 0;
@@ -2201,7 +2201,7 @@ function system_identify_specific_platform() {
 			return (array('name' => 'APU', 'descr' => 'Netgate APU'));
 			break;
 		case 'RCC-VE':
-			return (array('name' => 'C2358', 'descr' => 'Netgate C2358'));
+			return (array('name' => 'RCC-VE', 'descr' => 'Netgate RCC-VE'));
 			break;
 	}
 
