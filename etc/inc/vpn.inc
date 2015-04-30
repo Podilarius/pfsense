@@ -1172,20 +1172,12 @@ EOD;
 			if (!isset($ph1ent['mobile']) && $keyexchange == 'ikev1') {
 				if (!empty($rightsubnet_spec)) {
 					$ipsecfin = '';
-					$keyingtries = 3;
 					foreach ($rightsubnet_spec as $idx => $rsubnet) {
 						$ipsecfin .= "\nconn con{$ph1ent['ikeid']}00{$idx}\n";
-						if (!empty($reqids[$idx])) {
-							$ipsecfin .= "\treqid = " . $reqids[$idx] . "\n";
-						}
+						//if (!empty($reqids[$idx])) {
+						//	$ipsecfin .= "\treqid = " . $reqids[$idx] . "\n";
+						//}
 						$ipsecfin .= $ipsecconnect;
-						/*
-						 * This is for making strongswan consider the various similar
-						 * connection profiles as different and forces it to create
-						 * separate IKE SAs for each subnet from P2
-						 */
-						$ipsecfin .= "\tkeyingtries = {$keyingtries}\n";
-						$keyingtries++;
 						$ipsecfin .= "\trightsubnet = {$rsubnet}\n";
 						$ipsecfin .= "\tleftsubnet = " . $leftsubnet_spec[$idx] . "\n";
 					}
@@ -1194,9 +1186,9 @@ EOD;
 				}
 			} else {
 				$ipsecfin = "\nconn con{$ph1ent['ikeid']}\n";
-				if (!empty($reqids[$idx])) {
-					$ipsecfin .= "\treqid = " . $reqids[0] . "\n";
-				}
+				//if (!empty($reqids[$idx])) {
+				//	$ipsecfin .= "\treqid = " . $reqids[0] . "\n";
+				//}
 				$ipsecfin .= $ipsecconnect;
 				if (!isset($ph1ent['mobile']) && !empty($rightsubnet_spec)) {
 					$tempsubnets = array();
