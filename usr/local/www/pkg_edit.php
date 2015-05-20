@@ -466,7 +466,7 @@ if ($pkg['tabs'] <> "") {
 <?php
 	$cols = 0;
 	$savevalue = gettext("Save");
-	if ($pkg['savetext'] <> "") { {
+	if ($pkg['savetext'] <> "") {
 		$savevalue = $pkg['savetext'];
 	}
 	/* If a package's XML has <advanced_options/> configured, then setup
@@ -507,8 +507,11 @@ if ($pkg['tabs'] <> "") {
 		}
 
 		$size = "";
+		$colspan="";
 		if (isset($pkga['dontdisplayname'])) {
 			$input="";
+			// We do not want a separate tr tag pair for each field in a set of combined fields.
+			// The case of putting the first tr tag at the beginning of a combine-fields set is already handled above.
 			if (!isset($pkga['combinefields'])) {
 				$input .= "<tr valign='top' id='tr_{$pkga['fieldname']}'>";
 			}
@@ -528,7 +531,13 @@ if ($pkg['tabs'] <> "") {
 			if (isset($pkga['required'])) {
 				$req = 'req';
 			}
-			$input= "<tr><td valign='top' width=\"22%\" class=\"vncell{$req}\">";
+			$input="";
+			// We do not want a separate tr tag pair for each field in a set of combined fields.
+			// The case of putting the first tr tag at the beginning of a combine-fields set is already handled above.
+			if (!isset($pkga['combinefields'])) {
+				$input .= "<tr>";
+			}
+			$input .= "<td valign='top' width=\"22%\" class=\"vncell{$req}\">";
 			$input .= fixup_string($pkga['fielddescr']);
 			$input .= "</td>";
 			if (isset($pkga['advancedfield']) && isset($adv_filed_count)) {
@@ -539,7 +548,7 @@ if ($pkg['tabs'] <> "") {
 			}
 		}
 		if ($pkga['combinefields']=="begin") {
-			$input="<td class=\"vncell\"><table summary=\"advanced\">";
+			$input="<td class=\"vncell\"><table summary=\"advanced\"><tr>";
 			if (isset($pkga['advancedfield']) && isset($adv_filed_count)) {
 				$advanced .= $input;
 			} else {
@@ -999,12 +1008,14 @@ if ($pkg['tabs'] <> "") {
 		}
 		#check combinefields options
 		if (isset($pkga['combinefields'])) {
-			$input="</td>";
+			// At the end of each combined-fields field we just want to end a td tag.
+			$input = "</td>";
+			// The tr tag and... ends are only used to end the whole set of combined fields.
 			if ($pkga['combinefields']=="end") {
-				$input.="</table></td></tr>";
+				$input.="</tr></table></td></tr>";
 			}
 		} else {
-			$input= "</td></tr>";
+			$input = "</td></tr>";
 			if ($pkga['usecolspan2']) {
 				$input.= "</tr><br />";
 			}
