@@ -832,14 +832,15 @@ function system_syslogd_start() {
 
 	$syslogd_extra = "";
 	if (isset($syslogcfg)) {
-		$separatelogfacilities = array('ntp','ntpd','ntpdate','charon','ipsec_starter','openvpn','pptps','poes','l2tps','relayd','hostapd','dnsmasq','filterdns','unbound','dhcpd','dhcrelay','dhclient','dhcp6c','apinger','radvd','routed','olsrd','zebra','ospfd','bgpd','miniupnpd','filterlog');
+		$separatelogfacilities = array('ntp', 'ntpd', 'ntpdate', 'charon', 'ipsec_starter', 'openvpn', 'pptps', 'poes', 'l2tps', 'relayd', 'hostapd', 'dnsmasq', 'filterdns', 'unbound', 'dhcpd', 'dhcrelay', 'dhclient', 'dhcp6c', 'apinger', 'radvd', 'routed', 'olsrd', 'zebra', 'ospfd', 'bgpd', 'miniupnpd', 'filterlog');
 		$syslogconf = "";
 		if ($config['installedpackages']['package']) {
 			foreach ($config['installedpackages']['package'] as $package) {
 				if ($package['logging']) {
 					array_push($separatelogfacilities, $package['logging']['facilityname']);
-					if (!is_file($g['varlog_path'].'/'.$package['logging']['logfilename']))
+					if (!is_file($g['varlog_path'].'/'.$package['logging']['logfilename'])) {
 						mwexec("{$log_create_directive} {$log_size} {$g['varlog_path']}/{$package['logging']['logfilename']}");
+					}
 					$syslogconf .= "!{$package['logging']['facilityname']}\n*.*\t\t\t\t\t\t {$log_directive}{$g['varlog_path']}/{$package['logging']['logfilename']}\n";
 				}
 			}
@@ -1564,6 +1565,30 @@ function system_ntp_setup_gps($serialport) {
 	unlink_if_exists($gps_device);
 	@symlink($serialport, $gps_device);
 
+	$gpsbaud = '4800';
+	if (is_array($config['ntpd']) && is_array($config['ntpd']['gps']) && !empty($config['ntpd']['gps']['speed'])) {
+		switch ($config['ntpd']['gps']['speed']) {
+			case '16':
+				$gpsbaud = '9600';
+				break;
+			case '32':
+				$gpsbaud = '19200';
+				break;
+			case '48':
+				$gpsbaud = '38400';
+				break;
+			case '64':
+				$gpsbaud = '57600';
+				break;
+			case '80':
+				$gpsbaud = '115200';
+				break;
+		}
+	}
+
+	/* Configure the serial port for raw IO and set the speed */
+	mwexec("stty -f {$serialport}.init raw speed {$gpsbaud}");
+
 	/* Send the following to the GPS port to initialize the GPS */
 	if (is_array($config['ntpd']) && is_array($config['ntpd']['gps']) && !empty($config['ntpd']['gps']['type'])) {
 		$gps_init = base64_decode($config['ntpd']['gps']['initcmd']);
@@ -1573,30 +1598,10 @@ function system_ntp_setup_gps($serialport) {
 
 	/* XXX: Why not file_put_contents to the device */
 	@file_put_contents('/tmp/gps.init', $gps_init);
-	`cat /tmp/gps.init > $serialport`;
+	mwexec("cat /tmp/gps.init > {$serialport}");
 
 	/* Add /etc/remote entry in case we need to read from the GPS with tip */
 	if (intval(`grep -c '^gps0' /etc/remote`) == 0) {
-		$gpsbaud = '4800';
-		if (is_array($config['ntpd']) && is_array($config['ntpd']['gps']) && !empty($config['ntpd']['gps']['speed'])) {
-			switch ($config['ntpd']['gps']['speed']) {
-				case '16':
-					$gpsbaud = '9600';
-					break;
-				case '32':
-					$gpsbaud = '19200';
-					break;
-				case '48':
-					$gpsbaud = '38400';
-					break;
-				case '64':
-					$gpsbaud = '57600';
-					break;
-				case '80':
-					$gpsbaud = '115200';
-					break;
-			}
-		}
 		@file_put_contents("/etc/remote", "gps0:dv={$serialport}:br#{$gpsbaud}:pa=none:", FILE_APPEND);
 	}
 
@@ -1872,6 +1877,9 @@ function system_ntp_configure($start_ntpd=true) {
 	if (is_array($interfaces) && count($interfaces)) {
 		$ntpcfg .= "interface ignore all\n";
 		foreach ($interfaces as $interface) {
+			if (strstr($interface, "_vip")) {
+				$interface = get_configured_carp_interface_list($interface);
+			}
 			if (!is_ipaddr($interface)) {
 				$interface = get_real_interface($interface);
 			}
