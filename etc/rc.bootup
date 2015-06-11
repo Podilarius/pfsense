@@ -1,8 +1,5 @@
 #!/usr/local/bin/php -f
 <?php
-ini_set('apc.enabled', '0');
-
-/* $Id$ */
 /*
 	rc.bootup
 	part of pfSense by Scott Ullrich
@@ -459,7 +456,9 @@ unset($g['booting']);
 if ($ipsec_dynamic_hosts) {
 	vpn_ipsec_configure();
 }
-filter_configure();
+if ($ipsec_dynamic_hosts || !empty($filterdns)) {
+	filter_configure();
+}
 
 led_normalize();
 
