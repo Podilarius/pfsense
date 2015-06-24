@@ -647,14 +647,6 @@ EOD;
 
 				if (!empty($ph1ent['pre-shared-key'])) {
 					$pskconf .= "{$myid} {$peerid} : PSK 0s" . base64_encode(trim($ph1ent['pre-shared-key'])) . "\n";
-
-					/*
-					 * XXX: Remove after following strongswan issue is fixed:
-					 *https://wiki.strongswan.org/issues/1004
-					 */
-					if ($peerid_type == 'address' && is_fqdn($ph1ent['remote-gateway'])) {
-						$pskconf .= "{$myid} @{$ph1ent['remote-gateway']} : PSK 0s" . base64_encode(trim($ph1ent['pre-shared-key'])) . "\n";
-					}
 				}
 			}
 		}
@@ -1255,7 +1247,8 @@ EOD;
 		if (isvalidpid("{$g['varrun_path']}/starter.charon.pid")) {
 			/* Update configuration changes */
 			/* Read secrets */
-			sigkillbypid("{$g['varrun_path']}/starter.charon.pid", 'USR1');
+			mwexec("/usr/local/sbin/ipsec rereadall", false);
+			mwexec("/usr/local/sbin/ipsec reload", false);
 		} else {
 			mwexec("/usr/local/sbin/ipsec start", false);
 		}
