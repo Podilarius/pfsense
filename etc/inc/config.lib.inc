@@ -218,6 +218,7 @@ function restore_backup($file) {
 		conf_mount_rw();
 		unlink_if_exists("{$g['tmp_path']}/config.cache");
 		copy("$file", "/cf/conf/config.xml");
+		pfSense_fsync("/cf/conf/config.xml");
 		disable_security_checks();
 		log_error(sprintf(gettext('%1$s is restoring the configuration %2$s'), $g['product_name'], $file));
 		file_notice("config.xml", sprintf(gettext('%1$s is restoring the configuration %2$s'), $g['product_name'], $file), "pfSenseConfigurator", "");
@@ -379,7 +380,7 @@ function conf_mount_ro() {
 
 	clear_subsystem_dirty('mount');
 	/* sync data, then force a remount of /cf */
-	pfSense_sync();
+	pfSense_fsync($g['cf_path']);
 	mwexec("/sbin/mount -u -r -f -o sync,noatime {$g['cf_path']}");
 	mwexec("/sbin/mount -u -r -f -o sync,noatime /");
 }
@@ -486,16 +487,14 @@ function safe_write_file($file, $content, $force_binary) {
 	fflush($fd);
 	fclose($fd);
 
-	if (!rename($tmp_file, $file)) {
+	if (!pfSense_fsync($tmp_file) || !rename($tmp_file, $file)) {
 		// Unable to move temporary file to original
 		@unlink($tmp_file);
 		return false;
 	}
 
 	// Sync file before returning
-	pfSense_sync();
-
-	return true;
+	return pfSense_fsync(dirname($file));
 }
 
 /****f* config/write_config
