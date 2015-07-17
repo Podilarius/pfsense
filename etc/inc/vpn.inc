@@ -825,6 +825,10 @@ EOD;
 			list ($myid_type, $myid_data) = ipsec_find_id($ph1ent, 'local');
 			if ($myid_type != 'address' && $myid_type != 'keyid') {
 				$myid_data = "{$myid_type}:{$myid_data}";
+				/* asn1dn needs double quotes */
+				if ($myid_type == "asn1dn") {
+					$myid_data = '"' . $myid_data . '"';
+				}
 			}
 
 			/* Only specify peer ID if we are not dealing with a mobile PSK-only tunnel */
@@ -833,6 +837,10 @@ EOD;
 				list ($peerid_type, $peerid_data) = ipsec_find_id($ph1ent, 'peer', $rgmap);
 				if ($peerid_type != 'address' && $peerid_type != 'keyid') {
 					$peerid_spec = "{$peerid_type}:{$peerid_data}";
+					/* asn1dn needs double quotes */
+					if ($peerid_type == "asn1dn") {
+						$peerid_spec = '"' . $peerid_spec . '"';
+					}
 				} else {
 					$peerid_spec = $peerid_data;
 				}
@@ -1650,16 +1658,16 @@ function vpn_pppoe_configure(&$pppoecfg) {
 				$clientip = long2ip32(ip2long($pppoecfg['remoteip']) + $i);
 
 				if (isset($pppoecfg['radius']['radiusissueips']) && isset($pppoecfg['radius']['server']['enable'])) {
-					$isssue_ip_type = "set ipcp ranges {$pppoecfg['localip']}/32 0.0.0.0/0";
+					$issue_ip_type = "set ipcp ranges {$pppoecfg['localip']}/32 0.0.0.0/0";
 				} else {
-					$isssue_ip_type = "set ipcp ranges {$pppoecfg['localip']}/32 {$clientip}/32";
+					$issue_ip_type = "set ipcp ranges {$pppoecfg['localip']}/32 {$clientip}/32";
 				}
 
 				$mpdconf .=<<<EOD
 
 poes{$pppoecfg['pppoeid']}{$i}:
 	new -i poes{$pppoecfg['pppoeid']}{$i} poes{$pppoecfg['pppoeid']}{$i} poes{$pppoecfg['pppoeid']}{$i}
-	{$isssue_ip_type}
+	{$issue_ip_type}
 	load pppoe_standard
 
 EOD;
@@ -1877,16 +1885,16 @@ EOD;
 				$clientip = long2ip32(ip2long($l2tpcfg['remoteip']) + $i);
 
 				if (isset ($l2tpcfg['radius']['radiusissueips']) && isset ($l2tpcfg['radius']['enable'])) {
-					$isssue_ip_type = "set ipcp ranges {$l2tpcfg['localip']}/32 0.0.0.0/0";
+					$issue_ip_type = "set ipcp ranges {$l2tpcfg['localip']}/32 0.0.0.0/0";
 				} else {
-					$isssue_ip_type = "set ipcp ranges {$l2tpcfg['localip']}/32 {$clientip}/32";
+					$issue_ip_type = "set ipcp ranges {$l2tpcfg['localip']}/32 {$clientip}/32";
 				}
 
 				$mpdconf .=<<<EOD
 
 l2tp{$i}:
 	new -i l2tp{$i} l2tp{$i} l2tp{$i}
-	{$isssue_ip_type}
+	{$issue_ip_type}
 	load l2tp_standard
 
 EOD;
