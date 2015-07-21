@@ -153,6 +153,7 @@ global $g, $config;
 /* System stats/info */
 defCmdT("System uptime", "/usr/bin/uptime");
 defCmdT("Interfaces", "/sbin/ifconfig -a");
+defCmdT("Interface Statistics","/usr/bin/netstat -ni");
 defCmdT("Top Process Info", "/usr/bin/top | /usr/bin/head -n5");
 defCmdT("Processes", "/bin/ps xauww");
 defCmdT("Mounted Filesystems", "/sbin/mount");
@@ -256,7 +257,8 @@ pre {
 "(passwords, maybe also IP addresses) before posting " .
 "information from this page in public places (like mailing lists)"); ?>!</strong></span><br />
 <?=gettext("Passwords in config.xml have been automatically removed"); ?>.<br /><br />
-<?=gettext("When the page has finished loading, the output will be stored in {$output_file}. It may be downloaded via Diagnostics > Command Prompt or scp."); ?>
+<?=gettext("When the page has finished loading, the output will be stored in {$output_file}. It may be downloaded via scp or "); ?>
+<a href="/exec.php?dlPath=<?= $output_file ?>"><?=gettext("Diagnostics > Command Prompt")?></a>
 
 <div id="cmdspace" style="width:700px">
 <?php listCmds(); ?>
