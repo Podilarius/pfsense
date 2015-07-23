@@ -2547,9 +2547,11 @@ function upgrade_066_to_067() {
 	global $config;
 	if (isset($config['system']['ca'])) {
 		$config['ca'] = $config['system']['ca'];
+		unset($config['system']['ca']);
 	}
 	if (isset($config['system']['cert'])) {
 		$config['cert'] = $config['system']['cert'];
+		unset($config['system']['cert']);
 	}
 }
 
@@ -3053,9 +3055,6 @@ function upgrade_085_to_086() {
 function upgrade_086_to_087() {
 	global $config, $dummynet_pipe_list;
 
-	if (!is_array($config['filter']) || !is_array($config['filter']['rule'])) {
-		return;
-	}
 	if (!is_array($config['dnshaper']) || !is_array($config['dnshaper']['queue'])) {
 		return;
 	}
@@ -3075,6 +3074,10 @@ function upgrade_086_to_087() {
 	}
 
 	unset($dnqueue_number, $dnpipe_number, $qidx, $idx, $dnpipe, $dnqueue);
+
+	if (!is_array($config['filter']) || !is_array($config['filter']['rule'])) {
+		return;
+	}
 
 	require_once("shaper.inc");
 	read_dummynet_config();
@@ -3438,7 +3441,7 @@ function upgrade_104_to_105() {
 	if (is_array($config['captiveportal'])) {
 		$zoneid = 2;
 		foreach ($config['captiveportal'] as $cpzone => $cpcfg) {
-			if (empty($cpfg['zoneid'])) {
+			if (empty($cpcfg['zoneid'])) {
 				$config['captiveportal'][$cpzone]['zoneid'] = $zoneid;
 				$zoneid += 2;
 			} else if ($cpcfg['zoneid'] > 4000) {
@@ -3751,6 +3754,14 @@ function upgrade_116_to_117() {
 
 function upgrade_117_to_118() {
 	global $config;
+
+	// Unset any old CA and Cert in the system section that might still be there from when upgrade_066_to_067 did not unset them.
+	if (isset($config['system']['ca'])) {
+		unset($config['system']['ca']);
+	}
+	if (isset($config['system']['cert'])) {
+		unset($config['system']['cert']);
+	}
 
 	if (!isset($config['ipsec']['phase1'])) {
 		return;
