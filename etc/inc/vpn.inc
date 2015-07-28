@@ -41,6 +41,7 @@
 */
 
 require_once("ipsec.inc");
+require_once("filter.inc");
 
 function vpn_ipsec_configure_loglevels($forconfig = false) {
 	global $config, $ipsec_loglevels;
@@ -590,7 +591,7 @@ EOD;
 	if (is_array($config['crl']) && count($config['crl'])) {
 		foreach ($config['crl'] as $crl) {
 			if (!isset($crl['text'])) {
-				log_error(sprintf(gettext("Error: Invalid CRL data for %s"), $crl['descr']));
+				log_error(sprintf(gettext("Warning: Missing CRL data for %s"), $crl['descr']));
 				continue;
 			}
 			$fpath = "{$crlpath}/{$crl['refid']}.crl";
@@ -761,9 +762,7 @@ EOD;
 				if ($ph1ent['iketype'] == "ikev2") {
 					$keyexchange = "ikev2";
 					//$passive = "start";
-				} else if ($ph1ent['iketype'] == "auto") {
-					$keyexchange = "ike";
-				}
+				} 
 			}
 
 			if (isset($ph1ent['mobile'])) {
@@ -858,11 +857,14 @@ EOD;
 				$leftid = "leftid = {$myid_data}";
 			}
 
-			/* Only specify peer ID if we are not dealing with a mobile PSK-only tunnel */
 			$peerid_spec = '';
-			if (!isset($ph1ent['mobile'])) {
+			if (isset($ph1ent['mobile']) && ($ph1ent['authentication_method'] == "pre_shared_key" || $ph1ent['authentication_method'] == "xauth_psk_server")) {
+				// Only specify peer ID if we are not dealing with mobile PSK
+			} else {
 				list ($peerid_type, $peerid_data) = ipsec_find_id($ph1ent, 'peer', $rgmap);
-				if ($peerid_type != 'address' && $peerid_type != 'keyid' && $peerid_type != 'asn1dn') {
+				if ($peerid_type == 'any') {
+					$peerid_spec = '';
+				} elseif ($peerid_type != 'address' && $peerid_type != 'keyid' && $peerid_type != 'asn1dn') {
 					$peerid_spec = "{$peerid_type}:{$peerid_data}";
 				} elseif ($peerid_type == "asn1dn") {
 					/* asn1dn needs double quotes */
