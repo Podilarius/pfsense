@@ -105,7 +105,7 @@ fi
 
 # Product details
 export PRODUCT_NAME=${PRODUCT_NAME:-"nonSense"}
-export PRODUCT_URL=${PRODUCT_VERSION:-""}
+export PRODUCT_URL=${PRODUCT_URL:-""}
 export PRODUCT_SRC=${PRODUCT_SRC:-"${BUILDER_ROOT}/src"}
 
 if [ "${PRODUCT_NAME}" = "pfSense" -a "${BUILD_AUTHORIZED_BY_ELECTRIC_SHEEP_FENCING}" != "yes" ]; then
@@ -199,17 +199,16 @@ export MEMORYDISK_SIZE=${MEMORYDISK_SIZE:-"768M"}
 export OVFTEMPLATE=${OVFTEMPLATE:-"${BUILDER_TOOLS}/templates/ovf/${PRODUCT_NAME}.ovf"}
 # / partition to be used by mkimg
 export OVFUFS=${OVFUFS:-"${PRODUCT_NAME}-disk1.ufs"}
+# Raw disk to be converted to vmdk
+export OVFRAW=${OVFRAW:-"${PRODUCT_NAME}-disk1.raw"}
 # On disk name of VMDK file included in OVA
 export OVFVMDK=${OVFVMDK:-"${PRODUCT_NAME}-disk1.vmdk"}
-# 10 gigabyte on disk VMDK size
-export OVADISKSIZE=${OVADISKSIZE:-"10737418240"}
-# first partition size (freebsd-ufs) GPT
-export OVA_FIRST_PART_SIZE=${OVA_FIRST_PART_SIZE:-"$((8*1024*1024*1024))"}
-# swap partition size (freebsd-swap) GPT -
-# remaining space of 10G-8G - 128 block beginning/loader
-export OVA_SWAP_PART_SIZE=${OVA_SWAP_PART_SIZE:-"4193725"}
-# 10737254400 = 10240MB = virtual box vmdk file size XXX grab this value from vbox creation
-export OVA_DISKSECTIONALLOCATIONUNITS=${OVA_DISKSECTIONALLOCATIONUNITS:-"10737254400"}
+# 8 gigabyte on disk VMDK size
+export VMDK_DISK_CAPACITY_IN_GB=${VMDK_DISK_CAPACITY_IN_GB:-"8"}
+# first partition size (freebsd-ufs)
+export OVA_FIRST_PART_SIZE=${OVA_FIRST_PART_SIZE:-"6g"}
+# swap partition size (freebsd-swap)
+export OVA_SWAP_PART_SIZE=${OVA_SWAP_PART_SIZE:-"2G"}
 # Temporary place to save files
 export OVA_TMP=${OVA_TMP:-"${SCRATCHDIR}/ova_tmp"}
 # end of OVF
