@@ -61,6 +61,21 @@ git_last_commit() {
 	echo "$CURRENT_COMMIT" > $SCRATCHDIR/build_commit_info.txt
 }
 
+# Create core pkg repository
+core_pkg_create_repo() {
+	if [ ! -d "${CORE_PKG_PATH}/All" ]; then
+		return
+	fi
+
+	echo -n ">>> Creating core packages repository... "
+	if pkg repo -q "${CORE_PKG_PATH}"; then
+		echo "Done!"
+	else
+		echo "Failed!"
+		print_error_pfS
+	fi
+}
+
 # Create core pkg (base, kernel)
 core_pkg_create() {
 	local _template="${1}"
@@ -117,8 +132,8 @@ core_pkg_create() {
 		rm -f ${_plist}.tmp ${plist}.exclude
 	fi
 
-	mkdir -p ${CORE_PKG_PATH}
-	if ! pkg create -o ${CORE_PKG_PATH} -p ${_plist} -r ${_root} -m ${_metadir}; then
+	mkdir -p ${CORE_PKG_PATH}/All
+	if ! pkg create -o ${CORE_PKG_PATH}/All -p ${_plist} -r ${_root} -m ${_metadir}; then
 		echo ">>> ERROR: Error building package ${_template} ${_flavor}"
 		print_error_pfS
 	fi
@@ -140,8 +155,10 @@ print_error_pfS() {
 		echo "Log saved on ${LOGFILE}" && \
 		tail -n20 ${LOGFILE} >&2
 	echo
-	echo "Press enter to continue."
-	read ans
+	if [ -z "${NOT_INTERACTIVE}" ]; then
+		echo "Press enter to continue."
+		read ans
+	fi
 	kill $$
 	exit 1
 }
@@ -245,7 +262,7 @@ build_all_kernels() {
 			print_error_pfS
 		fi
 
-		if [ -n "${NO_BUILDKERNEL:-}" -a -f "${CORE_PKG_PATH}/$(get_pkg_name kernel-${KERNEL_NAME}).txz" ]; then
+		if [ -n "${NO_BUILDKERNEL:-}" -a -f "${CORE_PKG_PATH}/All/$(get_pkg_name kernel-${KERNEL_NAME}).txz" ]; then
 			echo ">>> NO_BUILDKERNEL set, skipping build" | tee -a ${LOGFILE}
 			continue
 		fi
@@ -292,10 +309,10 @@ install_default_kernel() {
 	fi
 	mkdir -p $FINAL_CHROOT_DIR/pkgs
 	if [ -z "${2}" -o -n "${INSTALL_EXTRA_KERNELS}" ]; then
-		cp ${CORE_PKG_PATH}/$(get_pkg_name kernel-${KERNEL_NAME}).txz $FINAL_CHROOT_DIR/pkgs
+		cp ${CORE_PKG_PATH}/All/$(get_pkg_name kernel-${KERNEL_NAME}).txz $FINAL_CHROOT_DIR/pkgs
 		if [ -n "${INSTALL_EXTRA_KERNELS}" ]; then
 			for _EXTRA_KERNEL in $INSTALL_EXTRA_KERNELS; do
-				_EXTRA_KERNEL_PATH=${CORE_PKG_PATH}/$(get_pkg_name kernel-${_EXTRA_KERNEL}).txz
+				_EXTRA_KERNEL_PATH=${CORE_PKG_PATH}/All/$(get_pkg_name kernel-${_EXTRA_KERNEL}).txz
 				if [ -f "${_EXTRA_KERNEL_PATH}" ]; then
 					echo -n ". adding ${_EXTRA_KERNEL_PATH} on image /pkgs folder"
 					cp ${_EXTRA_KERNEL_PATH} $FINAL_CHROOT_DIR/pkgs
@@ -1100,7 +1117,7 @@ customize_stagearea_for_image() {
 	     "${1}" = "memstickadi" ]; then
 		install_bsdinstaller
 		mkdir -p ${FINAL_CHROOT_DIR}/pkgs
-		cp ${CORE_PKG_PATH}/*default-config*.txz ${FINAL_CHROOT_DIR}/pkgs
+		cp ${CORE_PKG_PATH}/All/*default-config*.txz ${FINAL_CHROOT_DIR}/pkgs
 	fi
 
 	if [ "${1}" = "nanobsd" -o \
@@ -1455,12 +1472,12 @@ pkg_chroot_add() {
 		print_error_pfS
 	fi
 
-	if [ ! -f ${CORE_PKG_PATH}/${_pkg} ]; then
+	if [ ! -f ${CORE_PKG_PATH}/All/${_pkg} ]; then
 		echo ">>> ERROR: Package ${_pkg} not found"
 		print_error_pfS
 	fi
 
-	cp ${CORE_PKG_PATH}/${_pkg} ${_target}
+	cp ${CORE_PKG_PATH}/All/${_pkg} ${_target}
 	pkg_chroot ${_target} add /${_pkg}
 	rm -f ${_target}/${_pkg}
 }
@@ -1574,6 +1591,32 @@ finish() {
 	echo ">>> Operation $0 has ended at $(date)"
 }
 
+pkg_repo_rsync() {
+	local _repo_path="${1}"
+
+	if [ -n "${DO_NOT_UPLOAD}" -o -z "${_repo_path}" -o ! -d "${_repo_path}" ]; then
+		return
+	fi
+
+	if [ -z "${LOGFILE}" ]; then
+		local _logfile="/dev/null"
+	else
+		local _logfile="${LOGFILE}"
+	fi
+
+	echo -n ">>> Sending updated repository to ${PKG_RSYNC_HOSTNAME}... " | tee -a ${_logfile}
+	if script -aq ${_logfile} rsync -ave "ssh -p ${PKG_RSYNC_SSH_PORT}" \
+		--timeout=60 --delete-delay ${_repo_path} \
+		${PKG_RSYNC_USERNAME}@${PKG_RSYNC_HOSTNAME}:${PKG_RSYNC_DESTDIR} >/dev/null 2>&1
+	then
+		echo "Done!" | tee -a ${_logfile}
+	else
+		echo "Failed!" | tee -a ${_logfile}
+		echo ">>> ERROR: An error occurred sending repo to remote hostname"
+		print_error_pfS
+	fi
+}
+
 poudriere_create_patch() {
 	local _jail_patch="${SCRATCHDIR}/poudriere_jail.${GIT_REPO_BRANCH_OR_TAG}.patch"
 
@@ -1618,6 +1661,24 @@ poudriere_possible_archs() {
 				_archs="${_archs} arm.armv6"
 			fi
 		fi
+	fi
+
+	if [ -n "${ARCH_LIST}" ]; then
+		local _found=0
+		for _desired_arch in ${ARCH_LIST}; do
+			_found=0
+			for _possible_arch in ${_archs}; do
+				if [ "${_desired_arch}" = "${_possible_arch}" ]; then
+					_found=1
+					break
+				fi
+			done
+			if [ ${_found} -eq 0 ]; then
+				echo ">>> ERROR: Impossible to build for arch: ${_desired_arch}"
+				print_error_pfS
+			fi
+		done
+		_archs="${ARCH_LIST}"
 	fi
 
 	echo ${_archs}
@@ -1783,20 +1844,6 @@ poudriere_update_jails() {
 
 	local native_xtools=""
 	for jail_arch in ${_archs}; do
-		local _run=0
-		if [ -n "${ARCH_LIST}" ]; then
-			for _arch in ${ARCH_LIST}; do
-				if [ "${jail_arch##*.}" = "${_arch}" ]; then
-					_run=1
-				fi
-			done
-		else
-			_run=1
-		fi
-
-		[ ${_run} -eq 0 ] \
-			&& continue
-
 		jail_name=$(poudriere_jail_name ${jail_arch})
 
 		if ! poudriere jail -i -j "${jail_name}" >/dev/null 2>&1; then
@@ -1881,20 +1928,7 @@ poudriere_bulk() {
 		fi
 
 		# ./ is intentional, it's a rsync trick to make it chdir to directory before send it
-		REPO_PATH="/usr/local/poudriere/data/packages/./${jail_name}-${POUDRIERE_PORTS_NAME}"
-		if [ -z "${DO_NOT_UPLOAD}" -a -d "${REPO_PATH}" ]; then
-			echo -n ">>> Sending updated repository to ${PKG_RSYNC_HOSTNAME}... " | tee -a ${LOGFILE}
-			if script -aq ${LOGFILE} rsync -ave "ssh -p ${PKG_RSYNC_SSH_PORT}" \
-				--timeout=60 --delete-delay ${REPO_PATH} \
-				${PKG_RSYNC_USERNAME}@${PKG_RSYNC_HOSTNAME}:${PKG_RSYNC_DESTDIR} >/dev/null 2>&1
-			then
-				echo "Done!" | tee -a ${LOGFILE}
-			else
-				echo "Failed!" | tee -a ${LOGFILE}
-				echo ">>> ERROR: An error occurred sending repo to remote hostname"
-				print_error_pfS
-			fi
-		fi
+		pkg_repo_rsync "/usr/local/poudriere/data/packages/./${jail_name}-${POUDRIERE_PORTS_NAME}"
 	done
 }
 
@@ -1914,7 +1948,7 @@ snapshots_update_status() {
 		# Only update every minute
 		if [ "$LU" != "$CT" ]; then
 			ssh ${RSYNCUSER}@${RSYNCIP} "mkdir -p ${RSYNCLOGS}"
-			scp -q $SNAPSHOTSLOGFILE ${RSYNCUSER}@${RSYNCIP}:${RSYNC_LOGS}/build.log
+			scp -q $SNAPSHOTSLOGFILE ${RSYNCUSER}@${RSYNCIP}:${RSYNCLOGS}/build.log
 			date "+%H%M%S" > $SNAPSHOTSLASTUPDATE
 		fi
 	fi
@@ -1923,12 +1957,14 @@ snapshots_update_status() {
 # Copy the current log file to $filename.old on
 # the snapshot www server (real time logs)
 snapshots_rotate_logfile() {
-	if [ -n "$MASTER_BUILDER_SSH_LOG_DEST" -a -z "${DO_NOT_UPLOAD}" ]; then
-		scp -q $SNAPSHOTSLOGFILE ${RSYNCUSER}@${RSYNCIP}:${RSYNC_LOGS}/build.log.old
+	if [ -z "${DO_NOT_UPLOAD}" -a -n "${RSYNCIP}" ]; then
+		scp -q $SNAPSHOTSLOGFILE ${RSYNCUSER}@${RSYNCIP}:${RSYNCLOGS}/build.log.old
 	fi
 
 	# Cleanup log file
-	echo "" > $SNAPSHOTSLOGFILE
+	rm -f $SNAPSHOTSLOGFILE;    touch $SNAPSHOTSLOGFILE
+	rm -f $SNAPSHOTSLASTUPDATE; touch $SNAPSHOTSLASTUPDATE
+
 }
 
 snapshots_copy_to_staging_nanobsd() {
@@ -1996,9 +2032,13 @@ snapshots_scp_files() {
 	if [ -z "${RSYNC_COPY_ARGUMENTS:-}" ]; then
 		RSYNC_COPY_ARGUMENTS="-ave ssh --timeout=60 --bwlimit=${RSYNCKBYTELIMIT}" #--bwlimit=50
 	fi
-	snapshots_update_status ">>> Copying files to ${RSYNCIP}"
 
-	rm -f $SCRATCHDIR/ssh-snapshots*
+	snapshots_update_status ">>> Copying core pkg repo to ${PKG_RSYNC_HOSTNAME}"
+	# Add ./ before last directory, it's rsync trick to make it chdir to parent directory before send
+	pkg_repo_rsync $(echo "${CORE_PKG_PATH}" | sed -E 's,/$,,; s,/([^/]*)$,/./\1,')
+	snapshots_update_status ">>> Finished copying core pkg repo"
+
+	snapshots_update_status ">>> Copying files to ${RSYNCIP}"
 
 	# Ensure directory(s) are available
 	ssh ${RSYNCUSER}@${RSYNCIP} "mkdir -p ${RSYNCPATH}/livecd_installer"
@@ -2009,9 +2049,7 @@ snapshots_scp_files() {
 	fi
 	ssh ${RSYNCUSER}@${RSYNCIP} "mkdir -p ${RSYNCPATH}/.updaters"
 	# ensure permissions are correct for r+w
-	ssh ${RSYNCUSER}@${RSYNCIP} "chmod -R ug+rw /usr/local/www/snapshots/FreeBSD_${FREEBSD_PARENT_BRANCH}/${TARGET}/."
 	ssh ${RSYNCUSER}@${RSYNCIP} "chmod -R ug+rw ${RSYNCPATH}/."
-	ssh ${RSYNCUSER}@${RSYNCIP} "chmod -R ug+rw ${RSYNCPATH}/*/."
 	rsync $RSYNC_COPY_ARGUMENTS $STAGINGAREA/${PRODUCT_NAME}-*iso* \
 		${RSYNCUSER}@${RSYNCIP}:${RSYNCPATH}/livecd_installer/
 	rsync $RSYNC_COPY_ARGUMENTS $STAGINGAREA/${PRODUCT_NAME}-memstick* \
@@ -2039,7 +2077,7 @@ snapshots_scp_files() {
 	ssh ${RSYNCUSER}@${RSYNCIP} "ln -s ${RSYNCPATH}/updates/${LATESTFILENAME}.sha256 \
 		${RSYNCPATH}/.updaters/latest.tgz.sha256"
 
-	for i in "${FLASH_SIZE}"
+	for i in ${FLASH_SIZE}
 	do
 		ssh ${RSYNCUSER}@${RSYNCIP} "rm -f ${RSYNCPATH}/.updaters/latest-nanobsd-${i}.img.gz"
 		ssh ${RSYNCUSER}@${RSYNCIP} "rm -f ${RSYNCPATH}/.updaters/latest-nanobsd-${i}.img.gz.sha256"

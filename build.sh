@@ -71,8 +71,8 @@ usage() {
 	echo "		--setup-poudriere - Install poudriere and create necessary jails and ports tree"
 	echo "		--create-unified-patch - Create a big patch with all changes done on FreeBSD"
 	echo "		--update-poudriere-jails [-a ARCH_LIST] - Update poudriere jails using current patch versions"
-	echo "		--update-poudriere-ports - Update poudriere ports tree"
-	echo "		--update-pkg-repo - Rebuild necessary ports on poudriere and update pkg repo"
+	echo "		--update-poudriere-ports [-a ARCH_LIST]- Update poudriere ports tree"
+	echo "		--update-pkg-repo [-a ARCH_LIST]- Rebuild necessary ports on poudriere and update pkg repo"
 	echo "		--do-not-upload|-u - Do not upload pkgs or snapshots"
 	echo "		-V VARNAME - print value of variable VARNAME"
 	exit 1
@@ -87,6 +87,7 @@ unset pfPORTTOBUILD
 unset IMAGETYPE
 unset DO_NOT_UPLOAD
 unset SNAPSHOTS
+unset ARCH_LIST
 BUILDACTION="images"
 
 # Maybe use options for nocleans etc?
@@ -169,17 +170,15 @@ while test "$1" != ""; do
 			;;
 		--update-poudriere-jails)
 			BUILDACTION="update_poudriere_jails"
+			;;
+		-a)
 			shift
-			unset ARCH_LIST
-			if [ "${1}" = "-a" ]; then
-				shift
-				if [ $# -eq 0 ]; then
-					echo "-a needs extra parameter."
-					echo
-					usage
-				fi
-				export ARCH_LIST="${1}"
+			if [ $# -eq 0 ]; then
+				echo "-a needs extra parameter."
+				echo
+				usage
 			fi
+			export ARCH_LIST="${1}"
 			;;
 		--update-poudriere-ports)
 			BUILDACTION="update_poudriere_ports"
@@ -201,8 +200,8 @@ while test "$1" != ""; do
 			;;
 		--snapshot-update-status)
 			shift
-			[ -n "${1}" ] \
-				&& snapshot_status_message="${1}"
+			snapshot_status_message="${1}"
+			BUILDACTION="snapshot_status_message"
 			;;
 		*)
 			usage
@@ -223,7 +222,7 @@ if [ -n "${var_to_print}"  ]; then
 fi
 
 # Update snapshot status and exit
-if [ -n "${snapshot_status_message}"  ]; then
+if [ "${BUILDACTION}" = "snapshot_status_message" ]; then
 	export SNAPSHOTS=1
 	snapshots_update_status "${snapshot_status_message}"
 	exit 0
@@ -288,25 +287,25 @@ if [ "${BUILDACTION}" != "images" ]; then
 fi
 
 if [ -n "${SNAPSHOTS}" -a -z "${DO_NOT_UPLOAD}" ]; then
-	if [ -z "${RSYNCIP}" -a -z "${DO_NOT_UPLOAD}" ]; then
-		echo ">>> ERROR: RSYNCIP is not defined"
-		exit 1
-	fi
+	_required=" \
+		RSYNCIP \
+		RSYNCUSER \
+		RSYNCPATH \
+		RSYNCLOGS \
+		PKG_RSYNC_HOSTNAME \
+		PKG_RSYNC_USERNAME \
+		PKG_RSYNC_SSH_PORT \
+		PKG_RSYNC_DESTDIR \
+		PKG_REPO_SERVER \
+		PKG_REPO_CONF_BRANCH"
 
-	if [ -z "${RSYNCUSER}" -a -z "${DO_NOT_UPLOAD}" ]; then
-		echo ">>> ERROR: RSYNCUSER is not defined"
-		exit 1
-	fi
-
-	if [ -z "${RSYNCPATH}" -a -z "${DO_NOT_UPLOAD}" ]; then
-		echo ">>> ERROR: RSYNCPATH is not defined"
-		exit 1
-	fi
-
-	if [ -z "${RSYNCLOGS}" -a -z "${DO_NOT_UPLOAD}" ]; then
-		echo ">>> ERROR: RSYNCLOGS is not defined"
-		exit 1
-	fi
+	for _var in ${_required}; do
+		eval "_value=\${$_var}"
+		if [ -z "${_value}" ]; then
+			echo ">>> ERROR: ${_var} is not defined"
+			exit 1
+		fi
+	done
 fi
 
 if [ $# -gt 1 ]; then
@@ -332,9 +331,6 @@ fi
 echo ">>> Building image type(s): ${_IMAGESTOBUILD}"
 
 if [ -n "${SNAPSHOTS}" ]; then
-	echo "" > $SNAPSHOTSLOGFILE
-	echo "" > $SNAPSHOTSLASTUPDATE
-
 	snapshots_rotate_logfile
 
 	snapshots_update_status ">>> Starting snapshot build operations"
@@ -415,6 +411,8 @@ for _IMGTOBUILD in $_IMAGESTOBUILD; do
 	fi
 done
 
+core_pkg_create_repo
+
 echo ">>> NOTE: waiting for jobs: `jobs -l` to finish..."
 wait
 
@@ -427,10 +425,10 @@ if [ -n "${SNAPSHOTS}" ]; then
 	fi
 	# Alert the world that we have some snapshots ready.
 	snapshots_update_status ">>> Builder run is complete."
-else
-	echo ">>> ${IMAGES_FINAL_DIR} now contains:"
-	ls -lah ${IMAGES_FINAL_DIR}
 fi
+
+echo ">>> ${IMAGES_FINAL_DIR} now contains:"
+ls -lah ${IMAGES_FINAL_DIR}
 
 set -e
 # Run final finish routines
