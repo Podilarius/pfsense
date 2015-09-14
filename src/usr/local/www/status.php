@@ -55,13 +55,6 @@ require_once("functions.inc");
 $output_path = "/tmp/status_output/";
 $output_file = "/tmp/status_output.tgz";
 
-if (is_dir($output_path)) {
-	unlink_if_exists("{$output_path}/*");
-	@rmdir($output_path);
-}
-unlink_if_exists($output_file);
-mkdir($output_path);
-
 function doCmdT($title, $command) {
 	global $output_path, $output_file;
 	/* Fixup output directory */
@@ -71,6 +64,11 @@ function doCmdT($title, $command) {
 	echo "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" summary=\"" . $title . "\">\n";
 	echo "\t<tr><td class=\"listtopic\">" . $title . "</td></tr>\n";
 	echo "\t<tr>\n\t\t<td class=\"listlr\">\n\t\t\t<pre>";		/* no newline after pre */
+
+	print('<div class="panel panel-default">');
+	print(	  '<div class="panel-heading">' . $title . '</div>');
+	print(	  '<div class="panel-body">');
+	print(		  '<pre>');
 
 	if ($command == "dumpconfigxml") {
 		$ofd = @fopen("{$output_path}/config-sanitized.xml", "w");
@@ -114,8 +112,10 @@ function doCmdT($title, $command) {
 		}
 		fclose($ofd);
 	}
-    echo "\n\t\t\t</pre>\n\t\t</td>\n\t</tr>\n";
-    echo "</table>\n";
+
+	print(		  '</pre>');
+	print(	  '</div>');
+	print('</div>');
 }
 
 /* Define a command, with a title, to be executed later. */
@@ -127,14 +127,24 @@ function defCmdT($title, $command) {
 
 /* List all of the commands as an index. */
 function listCmds() {
+	global $currentDate;
 	global $commands;
-	$rubbish = array('|', '-', '/', '.', ' ');  /* fixes the <a> tag to be W3C compliant */
-	echo "\n<p>" . gettext("This status page includes the following information") . ":\n";
-	echo "<ul>\n";
-	for ($i = 0; isset($commands[$i]); $i++) {
-		echo "\t<li><strong><a href=\"#" . str_replace($rubbish, '', $commands[$i][0]) . "\">" . $commands[$i][0] . "</a></strong></li>\n";
+
+	$rubbish = array('|', '-', '/', '.', ' ');	/* fixes the <a> tag to be W3C compliant */
+
+	print('<div class="panel panel-default">');
+	print(	  '<div class="panel-heading">' . gettext("System status on ") . $currentDate . '</div>');
+	print(	  '<div class="panel-body">');
+
+	print("\n<p>" . gettext("This status page includes the following information") . ":\n");
+	print("<ul>\n");
+	for ($i = 0; isset($commands[$i]); $i++ ) {
+		print("\t<li><strong><a href=\"#" . str_replace($rubbish,'',$commands[$i][0]) . "\">" . $commands[$i][0] . "</a></strong></li>\n");
 	}
-	echo "</ul>\n";
+
+	print("</ul>\n");
+	print('	   </div>');
+	print('</div>');
 }
 
 /* Execute all of the commands which were defined by a call to defCmd. */
@@ -148,39 +158,13 @@ function execCmds() {
 global $g, $config;
 
 /* Set up all of the commands we want to execute. */
+defCmdT("System uptime","uptime");
+defCmdT("Interfaces","/sbin/ifconfig -a");
+defCmdT("PF Info","/sbin/pfctl -s info");
+defCmdT("Routing tables","netstat -nr");
+defCmdT("top | head -n5", "/usr/bin/top | /usr/bin/head -n5");
+defCmdT("sysctl hw.physmem","/sbin/sysctl hw.physmem");
 
-/* System stats/info */
-defCmdT("System uptime", "/usr/bin/uptime");
-defCmdT("Interfaces", "/sbin/ifconfig -a");
-defCmdT("Interface Statistics","/usr/bin/netstat -ni");
-defCmdT("Top Process Info", "/usr/bin/top | /usr/bin/head -n5");
-defCmdT("Processes", "/bin/ps xauww");
-defCmdT("Mounted Filesystems", "/sbin/mount");
-defCmdT("Free Disk Space", "/bin/df -hi");
-defCmdT("Routing tables", "/usr/bin/netstat -nWr");
-defCmdT("Mbuf Usage", "/usr/bin/netstat -mb");
-defCmdT("VMStat", "/usr/bin/vmstat -afimsz");
-defCmdT("Sockets", "/usr/bin/sockstat");
-
-/* Firewall rules and info */
-defCmdT("Generated Ruleset", "/bin/cat {$g['tmp_path']}/rules.debug");
-defCmdT("Generated Ruleset Limiters", "/bin/cat {$g['tmp_path']}/rules.limiter");
-defCmdT("Generated Ruleset Limits", "/bin/cat {$g['tmp_path']}/rules.limits");
-defCmdT("pf NAT Rules", "/sbin/pfctl -vvsn");
-defCmdT("pf Firewall Rules", "/sbin/pfctl -vvsr");
-defCmdT("pf Tables", "/sbin/pfctl -vs Tables");
-defCmdT("pf State Table Contents", "/sbin/pfctl -ss");
-defCmdT("pf Info", "/sbin/pfctl -si");
-defCmdT("pf Show All", "/sbin/pfctl -sa");
-defCmdT("pf Queues", "/sbin/pfctl -s queue -v");
-defCmdT("pf OSFP", "/sbin/pfctl -s osfp");
-defCmdT("pfsync stats", "/usr/bin/netstat -s -ppfsync");
-defCmdT("pftop Default", "/usr/local/sbin/pftop -a -b");
-defCmdT("pftop Long", "/usr/local/sbin/pftop -w 150 -a -b -v long");
-defCmdT("pftop Queue", "/usr/local/sbin/pftop -w 150 -a -b -v queue");
-defCmdT("pftop Rules", "/usr/local/sbin/pftop -w 150 -a -b -v rules");
-defCmdT("pftop Size", "/usr/local/sbin/pftop -w 150 -a -b -v size");
-defCmdT("pftop Speed", "/usr/local/sbin/pftop -w 150 -a -b -v speed");
 if (isset($config['captiveportal']) && is_array($config['captiveportal'])) {
 	foreach ($config['captiveportal'] as $cpZone => $cpdata) {
 		if (isset($cpdata['enable'])) {
@@ -238,44 +222,11 @@ $currentDate = $dateOutput[0];
 $pgtitle = array("{$g['product_name']}", "status");
 include("head.inc");
 
-?>
-<style type="text/css">
-/*<![CDATA[*/
-pre {
-	margin: 0px;
-	font-family: courier new, courier;
-	font-weight: normal;
-	font-size: 9pt;
-}
-/*]]>*/
-</style>
+print_info_box(gettext("Make sure all sensitive information is removed! (Passwords, maybe also IP addresses) before posting " .
+					   "information from this page in public places (like mailing lists)") . '<br />' .
+			   gettext("Passwords in config.xml have been automatically removed"));
 
-<body link="#0000CC" vlink="#0000CC" alink="#0000CC">
-<?php include("fbegin.inc"); ?>
-<strong><?=$currentDate;?></strong>
-<p><span class="red"><strong><?=gettext("Note: make sure to remove any sensitive information " .
-"(passwords, maybe also IP addresses) before posting " .
-"information from this page in public places (like mailing lists)"); ?>!</strong></span><br />
-<?=gettext("Passwords in config.xml have been automatically removed"); ?>.<br /><br />
-<?=gettext("When the page has finished loading, the output will be stored in {$output_file}. It may be downloaded via scp or "); ?>
-<a href="/exec.php?dlPath=<?= $output_file ?>"><?=gettext("Diagnostics > Command Prompt")?></a>
+listCmds();
+execCmds();
 
-<div id="cmdspace" style="width:700px">
-<?php listCmds(); ?>
-
-<?php execCmds(); ?>
-</div>
-<br />
-<?=gettext("Saving output to archive...");?>
-<?php
-if (is_dir($output_path)) {
-	mwexec("/usr/bin/tar czpf " . escapeshellarg($output_file) . " -C " . escapeshellarg(dirname($output_path)) . " " . escapeshellarg(basename($output_path)));
-	unlink_if_exists("{$output_path}/*");
-	@rmdir($output_path);
-}
-?>
-<?=gettext("Done.");?>
-
-<?php include("fend.inc"); ?>
-</body>
-</html>
+include("foot.inc");

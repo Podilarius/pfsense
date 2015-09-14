@@ -144,7 +144,7 @@ function get_dns_servers() {
 			if (preg_match("/nameserver (.*)/", $dns, $matches)) {
 				$dns_servers[] = $matches[1];
 			}
-		}	
+		}
 	}
 	return array_unique($dns_servers);
 }
@@ -1044,12 +1044,12 @@ function setup_serial_port($when = "save", $path = "") {
 			//  do not contain a console directive.
 			foreach ($boot_config_split as $bcs) {
 				if (!empty($bcs) &&
-				(stripos($bcs, "console") === false) &&
-				(stripos($bcs, "boot_multicons") === false) &&
-				(stripos($bcs, "boot_serial") === false) &&
-				(stripos($bcs, "hw.usb.no_pf") === false) &&
-				(stripos($bcs, "hint.uart.0.flags") === false) &&
-				(stripos($bcs, "hint.uart.1.flags") === false)) {
+				    (stripos($bcs, "console") === false) &&
+				    (stripos($bcs, "boot_multicons") === false) &&
+				    (stripos($bcs, "boot_serial") === false) &&
+				    (stripos($bcs, "hw.usb.no_pf") === false) &&
+				    (stripos($bcs, "hint.uart.0.flags") === false) &&
+				    (stripos($bcs, "hint.uart.1.flags") === false)) {
 					$new_boot_config[] = $bcs;
 				}
 			}
@@ -1919,12 +1919,12 @@ function update_output_window($text) {
 	global $pkg_interface;
 	$log = preg_replace("/\n/", "\\n", $text);
 	if ($pkg_interface != "console") {
-		echo "\n<script type=\"text/javascript\">";
-		echo "\n//<![CDATA[";
-		echo "\nthis.document.forms[0].output.value = \"" . $log . "\";";
-		echo "\nthis.document.forms[0].output.scrollTop = this.document.forms[0].output.scrollHeight;";
-		echo "\n//]]>";
-		echo "\n</script>";
+?>
+<script>
+	document.getElementById("output").textContent="<?=htmlspecialchars($log)?>";
+	document.getElementById("output").scrollTop = document.getElementById("output").scrollHeight;
+</script>
+<?php
 	}
 	/* ensure that contents are written out */
 	ob_flush();
@@ -1938,12 +1938,9 @@ function update_status($status) {
 	if ($pkg_interface == "console") {
 		echo "\r{$status}";
 	} else {
-		echo "\n<script type=\"text/javascript\">";
-		echo "\n//<![CDATA[";
-		echo "\nthis.document.forms[0].status.value=\"" . $status . "\";";
-		echo "\n//]]>";
-		echo "\n</script>";
+		echo '<script>document.getElementById("status").innerText="'. htmlspecialchars($status).'";</script>';
 	}
+
 	/* ensure that contents are written out */
 	ob_flush();
 }
@@ -1957,11 +1954,7 @@ function update_progress_bar($percent, $first_time) {
 		$percent = 1;
 	}
 	if ($pkg_interface <> "console") {
-		echo "\n<script type=\"text/javascript\">";
-		echo "\n//<![CDATA[";
-		echo "\ndocument.progressbar.style.width='" . $percent . "%';";
-		echo "\n//]]>";
-		echo "\n</script>";
+		echo '<script>document.getElementById("progressbar").style.width="'. $percent.'%";</script>';
 	} else {
 		if (!($first_time)) {
 			echo "\x08\x08\x08\x08\x08";
