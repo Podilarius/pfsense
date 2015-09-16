@@ -804,7 +804,7 @@ if($act=="new" || $act=="edit") :
 
 		$section->addInput(new Form_Select(
 			'caref',
-			'Peer Certifiacte Authority',
+			'Peer Certificate Authority',
 			$pconfig['caref'],
 			$list
 		));
@@ -831,7 +831,7 @@ if($act=="new" || $act=="edit") :
 
 	$section->addInput(new Form_Select(
 		'certref',
-		'Peer Certifiacte Authority',
+		'Peer Certificate Authority',
 		$pconfig['certref'],
 		build_cert_list()
 		))->setHelp(count($a_cert) ? '':sprintf('No Certificates defined. You may create one here: %s', '<a href="system_camanager.php">System &gt; Cert Manager</a>'));
@@ -1144,11 +1144,11 @@ if($act=="new" || $act=="edit") :
 
 	$form->add($section);
 
-	$section = new Form_Section('Netbios Options');
+	$section = new Form_Section('NetBIOS Options');
 
 	$section->addInput(new Form_checkbox(
 		'netbios_enable',
-		'Netbios enable',
+		'NetBIOS enable',
 		'Enable NetBIOS over TCP/IP',
 		$pconfig['ntp_server_enable']
 	))->setHelp('If this option is not set, all NetBIOS-over-TCP/IP options (including WINS) will be disabled');

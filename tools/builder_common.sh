@@ -378,10 +378,15 @@ create_Full_update_tarball() {
 	rm ${FINAL_CHROOT_DIR}/boot/loader.conf 2>/dev/null
 	rm ${FINAL_CHROOT_DIR}/boot/loader.conf.local 2>/dev/null
 
-	# Old systems will run pre_upgrade_command from /tmp
+	# Old systems will run (pre|post)_upgrade_command from /tmp
 	if [ -f ${FINAL_CHROOT_DIR}/usr/local/share/${PRODUCT_NAME}/pre_upgrade_command ]; then
 		cp -p \
 			${FINAL_CHROOT_DIR}/usr/local/share/${PRODUCT_NAME}/pre_upgrade_command \
+			${FINAL_CHROOT_DIR}/tmp
+	fi
+	if [ -f ${FINAL_CHROOT_DIR}/usr/local/share/${PRODUCT_NAME}/post_upgrade_command ]; then
+		cp -p \
+			${FINAL_CHROOT_DIR}/usr/local/share/${PRODUCT_NAME}/post_upgrade_command \
 			${FINAL_CHROOT_DIR}/tmp
 	fi
 
@@ -2021,9 +2026,11 @@ snapshots_copy_to_staging_iso_updates() {
 	sha256 ${MEMSTICKSERIALPATH}.gz > ${MEMSTICKSERIALPATH}.sha256
 	cp ${MEMSTICKSERIALPATH}* $STAGINGAREA/ 2>/dev/null
 
-	md5 ${MEMSTICKADIPATH}.gz > ${MEMSTICKADIPATH}.md5
-	sha256 ${MEMSTICKADIPATH}.gz > ${MEMSTICKADIPATH}.sha256
-	cp ${MEMSTICKADIPATH}* $STAGINGAREA/ 2>/dev/null
+	if [ "${TARGET}" = "amd64" ]; then
+		md5 ${MEMSTICKADIPATH}.gz > ${MEMSTICKADIPATH}.md5
+		sha256 ${MEMSTICKADIPATH}.gz > ${MEMSTICKADIPATH}.sha256
+		cp ${MEMSTICKADIPATH}* $STAGINGAREA/ 2>/dev/null
+	fi
 
 	md5 ${UPDATES_TARBALL_FILENAME} > ${UPDATES_TARBALL_FILENAME}.md5
 	sha256 ${UPDATES_TARBALL_FILENAME} > ${UPDATES_TARBALL_FILENAME}.sha256

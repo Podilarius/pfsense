@@ -442,7 +442,7 @@ display_top_tabs($tab_array, true);
 // We draw a simple table first, then present the controls to work with it
 ?>
 <div class="panel panel-default">
-	<div class="panel-heading"><h2 class="panel-title">Synchronized from <?=$pconfig['vouchersyncdbip']?></h2></div>
+	<div class="panel-heading"><h2 class="panel-title">Voucher Rolls</h2></div>
 	<div class="panel-body">
 		<div class="table-responsive">
 			<table class="table table-striped table-hover table-condensed">
@@ -477,7 +477,7 @@ foreach($a_roll as $rollent):
 							<!-- These buttons are hidden/shown on checking the 'enable' checkbox -->
 							<a href="services_captiveportal_vouchers_edit.php?zone=<?=$cpzone?>&amp;id=<?=$i; ?>" class="btn btn-info btn-xs"><?=gettext("Edit")?></a>
 							<a href="services_captiveportal_vouchers.php?zone=<?=$cpzone?>&amp;act=del&amp;id=<?=$i; ?>" class="btn btn-danger btn-xs"><?=gettext("Delete")?></a>
-							<a href="services_captiveportal_vouchers.php?zone=<?=$cpzone?>&amp;act=csv&amp;id=<?=$i; ?>" class="btn btn-success btn-xs" data-toggle="tooltip" title="Generate vouchers for this roll to a .csv file""><?=gettext("Generate")?></a>
+							<a href="services_captiveportal_vouchers.php?zone=<?=$cpzone?>&amp;act=csv&amp;id=<?=$i; ?>" class="btn btn-success btn-xs" data-toggle="tooltip" title="Export vouchers for this roll to a .csv file""><?=gettext("Export")?></a>
 						</td>
 					</tr>
 <?php

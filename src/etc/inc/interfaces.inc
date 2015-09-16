@@ -129,11 +129,7 @@ function interface_netgraph_needed($interface = "wan") {
 	global $config;
 
 	$found = false;
-	if (!empty($config['pptpd']) &&
-	    $config['pptpd']['mode'] == "server") {
-		$found = true;
-	}
-	if ($found == false && !empty($config['l2tp']) &&
+	if (!empty($config['l2tp']) &&
 	    $config['l2tp']['mode'] == "server") {
 		$found = true;
 	}
@@ -5329,7 +5325,7 @@ function get_interface_ipv6($interface = "wan", $flush = false) {
 			case 'pptp':
 			case 'ppp':
 				if ($config['interfaces'][$interface]['ipaddrv6'] == 'dhcp6') {
-					$realif = get_real_interface($interface, 'inet6', true);
+					$realif = get_real_interface($interface, 'inet6', false);
 				}
 				break;
 		}

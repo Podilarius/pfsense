@@ -4,56 +4,56 @@
 	firewall_nat.php
 */
 /* ====================================================================
- *  Copyright (c)  2004-2015  Electric Sheep Fencing, LLC. All rights reserved. 
- *  Copyright (c)  2004 Scott Ullrich
+ *	Copyright (c)  2004-2015  Electric Sheep Fencing, LLC. All rights reserved.
+ *	Copyright (c)  2004 Scott Ullrich
  *	Copyright (c) 2003-2004 Manuel Kasper <mk@neon1.net>
  *	originally part of m0n0wall (http://m0n0.ch/wall)
  *
- *  Redistribution and use in source and binary forms, with or without modification, 
- *  are permitted provided that the following conditions are met: 
+ *	Redistribution and use in source and binary forms, with or without modification,
+ *	are permitted provided that the following conditions are met:
  *
- *  1. Redistributions of source code must retain the above copyright notice,
- *      this list of conditions and the following disclaimer.
+ *	1. Redistributions of source code must retain the above copyright notice,
+ *		this list of conditions and the following disclaimer.
  *
- *  2. Redistributions in binary form must reproduce the above copyright
- *      notice, this list of conditions and the following disclaimer in
- *      the documentation and/or other materials provided with the
- *      distribution. 
+ *	2. Redistributions in binary form must reproduce the above copyright
+ *		notice, this list of conditions and the following disclaimer in
+ *		the documentation and/or other materials provided with the
+ *		distribution.
  *
- *  3. All advertising materials mentioning features or use of this software 
- *      must display the following acknowledgment:
- *      "This product includes software developed by the pfSense Project
- *       for use in the pfSense software distribution. (http://www.pfsense.org/). 
+ *	3. All advertising materials mentioning features or use of this software
+ *		must display the following acknowledgment:
+ *		"This product includes software developed by the pfSense Project
+ *		 for use in the pfSense software distribution. (http://www.pfsense.org/).
  *
- *  4. The names "pfSense" and "pfSense Project" must not be used to
- *       endorse or promote products derived from this software without
- *       prior written permission. For written permission, please contact
- *       coreteam@pfsense.org.
+ *	4. The names "pfSense" and "pfSense Project" must not be used to
+ *		 endorse or promote products derived from this software without
+ *		 prior written permission. For written permission, please contact
+ *		 coreteam@pfsense.org.
  *
- *  5. Products derived from this software may not be called "pfSense"
- *      nor may "pfSense" appear in their names without prior written
- *      permission of the Electric Sheep Fencing, LLC.
+ *	5. Products derived from this software may not be called "pfSense"
+ *		nor may "pfSense" appear in their names without prior written
+ *		permission of the Electric Sheep Fencing, LLC.
  *
- *  6. Redistributions of any form whatsoever must retain the following
- *      acknowledgment:
+ *	6. Redistributions of any form whatsoever must retain the following
+ *		acknowledgment:
  *
- *  "This product includes software developed by the pfSense Project
- *  for use in the pfSense software distribution (http://www.pfsense.org/).
+ *	"This product includes software developed by the pfSense Project
+ *	for use in the pfSense software distribution (http://www.pfsense.org/).
   *
- *  THIS SOFTWARE IS PROVIDED BY THE pfSense PROJECT ``AS IS'' AND ANY
- *  EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- *  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- *  PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE pfSense PROJECT OR
- *  ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
- *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- *  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- *  HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
- *  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
- *  OF THE POSSIBILITY OF SUCH DAMAGE.
+ *	THIS SOFTWARE IS PROVIDED BY THE pfSense PROJECT ``AS IS'' AND ANY
+ *	EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ *	IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ *	PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE pfSense PROJECT OR
+ *	ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ *	SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *	NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ *	LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ *	HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ *	STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *	ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+ *	OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- *  ====================================================================
+ *	====================================================================
  *
  */
 /*
@@ -80,20 +80,22 @@ if (!is_array($config['nat']['rule'])) {
 $a_nat = &$config['nat']['rule'];
 
 /* update rule order, POST[rule] is an array of ordered IDs */
-if (is_array($_POST['rule']) && !empty($_POST['rule'])) {
-	$a_nat_new = array();
+if($_POST['order-store']) {
+	if (is_array($_POST['rule']) && !empty($_POST['rule'])) {
+		$a_nat_new = array();
 
-	// if a rule is not in POST[rule], it has been deleted by the user
-	foreach ($_POST['rule'] as $id)
-		$a_nat_new[] = $a_nat[$id];
+		// if a rule is not in POST[rule], it has been deleted by the user
+		foreach ($_POST['rule'] as $id)
+			$a_nat_new[] = $a_nat[$id];
 
-	$a_nat = $a_nat_new;
+		$a_nat = $a_nat_new;
 
-	if (write_config())
-		mark_subsystem_dirty('filter');
+		if (write_config())
+			mark_subsystem_dirty('filter');
 
-	header("Location: firewall_nat.php");
-	exit;
+		header("Location: firewall_nat.php");
+		exit;
+	}
 }
 
 /* if a custom message has been passed along, lets process it */
@@ -102,7 +104,6 @@ if ($_GET['savemsg']) {
 }
 
 if ($_POST) {
-
 	$pconfig = $_POST;
 
 	if ($_POST['apply']) {
@@ -154,63 +155,17 @@ if (isset($_POST['del_x'])) {
 
 				mark_subsystem_dirty('filter');
 			}
+
 			unset($a_nat[$rulei]);
 		}
+
 		if (write_config()) {
 			mark_subsystem_dirty('natconf');
 		}
+
 		header("Location: firewall_nat.php");
 		exit;
 	}
-
-} else {
-		/* yuck - IE won't send value attributes for image buttons, while Mozilla does - so we use .x/.y to find move button clicks instead... */
-		unset($movebtn);
-		foreach ($_POST as $pn => $pd) {
-			if (preg_match("/move_(\d+)_x/", $pn, $matches)) {
-				$movebtn = $matches[1];
-				break;
-			}
-		}
-		/* move selected rules before this rule */
-		if (isset($movebtn) && is_array($_POST['rule']) && count($_POST['rule'])) {
-			$a_nat_new = array();
-
-			/* copy all rules < $movebtn and not selected */
-			for ($i = 0; $i < $movebtn; $i++) {
-				if (!in_array($i, $_POST['rule'])) {
-					$a_nat_new[] = $a_nat[$i];
-				}
-			}
-
-			/* copy all selected rules */
-			for ($i = 0; $i < count($a_nat); $i++) {
-				if ($i == $movebtn) {
-					continue;
-				}
-				if (in_array($i, $_POST['rule'])) {
-					$a_nat_new[] = $a_nat[$i];
-				}
-			}
-
-			/* copy $movebtn rule */
-			if ($movebtn < count($a_nat)) {
-				$a_nat_new[] = $a_nat[$movebtn];
-			}
-
-			/* copy all rules > $movebtn and not selected */
-			for ($i = $movebtn+1; $i < count($a_nat); $i++) {
-				if (!in_array($i, $_POST['rule'])) {
-					$a_nat_new[] = $a_nat[$i];
-				}
-			}
-			$a_nat = $a_nat_new;
-			if (write_config()) {
-				mark_subsystem_dirty('natconf');
-			}
-			header("Location: firewall_nat.php");
-			exit;
-		}
 }
 
 $closehead = false;
@@ -239,6 +194,7 @@ display_top_tabs($tab_array);
 			<table class="table table-striped table-hover table-condensed">
 				<thead>
 					<tr>
+						<th><!-- Checkbox --></th>
 						<th><!-- Rule type --></th>
 						<th><?=gettext("If")?></th>
 						<th><?=gettext("Proto")?></th>
@@ -270,8 +226,11 @@ foreach ($a_nat as $natent):
 	if (!have_natpfruleint_access($natent['interface']))
 		continue;
 ?>
-					
-					<tr id="fr<?=$nnats?>">
+
+					<tr id="fr<?=$nnats;?>" onClick="fr_toggle(<?=$nnats;?>)" ondblclick="document.location='firewall_nat_edit.php?id=<?=$i;?>';">
+						<td >
+							<input type="checkbox" id="frc<?=$nnats;?>" onClick="fr_toggle(<?=$nnats;?>)" name="rule[]" value="<?=$i;?>"/>
+						</td>
 						<td>
 <?php
 	if ($natent['associated-rule-id'] == "pass"):
@@ -297,7 +256,6 @@ foreach ($a_nat as $natent):
 						</td>
 
 						<td>
-							<input type="hidden" name="rule[]" value="<?=$i?>" />
 							<?=$textss?><?=strtoupper($natent['protocol'])?><?=$textse?>
 						</td>
 
@@ -411,9 +369,35 @@ endforeach;
 
 	<div class="pull-right">
 		<a href="firewall_nat_edit.php?after=-1" class="btn btn-sm btn-success" title="<?=gettext('Add new rule')?>"><?=gettext('Add new rule')?></a>
-		<input type="submit" id="order-store" class="btn btn-primary btn-sm" value="store changes" disabled="disabled" />
+		<input name="del_x" type="submit" class="btn btn-danger btn-sm" value="<?=gettext("Delete selected rules"); ?>"	 />
+		<input type="submit" id="order-store" name="order-store" class="btn btn-primary btn-sm" value="<?=gettext("Save changes")?>" disabled="disabled" />
 	</div>
 </form>
+
+<script>
+function fr_toggle(id, prefix) {
+	if (!prefix)
+		prefix = 'fr';
+
+	var checkbox = document.getElementById(prefix + 'c' + id);
+	checkbox.checked = !checkbox.checked;
+	fr_bgcolor(id, prefix);
+}
+
+function fr_bgcolor(id, prefix) {
+	if (!prefix)
+		prefix = 'fr';
+
+	var row = document.getElementById(prefix + id);
+	var checkbox = document.getElementById(prefix + 'c' + id);
+	var cells = row.getElementsByTagName('td');
+	var cellcnt = cells.length;
+
+	for (i = 0; i < cellcnt-1; i++) {
+		cells[i].style.backgroundColor = checkbox.checked ? "#DDF4FF" : "#FFFFFF";
+	}
+}
+</script>
 
 <script>
 events.push(function() {
@@ -423,6 +407,11 @@ events.push(function() {
 		update: function(event, ui) {
 			$('#order-store').removeAttr('disabled');
 		}
+	});
+
+	// Check all of the rule checkboxes so that their values are posted
+	$('#order-store').click(function () {
+	   $('[id^=frc]').prop('checked', true);
 	});
 });
 </script>

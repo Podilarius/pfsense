@@ -236,7 +236,7 @@ if ($config['widgets'] && $config['widgets']['sequence'] != "") {
 		);
 	}
 
-	##add widgets that may not be in the saved configuration, in case they are to be displayed later
+	// add widgets that may not be in the saved configuration, in case they are to be displayed later
 	$widgets = $widgetsfromconfig + $widgets;
 
 	##find custom configurations of a particular widget and load its info to $pconfig
@@ -259,7 +259,9 @@ foreach ($phpincludefiles as $includename) {
 	if (!stristr($includename, ".inc")) {
 		continue;
 	}
-	include($directory . $includename);
+	if (file_exists($directory . $includename)) {
+		include($directory . $includename);
+	}
 }
 
 ## Set Page Title and Include Header
@@ -326,6 +328,10 @@ foreach ($widgets as $widgetname => $widgetconfig)
 {
 	if ($widgetconfig['display'] == 'none')
 		continue;
+
+	if (!file_exists('/usr/local/www/widgets/widgets/'. $widgetname.'.widget.php')) {
+		continue;
+	}
 
 	if (!isset($widgetColumns[ $widgetconfig['col'] ]))
 		$widgetColumns[ $widgetconfig['col'] ] = array();

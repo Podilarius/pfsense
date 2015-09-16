@@ -1132,9 +1132,6 @@ foreach (get_configured_interface_with_descr() as $ifent => $ifdesc)
 if ($config['l2tp']['mode'] == "server" && have_ruleint_access("l2tp"))
 	$interfaces['l2tp'] = 'L2TP VPN';
 
-if ($config['pptpd']['mode'] == "server" && have_ruleint_access("pptp"))
-	$interfaces['pptp'] = 'PPTP VPN';
-
 if (is_pppoe_server_enabled() && have_ruleint_access("pppoe"))
 	$interfaces['pppoe'] = "PPPoE Server";
 
@@ -1256,8 +1253,6 @@ foreach (['src' => 'Source', 'dst' => 'Destination'] as $type => $name) {
 	);
 	if (isset($a_filter[$id]['floating']) || $if == "FloatingRules")
 		$ruleValues['(self)'] = 'This Firewall (self)';
-	if (have_ruleint_access("pptp"))
-		$ruleValues['pptp'] = 'PPTP clients';
 	if (have_ruleint_access("pppoe"))
 		$ruleValues['pppoe'] = 'PPPoE clients';
 	if (have_ruleint_access("l2tp"))
@@ -1581,7 +1576,7 @@ $group->add(new Form_Select(
 	$pconfig['pdnpipe'],
 	array('' => 'none') + array_keys($dnqlist)
 ));
-
+ 
 $section->add($group)->setHelp('Choose the Out queue/Virtual interface only if '.
 	'you have also selected In. The Out selection is applied to traffic leaving '.
 	'the interface where the rule is created, In is applied to traffic coming '.
@@ -1593,6 +1588,7 @@ $section->add($group)->setHelp('Choose the Out queue/Virtual interface only if '
 $group = new Form_Group('Ackqueue / Queue');
 
 $qlist = array_keys($qlist);
+
 foreach ($qlist as $idx => $q)
 {
 	if (isset($ifdisp[$q]))
@@ -1602,15 +1598,15 @@ foreach ($qlist as $idx => $q)
 $group->add(new Form_Select(
 	'ackqueue',
 	'Ackqueue',
-	$pconfig['ackqueue'],
-	$qlist
+	($qselected) ? $pconfig['ackqueue']:'',
+	['' => 'None'] + $qlist
 ));
 
 $group->add(new Form_Select(
 	'defaultqueue',
 	'Default Queue',
-	$pconfig['defaultqueue'],
-	$qlist
+	($qselected) ? $pconfig['defaultqueue']:'',
+	['' => 'None'] + $qlist
 ));
 
 $section->add($group)->setHelp('Choose the Acknowledge Queue only if you have '.

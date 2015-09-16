@@ -4,56 +4,56 @@
 	firewall_nat_out.php
 */
 /* ====================================================================
- *  Copyright (c)  2004-2015  Electric Sheep Fencing, LLC. All rights reserved. 
- *  Copyright (c)  2004 Scott Ullrich
- *  Copyright (c)  2003-2004 Manuel Kasper <mk@neon1.net>
+ *	Copyright (c)  2004-2015  Electric Sheep Fencing, LLC. All rights reserved.
+ *	Copyright (c)  2004 Scott Ullrich
+ *	Copyright (c)  2003-2004 Manuel Kasper <mk@neon1.net>
  *	Originally part of pfSense (https://www.pfsense.org)
  *
- *  Redistribution and use in source and binary forms, with or without modification, 
- *  are permitted provided that the following conditions are met: 
+ *	Redistribution and use in source and binary forms, with or without modification,
+ *	are permitted provided that the following conditions are met:
  *
- *  1. Redistributions of source code must retain the above copyright notice,
- *      this list of conditions and the following disclaimer.
+ *	1. Redistributions of source code must retain the above copyright notice,
+ *		this list of conditions and the following disclaimer.
  *
- *  2. Redistributions in binary form must reproduce the above copyright
- *      notice, this list of conditions and the following disclaimer in
- *      the documentation and/or other materials provided with the
- *      distribution. 
+ *	2. Redistributions in binary form must reproduce the above copyright
+ *		notice, this list of conditions and the following disclaimer in
+ *		the documentation and/or other materials provided with the
+ *		distribution.
  *
- *  3. All advertising materials mentioning features or use of this software 
- *      must display the following acknowledgment:
- *      "This product includes software developed by the pfSense Project
- *       for use in the pfSense software distribution. (http://www.pfsense.org/). 
+ *	3. All advertising materials mentioning features or use of this software
+ *		must display the following acknowledgment:
+ *		"This product includes software developed by the pfSense Project
+ *		 for use in the pfSense software distribution. (http://www.pfsense.org/).
  *
- *  4. The names "pfSense" and "pfSense Project" must not be used to
- *       endorse or promote products derived from this software without
- *       prior written permission. For written permission, please contact
- *       coreteam@pfsense.org.
+ *	4. The names "pfSense" and "pfSense Project" must not be used to
+ *		 endorse or promote products derived from this software without
+ *		 prior written permission. For written permission, please contact
+ *		 coreteam@pfsense.org.
  *
- *  5. Products derived from this software may not be called "pfSense"
- *      nor may "pfSense" appear in their names without prior written
- *      permission of the Electric Sheep Fencing, LLC.
+ *	5. Products derived from this software may not be called "pfSense"
+ *		nor may "pfSense" appear in their names without prior written
+ *		permission of the Electric Sheep Fencing, LLC.
  *
- *  6. Redistributions of any form whatsoever must retain the following
- *      acknowledgment:
+ *	6. Redistributions of any form whatsoever must retain the following
+ *		acknowledgment:
  *
- *  "This product includes software developed by the pfSense Project
- *  for use in the pfSense software distribution (http://www.pfsense.org/).
+ *	"This product includes software developed by the pfSense Project
+ *	for use in the pfSense software distribution (http://www.pfsense.org/).
   *
- *  THIS SOFTWARE IS PROVIDED BY THE pfSense PROJECT ``AS IS'' AND ANY
- *  EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- *  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- *  PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE pfSense PROJECT OR
- *  ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
- *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- *  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- *  HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
- *  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
- *  OF THE POSSIBILITY OF SUCH DAMAGE.
+ *	THIS SOFTWARE IS PROVIDED BY THE pfSense PROJECT ``AS IS'' AND ANY
+ *	EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ *	IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ *	PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE pfSense PROJECT OR
+ *	ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ *	SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *	NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ *	LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ *	HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ *	STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *	ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+ *	OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- *  ====================================================================
+ *	====================================================================
  *
  */
 /*
@@ -85,21 +85,27 @@ if (!is_array($config['nat']['outbound']['rule'])) {
 
 $a_out = &$config['nat']['outbound']['rule'];
 
-/* update rule order, POST[rule] is an array of ordered IDs */
-if (is_array($_POST['rule']) && !empty($_POST['rule'])) {
-	$a_out_new = array();
+// update rule order, POST[rule] is an array of ordered IDs
+// All rule are 'checked' before posting
+if (isset($_POST['order-store'])) {
+	if(is_array($_POST['rule']) && !empty($_POST['rule'])) {
 
-	// if a rule is not in POST[rule], it has been deleted by the user
-	foreach ($_POST['rule'] as $id)
-		$a_out_new[] = $a_out[$id];
+		$a_out_new = array();
 
-	$a_out = $a_out_new;
-	
-	if (write_config())
-		mark_subsystem_dirty('filter');
-		
-	header("Location: firewall_nat_out.php");
-	exit;
+		// if a rule is not in POST[rule], it has been deleted by the user
+		foreach ($_POST['rule'] as $id) {
+			$a_out_new[] = $a_out[$id];
+		}
+
+		$a_out = $a_out_new;
+
+		if (write_config())
+			mark_subsystem_dirty('natconf');
+
+		header("Location: firewall_nat_out.php");
+		exit;
+
+	}
 }
 
 if (!isset($config['nat']['outbound']['mode']))
@@ -152,10 +158,10 @@ if (isset($_POST['save']) && $_POST['save'] == "Save") {
 				$found = false;
 				foreach ($a_out as $rule) {
 					if ($rule['interface'] == $natent['interface'] &&
-					    $rule['source']['network'] == $natent['source']['network'] &&
-					    $rule['dstport'] == $natent['dstport'] &&
-					    $rule['target'] == $natent['target'] &&
-					    $rule['descr'] == $natent['descr']) {
+						$rule['source']['network'] == $natent['source']['network'] &&
+						$rule['dstport'] == $natent['dstport'] &&
+						$rule['target'] == $natent['target'] &&
+						$rule['descr'] == $natent['descr']) {
 						$found = true;
 						break;
 					}
@@ -175,30 +181,41 @@ if (isset($_POST['save']) && $_POST['save'] == "Save") {
 	if (write_config()) {
 		mark_subsystem_dirty('natconf');
 	}
+
 	header("Location: firewall_nat_out.php");
 	exit;
 }
 
+//	Delete a single rule/map
 if ($_GET['act'] == "del") {
+
 	if ($a_out[$_GET['id']]) {
 		unset($a_out[$_GET['id']]);
 		if (write_config()) {
 			mark_subsystem_dirty('natconf');
 		}
-		header("Location: firewall_nat_out.php");
-		exit;
+
+	header("Location: firewall_nat_out.php");
+	exit;
 	}
 }
 
+// Delete multiple maps Only checked rules will be in the
+// POST
 if (isset($_POST['del_x'])) {
 	/* delete selected rules */
+	print('Deleting rows<br />');
+
 	if (is_array($_POST['rule']) && count($_POST['rule'])) {
 		foreach ($_POST['rule'] as $rulei) {
+			print('Deleting ' . $rulei . '<br />');
 			unset($a_out[$rulei]);
 		}
+
 		if (write_config()) {
 			mark_subsystem_dirty('natconf');
 		}
+
 		header("Location: firewall_nat_out.php");
 		exit;
 	}
@@ -213,108 +230,9 @@ if (isset($_POST['del_x'])) {
 		if (write_config("Firewall: NAT: Outbound, enable/disable NAT rule")) {
 			mark_subsystem_dirty('natconf');
 		}
+
 		header("Location: firewall_nat_out.php");
 		exit;
-	}
-} else {
-	/* yuck - IE won't send value attributes for image buttons, while Mozilla does - so we use .x/.y to find move button clicks instead... */
-	unset($movebtn);
-	foreach ($_POST as $pn => $pd) {
-		if (preg_match("/move_(\d+)_x/", $pn, $matches)) {
-			$movebtn = $matches[1];
-			break;
-		}
-	}
-	/* move selected rules before this rule */
-	if (isset($movebtn) && is_array($_POST['rule']) && count($_POST['rule'])) {
-		$a_out_new = array();
-
-		/* copy all rules < $movebtn and not selected */
-		for ($i = 0; $i < $movebtn; $i++) {
-			if (!in_array($i, $_POST['rule'])) {
-				$a_out_new[] = $a_out[$i];
-			}
-		}
-
-		/* copy all selected rules */
-		for ($i = 0; $i < count($a_out); $i++) {
-			if ($i == $movebtn) {
-				continue;
-			}
-			if (in_array($i, $_POST['rule'])) {
-				$a_out_new[] = $a_out[$i];
-			}
-		}
-
-		/* copy $movebtn rule */
-		if ($movebtn < count($a_out)) {
-			$a_out_new[] = $a_out[$movebtn];
-		}
-
-		/* copy all rules > $movebtn and not selected */
-		for ($i = $movebtn+1; $i < count($a_out); $i++) {
-			if (!in_array($i, $_POST['rule'])) {
-				$a_out_new[] = $a_out[$i];
-			}
-		}
-		if (count($a_out_new) > 0) {
-			$a_out = $a_out_new;
-		}
-
-		if (write_config()) {
-			mark_subsystem_dirty('natconf');
-		}
-		header("Location: firewall_nat_out.php");
-		exit;
-	}
-}
-
-function rule_popup($src, $srcport, $dst, $dstport) {
-	global $config, $g;
-	$aliases_array = array();
-	if ($config['aliases']['alias'] <> "" and is_array($config['aliases']['alias'])) {
-		$descriptions = array ();
-
-		foreach ($config['aliases']['alias'] as $alias_id => $alias_name) {
-			$loading_image="<a><img src=\'/themes/{$g['theme']}/images/misc/loader.gif\' alt=\'loader\' /> " .gettext("loading...")."</a>";
-
-			switch ($alias_name['type']) {
-				case "port":
-					$width="250";
-					break;
-				case "urltable":
-					$width="500";
-					break;
-				default:
-					$width="350";
-
-					break;
-			}
-			$span_begin = "<span style=\"cursor: help;\" onmouseover=\"var response_html=domTT_activate(this, event, 'id','ttalias_{$alias_id}','content','{$loading_image}', 'trail', true, 'delay', 300, 'fade', 'both', 'fadeMax', 93, 'styleClass', 'niceTitle','type','velcro','width',{$width});alias_popup('{$alias_id}','{$g['theme']}','".gettext('loading...')."');\" onmouseout=\"this.style.color = ''; domTT_mouseout(this, event);\"><u>";
-			$span_end = "</u></span>";
-
-			if ($alias_name['name'] == $src) {
-				$descriptions['src'] = $span_begin;
-				$descriptions['src_end'] = $span_end;
-			}
-
-			if ($alias_name['name'] == $srcport) {
-				$descriptions['srcport'] = $span_begin;
-				$descriptions['srcport_end'] = $span_end;
-			}
-
-			if ($alias_name['name'] == $dst) {
-				$descriptions['dst'] = $span_begin;
-				$descriptions['dst_end'] = $span_end;
-			}
-
-			if ($alias_name['name'] == $dstport) {
-				$descriptions['dstport'] = $span_begin;
-				$descriptions['dstport_end'] = $span_end;
-			}
-		}
-
-		return $descriptions;
 	}
 }
 
@@ -387,6 +305,7 @@ print($form);
 			<table class="table table-striped table-hover table-condensed">
 				<thead>
 					<tr>
+						<th><!-- checkbox	  --></th>
 						<th><!-- status	  --></th>
 						<th><?=gettext("Interface")?></th>
 						<th><?=gettext("Source")?></th>
@@ -403,6 +322,7 @@ print($form);
 				<tbody class="user-entries">
 <?php
 			$i = 0;
+
 			foreach ($a_out as $natent):
 				$iconfn = "pass";
 				$textss = $textse = "";
@@ -417,12 +337,17 @@ print($form);
 					pprint_port($natent['destination']['port'])
 				);
 ?>
-					<tr id="fr<?=$i?>">
+
+					<tr id="fr<?=$i;?>" onClick="fr_toggle(<?=$i;?>)" ondblclick="document.location='firewall_nat_out_edit.php?id=<?=$i;?>';">
+						<td >
+							<input type="checkbox" id="frc<?=$i;?>" onClick="fr_toggle(<?=$i;?>)" name="rule[]" value="<?=$i;?>"/>
+						</td>
+
 						<td>
 <?php
 					if ($mode == "disabled" || $mode == "automatic"):
 ?>
-							<i class="<?= ($iconfn == "pass") ? "icon-ok":"icon-remove"?>"title="<?=gettext("Click to toggle enabled/disabled status")?>"></i>
+							<i class="<?= ($iconfn == "pass") ? "icon-ok":"icon-remove"?>" title="<?=gettext("Click to toggle enabled/disabled status")?>"></i>
 <?php
 					else:
 ?>
@@ -436,7 +361,6 @@ print($form);
 						</td>
 
 						<td>
-							<input type="hidden" name="rule[]" value="<?=$i?>" />
 							<?=htmlspecialchars(convert_friendly_interface_to_friendly_descr($natent['interface']))?>
 						</td>
 
@@ -467,7 +391,7 @@ print($form);
 						if (!$natent['sourceport']) {
 							echo "*";
 						} else {
-						
+
 							if (isset($alias['srcport'])):
 ?>
 							<a href="/firewall_aliases_edit.php?id=<?=$alias['srcport']?>" data-toggle="popover" data-trigger="hover focus" title="Alias details" data-content="<?=alias_info_popup($alias['srcport'])?>" data-html="true">
@@ -492,7 +416,7 @@ print($form);
 						} else {
 							if (isset($natent['destination']['not']))
 								echo "!&nbsp;";
-								
+
 
 							if (isset($alias['dst'])):
 ?>
@@ -506,7 +430,7 @@ print($form);
 ?>
 							<i class='icon icon-pencil'></i></a>
 <?php
-							endif;								
+							endif;
 						}
 ?>
 						</td>
@@ -588,8 +512,9 @@ print($form);
 	</div>
 
 	<nav class="action-buttons">
-		<a href="firewall_nat_out_edit.php?after=-1" class="btn btn-sm btn-success" title="<?=gettext('Add new mapping')?>"><?=gettext('Add new mapping')?></a>&nbsp;
-		<input type="submit" id="order-store" class="btn btn-primary btn-sm" value="store changes" disabled="disabled" />
+		<a href="firewall_nat_out_edit.php" class="btn btn-sm btn-success" title="<?=gettext('Add new mapping')?>"><?=gettext('Add new mapping')?></a>&nbsp;
+		<input name="del_x" type="submit" class="btn btn-danger btn-sm" value="<?=gettext("Delete selected map"); ?>"	 />
+		<input type="submit" id="order-store" class="btn btn-primary btn-sm" value="Save changes" disabled="disabled" name="order-store" />
 	</nav>
 
 <?php
@@ -621,6 +546,8 @@ if ($mode == "automatic" || $mode == "hybrid"):
 						<th><?=gettext("Description")?></th>
 
 					</tr>
+				</thead>
+				<tbody>
 <?php
 	foreach ($automatic_rules as $natent):
 ?>
@@ -722,6 +649,31 @@ endif;
 </div>
 
 <script>
+function fr_toggle(id, prefix) {
+	if (!prefix)
+		prefix = 'fr';
+
+	var checkbox = document.getElementById(prefix + 'c' + id);
+	checkbox.checked = !checkbox.checked;
+	fr_bgcolor(id, prefix);
+}
+
+function fr_bgcolor(id, prefix) {
+	if (!prefix)
+		prefix = 'fr';
+
+	var row = document.getElementById(prefix + id);
+	var checkbox = document.getElementById(prefix + 'c' + id);
+	var cells = row.getElementsByTagName('td');
+	var cellcnt = cells.length;
+
+	for (i = 0; i < cellcnt-1; i++) {
+		cells[i].style.backgroundColor = checkbox.checked ? "#DDF4FF" : "#FFFFFF";
+	}
+}
+</script>
+
+<script>
 events.push(function() {
 	// Make rules draggable/sortable
 	$('table tbody.user-entries').sortable({
@@ -729,6 +681,11 @@ events.push(function() {
 		update: function(event, ui) {
 			$('#order-store').removeAttr('disabled');
 		}
+	});
+
+	// Check all of the rule checkboxes so that their values are posted
+	$('#order-store').click(function () {
+	   $('[id^=frc]').prop('checked', true);
 	});
 });
 </script>

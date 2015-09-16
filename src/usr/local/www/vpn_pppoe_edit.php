@@ -1,34 +1,58 @@
 <?php
 /*
 	vpn_pppoe_edit.php
-	part of pfSense
-
-	Copyright (C) 2005 Scott Ullrich (sullrich@gmail.com)
-	Copyright (C) 2010 Ermal Luçi
-	Copyright (C) 2013-2015 Electric Sheep Fencing, LP
-	All rights reserved.
-
-	Redistribution and use in source and binary forms, with or without
-	modification, are permitted provided that the following conditions are met:
-
-	1. Redistributions of source code must retain the above copyright notice,
-	   this list of conditions and the following disclaimer.
-
-	2. Redistributions in binary form must reproduce the above copyright
-	   notice, this list of conditions and the following disclaimer in the
-	   documentation and/or other materials provided with the distribution.
-
-	THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES,
-	INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
-	AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-	AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY,
-	OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-	SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-	INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-	CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-	ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-	POSSIBILITY OF SUCH DAMAGE.
 */
+/* ====================================================================
+ *	Copyright (c)  2004-2015  Electric Sheep Fencing, LLC. All rights reserved.
+ *	Copyright (c)  2004, 2005 Scott Ullrich
+ *
+ *	Redistribution and use in source and binary forms, with or without modification,
+ *	are permitted provided that the following conditions are met:
+ *
+ *	1. Redistributions of source code must retain the above copyright notice,
+ *		this list of conditions and the following disclaimer.
+ *
+ *	2. Redistributions in binary form must reproduce the above copyright
+ *		notice, this list of conditions and the following disclaimer in
+ *		the documentation and/or other materials provided with the
+ *		distribution.
+ *
+ *	3. All advertising materials mentioning features or use of this software
+ *		must display the following acknowledgment:
+ *		"This product includes software developed by the pfSense Project
+ *		 for use in the pfSense software distribution. (http://www.pfsense.org/).
+ *
+ *	4. The names "pfSense" and "pfSense Project" must not be used to
+ *		 endorse or promote products derived from this software without
+ *		 prior written permission. For written permission, please contact
+ *		 coreteam@pfsense.org.
+ *
+ *	5. Products derived from this software may not be called "pfSense"
+ *		nor may "pfSense" appear in their names without prior written
+ *		permission of the Electric Sheep Fencing, LLC.
+ *
+ *	6. Redistributions of any form whatsoever must retain the following
+ *		acknowledgment:
+ *
+ *	"This product includes software developed by the pfSense Project
+ *	for use in the pfSense software distribution (http://www.pfsense.org/).
+ *
+ *	THIS SOFTWARE IS PROVIDED BY THE pfSense PROJECT ``AS IS'' AND ANY
+ *	EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ *	IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ *	PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE pfSense PROJECT OR
+ *	ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ *	SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *	NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ *	LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ *	HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ *	STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *	ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+ *	OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ *	====================================================================
+ *
+ */
 
 ##|+PRIV
 ##|*IDENT=page-services-pppoeserver-edit
@@ -39,8 +63,6 @@
 
 require("guiconfig.inc");
 require_once("vpn.inc");
-$addrow = false;
-$dltrow = 9999;
 
 function vpn_pppoe_get_id() {
 	global $config;
@@ -67,12 +89,6 @@ $a_pppoes = &$config['pppoes']['pppoe'];
 
 if (is_numericint($_GET['id'])) {
 	$id = $_GET['id'];
-
-if($_GET['addrow'] == 'true')
-	$addrow = true;
-
-if (is_numericint($_GET['dltrow']))
-	$dltrow = $_GET['dltrow'];
 
 if (isset($_POST['id']) && is_numericint($_POST['id']))
 	$id = $_POST['id'];
@@ -147,7 +163,7 @@ if ($_POST) {
 		$subnet_start = ip2ulong($_POST['remoteip']);
 		$subnet_end = ip2ulong($_POST['remoteip']) + $_POST['pppoe_subnet'] - 1;
 		if ((ip2ulong($_POST['localip']) >= $subnet_start) &&
-		    (ip2ulong($_POST['localip']) <= $subnet_end)) {
+			(ip2ulong($_POST['localip']) <= $subnet_end)) {
 			$input_errors[] = gettext("The specified server address lies in the remote subnet.");
 		}
 		if ($_POST['localip'] == get_interface_ip($_POST['interface'])) {
@@ -159,7 +175,7 @@ if ($_POST) {
 				if (empty($_POST["password{$x}"])) {
 					$input_errors[] = sprintf(gettext("No password specified for username %s"), $_POST["username{$x}"]);
 				}
-				if ($_POST["ip{$x}"] <> "" && !is_ipaddr($_POST["ip{$x}"])) {
+				if ($_POST["ip{$x}"] != "" && !is_ipaddr($_POST["ip{$x}"])) {
 					$input_errors[] = sprintf(gettext("Incorrect ip address specified for username %s"), $_POST["username{$x}"]);
 				}
 			}
@@ -242,9 +258,11 @@ if ($_POST) {
 				if ($_POST["ip{$x}"]) {
 					$usernam .= ":" . $_POST["ip{$x}"];
 				}
+
 				$users[] = $usernam;
 			}
 		}
+
 		if (count($users) > 0) {
 			$pppoecfg['username'] = implode(" ", $users);
 		}
@@ -252,6 +270,7 @@ if ($_POST) {
 		if (!isset($id)) {
 			$id = count($a_pppoes);
 		}
+
 		if (file_exists("{$g['tmp_path']}/.vpn_pppoe.apply")) {
 			$toapplylist = unserialize(file_get_contents("{$g['tmp_path']}/.vpn_pppoe.apply"));
 		} else {
@@ -300,7 +319,8 @@ $section->addInput(new Form_Checkbox(
 	'mode',
 	'Enable',
 	'Enable PPPoE Server',
-	($pconfig['mode'] == "server")
+	($pconfig['mode'] == "server"),
+	'server'
 )) ->toggles('.form-group:not(:first-child)');
 
 $section->addInput(new Form_Select(
@@ -313,7 +333,7 @@ $section->addInput(new Form_Select(
 
 $section->addInput(new Form_Select(
 	'pppoe_subnet',
-	'Subnet netask',
+	'Subnet mask',
 	$pconfig['pppoe_subnet'],
 	array_combine(range(0, 32, 1), range(0, 32, 1))
 ))->setHelp('Hint: 24 is 255.255.255.0');
@@ -362,7 +382,7 @@ $section->addInput(new Form_IpAddress(
 $section->addInput(new Form_Checkbox(
 	'radiusenable',
 	'RADIUS',
-	'Use a Radius Server for authentication',
+	'Use a RADIUS Server for authentication',
 	$pconfig['radiusenable']
 ))->setHelp('All users will be authenticated using the RADIUS server specified below. The local user database ' .
 			'will not be used');
@@ -370,7 +390,7 @@ $section->addInput(new Form_Checkbox(
 $section->addInput(new Form_Checkbox(
 	'radacct_enable',
 	null,
-	'Enable Radius Accounting',
+	'Enable RADIUS Accounting',
 	$pconfig['radacct_enable']
 ))->setHelp('Sends accounting packets to the RADIUS server');
 
@@ -468,75 +488,65 @@ $section->addInput(new Form_Input(
 ))->setHelp('Enter the shared secret that will be used to authenticate to the backup RADIUS server.');
 
 $counter = 0;
+$numrows = count($item) -1;
+
 $usernames = $pconfig['username'];
 
 //DEBUG
-$usernames = 'sbeaver:TXlQYXNzd2Q=:192.168.1.1 smith:TXlQYXNzd2Q=:192.168.2.1 sjones:TXlQYXNzd2Q=:192.168.3.1 salpha:TXlQYXNzd2Q=:192.168.4.1';
+//$usernames = 'sbeaver:TXlQYXNzd2Q=:192.168.1.1 smith:TXlQYXNzd2Q=:192.168.2.1 sjones:TXlQYXNzd2Q=:192.168.3.1 salpha:TXlQYXNzd2Q=:192.168.4.1';
 
-if($addrow)
-	$usernames .= ' ::';
+if($usernames == "")
+	$usernames = '::';
 
-if ($usernames != ""):
+if ($usernames != ""){
 	$item = explode(" ", $usernames);
 
 	$numrows = count($item) -1;
 
-	foreach($item as $ww):
+	foreach($item as $ww) {
 		$wws = explode(":", $ww);
 		$user = $wws[0];
 		$passwd = base64_decode($wws[1]);
 		$ip = $wws[2];
 
-		$tracker = $counter;
+		$group = new Form_Group($counter == 0 ? 'User table':null);
+		$group->addClass('repeatable');
 
-		if($tracker != $dltrow) {
-			$group = new Form_Group($counter == 0 ? 'User table':null);
+		$group->add(new Form_Input(
+			'username' . $counter,
+			null,
+			'text',
+			$user
+		))->setHelp($numrows == $counter ? 'User name':null);
 
-			$group->add(new Form_Input(
-				'username' . $tracker,
-				null,
-				'text',
-				$user
-			))->setHelp($numrows == $tracker ? 'User name':null);
+		$group->add(new Form_Input(
+			'password' . $counter,
+			null,
+			'password',
+			$passwd
+		))->setHelp($numrows == $counter ? 'Password':null);
 
-			$group->add(new Form_Input(
-				'password' . $tracker,
-				null,
-				'password',
-				$passwd
-			))->setHelp($numrows == $tracker ? 'Password':null);
+		$group->add(new Form_IpAddress(
+			'ip' . $counter,
+			null,
+			$ip
+		))->setHelp($numrows == $counter ? 'IP Address':null);
 
-			$group->add(new Form_IpAddress(
-				'ip' . $tracker,
-				null,
-				$ip
-			))->setHelp($numrows == $tracker ? 'IP Address':null);
+		$group->add(new Form_Button(
+			'deleterow' . $counter,
+			'Delete'
+		))->removeClass('btn-primary')->addClass('btn-warning');
 
-			$btndltrow = new Form_Button(
-				'btndltrow' . $tracker,
-				'Delete',
-				'vpn_pppoe_edit.php?id=' . $id . '&dltrow=' . $tracker
-			);
-
-			$btndltrow->removeClass('btn-primary')->addClass('btn-danger btn-sm');
-
-			$group->add($btndltrow);
-			$section->add($group);
-		}
+		$section->add($group);
 
 		$counter++;
-	endforeach;
-endif;
+	}
+}
 
-$btnaddrow = new Form_Button(
-	'btnaddrow',
-	'Add Row',
-	'vpn_pppoe_edit.php?id=' . $id . '&addrow=true'
-	);
-
-$btnaddrow->removeClass('btn-primary')->addClass('btn-success btn-sm');
-
-$section->addInput($btnaddrow);
+$section->addInput(new Form_Button(
+	'addrow',
+	'Add'
+))->removeClass('btn-primary')->addClass('btn-success');
 
 // Hidden fields
 if(isset($id)) {
@@ -566,6 +576,150 @@ print_info_box(gettext('Don\'t forget to add a firewall rule to permit traffic f
 <script>
 //<![CDATA[
 events.push(function(){
+	function setMasks() {
+		// Find all ipaddress masks and make dynamic based on address family of input
+		$('span.pfIpMask + select').each(function (idx, select){
+			var input = $(select).prevAll('input[type=text]');
+
+			input.on('change', function(e){
+				var isV6 = (input.val().indexOf(':') != -1), min = 0, max = 128;
+				if (!isV6)
+					max = 32;
+
+				if (input.val() == "")
+					return;
+
+				while (select.options.length > max)
+					select.remove(0);
+
+				if (select.options.length < max)
+				{
+					for (var i=select.options.length; i<=max; i++)
+						select.options.add(new Option(i, i), 0);
+				}
+			});
+
+			// Fire immediately
+			input.change();
+		});
+	}
+
+	// Complicated function to move all help text associated with this input id to the same id
+	// on the row above. That way if you delete the last row, you don't lose the help
+	function moveHelpText(id) {
+		$('#' + id).parent('div').parent('div').find('input').each(function() {	 // For each <span></span>
+			var fromId = this.id;
+			var toId = decrStringInt(fromId);
+			var helpSpan;
+
+			if(!$(this).hasClass('pfIpMask') && !$(this).hasClass('btn')) {
+
+				helpSpan = $('#' + fromId).parent('div').parent('div').find('span:last').clone();
+				if($(helpSpan).hasClass('help-block')) {
+					if($('#' + decrStringInt(fromId)).parent('div').hasClass('input-group'))
+						$('#' + decrStringInt(fromId)).parent('div').after(helpSpan);
+					else
+						$('#' + decrStringInt(fromId)).after(helpSpan);
+				}
+			}
+		});
+	}
+
+	// Increment the number at the end of the string
+	function bumpStringInt( str )	{
+	  var data = str.match(/(\D*)(\d+)(\D*)/), newStr = "";
+
+	  if( data )
+		newStr = data[ 1 ] + ( Number( data[ 2 ] ) + 1 ) + data[ 3 ];
+
+	  return newStr || str;
+	}
+
+	// Decrement the number at the end of the string
+	function decrStringInt( str )	{
+	  var data = str.match(/(\D*)(\d+)(\D*)/), newStr = "";
+
+	  if( data )
+		newStr = data[ 1 ] + ( Number( data[ 2 ] ) - 1 ) + data[ 3 ];
+
+	  return newStr || str;
+	}
+
+	// Called after a delete so that there are no gaps in the numbering. Most of the time the config system doesn't care about
+	// gaps, but I do :)
+	function renumber() {
+		var idx = 0;
+
+		$('.repeatable').each(function() {
+
+			$(this).find('input').each(function() {
+				$(this).prop("id", this.id.replace(/\d+$/, "") + idx);
+				$(this).prop("name", this.name.replace(/\d+$/, "") + idx);
+			});
+
+			$(this).find('select').each(function() {
+				$(this).prop("id", this.id.replace(/\d+$/, "") + idx);
+				$(this).prop("name", this.name.replace(/\d+$/, "") + idx);
+			});
+
+			$(this).find('label').attr('for', $(this).find('label').attr('for').replace(/\d+$/, "") + idx);
+
+			idx++;
+		});
+	}
+
+	function delete_row(row) {
+		$('#' + row).parent('div').parent('div').remove();
+		renumber();
+	}
+
+	function add_row() {
+		// Find the lst repeatable group
+		var lastRepeatableGroup = $('.repeatable:last');
+
+		// Clone it
+		var newGroup = lastRepeatableGroup.clone(true);
+
+		// Increment the suffix number for each input elemnt in the new group
+		$(newGroup).find('input').each(function() {
+			$(this).prop("id", bumpStringInt(this.id));
+			$(this).prop("name", bumpStringInt(this.name));
+			if(!$(this).is('[id^=delete]'))
+				$(this).val('');
+		});
+
+		// Do the same for selectors
+		$(newGroup).find('select').each(function() {
+			$(this).prop("id", bumpStringInt(this.id));
+			$(this).prop("name", bumpStringInt(this.name));
+			// If this selector lists mask bits, we need it to be reset to all 128 options
+			// and no items selected, so that automatic v4/v6 selection still works
+			if($(this).is('[id^=address_subnet]')) {
+				$(this).empty();
+				for(idx=128; idx>0; idx--) {
+					$(this).append($('<option>', {
+						value: idx,
+						text: idx
+					}));
+				}
+			}
+		});
+
+		// And for "for" tags
+		$(newGroup).find('label').attr('for', bumpStringInt($(newGroup).find('label').attr('for')));
+		$(newGroup).find('label').text(""); // Clear the label. We only want it on the very first row
+
+		// Insert the updated/cloned row
+		$(lastRepeatableGroup).after(newGroup);
+
+		// Delete any help text from the group we have cloned
+		$(lastRepeatableGroup).find('.help-block').each(function() {
+			$(this).remove();
+		});
+
+		setMasks();
+
+	}
 
 	// Disables the specified input element
 	function disableInput(id, disable) {
@@ -609,9 +763,26 @@ events.push(function(){
 		hide_radius2(!$('#radiussecenable').prop('checked'));
 	});
 
-	//I On initial page load
+	//On initial page load
 	hide_radius2(!$('#radiussecenable').prop('checked'));
 	hide_radius(!$('#radiusenable').prop('checked'));
+	// These are action buttons, not submit buttons
+	$('[id^=addrow]').prop('type','button');
+	$('[id^=delete]').prop('type','button');
+
+	// on click . .
+	$('[id^=addrow]').click(function() {
+		add_row();
+	});
+
+	$('[id^=delete]').click(function(event) {
+		if($('.repeatable').length > 1) {
+			moveHelpText(event.target.id);
+			delete_row(event.target.id);
+		}
+		else
+			alert('<?php echo gettext("You may not delete the last one!")?>');
+	});
 });
 //]]>
 </script>
