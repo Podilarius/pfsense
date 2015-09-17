@@ -1091,24 +1091,27 @@ if ($edit_disabled)
 			$extra = '<br/><a href="firewall_nat_edit.php?id='. $index .'">'. gettext('View the NAT rule') .'</a>';
 	}
 
-	$section->add(new Form_Group(
-		'Associated filter rule'
-	))->setHelp('Note: This is associated to a NAT rule.<br/>You cannot edit '.
-		'the interface, protocol, source, or destination of associated filter '.
-		'rules.'. $extra);
+	$section->addInput(new Form_StaticText(
+		'Associated filter rule',
+		'<span class="help-block">' .
+		'This is associated with a NAT rule.<br/>' .
+		'You cannot edit the interface, protocol, source, or destination of associated filter rules.'.
+		$extra .
+		'</span>'
+		));
 
-	$section->addInput(new Form_Input(
+	$form->addGlobal(new Form_Input(
 		'associated-rule-id',
-		'Associated Rule ID',
+		null,
 		'hidden',
 		$pconfig['associated-rule-id']
 	));
 
 	if (!empty($pconfig['interface']))
 	{
-		$section->addInput(new Form_Input(
+		$form->addGlobal(new Form_Input(
 			'interface',
-			'Interface',
+			null,
 			'hidden',
 			$pconfig['interface']
 		));
@@ -1117,7 +1120,7 @@ if ($edit_disabled)
 
 $interfaces = array();
 
-/* add group interfaces */
+// add group interfaces
 if (is_array($config['ifgroups']['ifgroupentry']))
 	foreach ($config['ifgroups']['ifgroupentry'] as $ifgen)
 		if (have_ruleint_access($ifgen['ifname']))
@@ -1135,11 +1138,11 @@ if ($config['l2tp']['mode'] == "server" && have_ruleint_access("l2tp"))
 if (is_pppoe_server_enabled() && have_ruleint_access("pppoe"))
 	$interfaces['pppoe'] = "PPPoE Server";
 
-/* add ipsec interfaces */
+// add ipsec interfaces
 if (isset($config['ipsec']['enable']) || isset($config['ipsec']['client']['enable']) && have_ruleint_access("enc0"))
 	$interfaces["enc0"] = "IPsec";
 
-/* add openvpn/tun interfaces */
+// add openvpn/tun interfaces
 if ($config['openvpn']["openvpn-server"] || $config['openvpn']["openvpn-client"])
 	$interfaces["openvpn"] = "OpenVPN";
 
@@ -1373,6 +1376,7 @@ $section->addInput(new Form_StaticText(
 ));
 
 $form->add($section);
+
 $section = new Form_Section('Advanced options');
 $section->addClass('advanced-options');
 
@@ -1704,6 +1708,7 @@ events.push(function(){
 	var portsenabled = 1;
 	var editenabled = 1;
 	var optionsvisible = 0;
+	var srcportsvisible = 0;
 
 	function ext_change() {
 		if (($('#srcbeginport').find(":selected").index() == 0) && portsenabled && editenabled) {
@@ -1758,10 +1763,7 @@ events.push(function(){
 	}
 
 	function show_source_port_range() {
-		if (portsenabled) {
-			hideInput('btnsrcadv', true);
-			hideClass('srcprtr', false);
-		}
+		hideClass('srcprtr', !srcportsvisible);
 	}
 
 	function typesel_change() {
@@ -1846,11 +1848,14 @@ events.push(function(){
 		}
 
 		if ($('#proto').find(":selected").index() <= 2) {
-			hideClass('dstprtr', false);
-			hideClass('srcprtr', false);
+			hideClass('dstprtr', !srcportsvisible);
+			hideClass('srcprtr', !srcportsvisible);
+			$("#btnsrcadv").prop('value', srcportsvisible ? 'Hide advanced':'Show advanced');
 		} else {
 			hideClass('srcprtr', true);
 			hideClass('dstprtr', true);
+			srcportsvisible = 0;
+			$("#btnsrcadv").prop('value', srcportsvisible ? 'Hide advanced':'Show advanced');
 		}
 	}
 
@@ -1887,8 +1892,9 @@ events.push(function(){
 	});
 
 	$('#btnsrcadv').click(function() {
-		hideClass('srcportrange', false);
-		hideInput('btnsrcadv', true);
+		srcportsvisible = !srcportsvisible;
+		show_source_port_range();
+		$("#btnsrcadv").prop('value', srcportsvisible ? 'Hide advanced':'Show advanced');
 	});
 
 	$('#srcendport').on('change', function() {
