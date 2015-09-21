@@ -560,8 +560,8 @@ function install_package_xml($package_name) {
 		$to_output = gettext("overwrite!") . "\n";
 	}
 	unlink_if_exists('/conf/needs_package_sync');
-	conf_mount_ro();
 	write_config("Intermediate config write during package install for {$pkg_info['name']}.");
+	conf_mount_ro();
 	$static_output .= $to_output;
 	update_output_window($static_output);
 
@@ -863,7 +863,7 @@ function delete_package_xml($package_name, $when = "post-deinstall") {
 		}
 	}
 	/* syslog */
-	if (is_array($pkg_info['logging']) && $pkg_info['logging']['logfile_name'] <> "") {
+	if (is_array($pkg_info['logging']) && $pkg_info['logging']['logfilename'] <> "") {
 		$static_output .= "Syslog entries... ";
 		update_output_window($static_output);
 		remove_text_from_file("/etc/syslog.conf", $pkg_info['logging']['facilityname'] . "\t\t\t\t" . $pkg_info['logging']['logfilename']);
@@ -873,7 +873,6 @@ function delete_package_xml($package_name, $when = "post-deinstall") {
 		update_output_window($static_output);
 	}
 
-	conf_mount_ro();
 	/* remove config.xml entries */
 	$static_output .= gettext("Configuration... ");
 	update_output_window($static_output);
@@ -881,6 +880,7 @@ function delete_package_xml($package_name, $when = "post-deinstall") {
 	$static_output .= gettext("done.") . "\n";
 	update_output_window($static_output);
 	write_config("Removed {$package_name} package.\n");
+	conf_mount_ro();
 }
 
 function pkg_reinstall_all() {

@@ -79,6 +79,7 @@ require_once("vpn.inc");
 require_once("xmlparse_attr.inc");
 
 define("ALLOWWEP", false);
+define("ANTENNAS", false);
 
 if (isset($_POST['referer'])) {
 	$referer = $_POST['referer'];
@@ -209,7 +210,7 @@ if ($wancfg['if'] == $a_ppps[$pppid]['if']) {
 	} else if ($a_ppps[$pppid]['type'] == "pptp" || $a_ppps[$pppid]['type'] == "l2tp") {
 		$pconfig['pptp_username'] = $a_ppps[$pppid]['username'];
 		$pconfig['pptp_password'] = base64_decode($a_ppps[$pppid]['password']);
-		$pconfig['pptp_local'] = explode(",", $a_ppps[$pppid]['localip']);
+		$pconfig['pptp_localip'] = explode(",", $a_ppps[$pppid]['localip']);
 		$pconfig['pptp_subnet'] = explode(",", $a_ppps[$pppid]['subnet']);
 		$pconfig['pptp_remote'] = explode(",", $a_ppps[$pppid]['gateway']);
 		$pconfig['pptp_dialondemand'] = isset($a_ppps[$pppid]['ondemand']);
@@ -604,20 +605,20 @@ if ($_POST['apply']) {
 			break;
 		case "pptp":
 			if ($_POST['pptp_dialondemand']) {
-				$reqdfields = explode(" ", "pptp_username pptp_password pptp_local pptp_subnet pptp_remote pptp_dialondemand pptp_idletimeout");
+				$reqdfields = explode(" ", "pptp_username pptp_password pptp_local0 pptp_subnet0 pptp_remote0 pptp_dialondemand pptp_idletimeout");
 				$reqdfieldsn = array(gettext("PPTP username"), gettext("PPTP password"), gettext("PPTP local IP address"), gettext("PPTP subnet"), gettext("PPTP remote IP address"), gettext("Dial on demand"), gettext("Idle timeout value"));
 			} else {
-				$reqdfields = explode(" ", "pptp_username pptp_password pptp_local pptp_subnet pptp_remote");
+				$reqdfields = explode(" ", "pptp_username pptp_password pptp_local0 pptp_subnet0 pptp_remote");
 				$reqdfieldsn = array(gettext("PPTP username"), gettext("PPTP password"), gettext("PPTP local IP address"), gettext("PPTP subnet"), gettext("PPTP remote IP address"));
 			}
 			do_input_validation($_POST, $reqdfields, $reqdfieldsn, $input_errors);
 			break;
 		case "l2tp":
 			if ($_POST['pptp_dialondemand']) {
-				$reqdfields = explode(" ", "pptp_username pptp_password pptp_remote pptp_dialondemand pptp_idletimeout");
+				$reqdfields = explode(" ", "pptp_username pptp_password pptp_remote0 pptp_dialondemand pptp_idletimeout");
 				$reqdfieldsn = array(gettext("L2TP username"), gettext("L2TP password"), gettext("L2TP remote IP address"), gettext("Dial on demand"), gettext("Idle timeout value"));
 			} else {
-				$reqdfields = explode(" ", "pptp_username pptp_password pptp_remote");
+				$reqdfields = explode(" ", "pptp_username pptp_password pptp_remote0");
 				$reqdfieldsn = array(gettext("L2TP username"), gettext("L2TP password"), gettext("L2TP remote IP address"));
 			}
 			do_input_validation($_POST, $reqdfields, $reqdfieldsn, $input_errors);
@@ -654,6 +655,9 @@ if ($_POST['apply']) {
 						break;
 					}
 				}
+			}
+			if (!is_ipaddrv4($_POST['gateway-6rd'])) {
+				$input_errors[] = gettext("6RD Border Gateway must be an IPv4 address.");
 			}
 			if (in_array($wancfg['ipaddrv6'], array())) {
 				$input_errors[] = sprintf(gettext("You have to reassign the interface to be able to configure as %s."), $_POST['type6']);
@@ -805,13 +809,13 @@ if ($_POST['apply']) {
 	if ($_POST['pppoe_resetdate'] != "" && !is_numeric(str_replace("/", "", $_POST['pppoe_resetdate']))) {
 		$input_errors[] = gettext("A valid PPPoE reset date must be specified (mm/dd/yyyy).");
 	}
-	if (($_POST['pptp_local'] && !is_ipaddrv4($_POST['pptp_local']))) {
+	if (($_POST['pptp_local0'] && !is_ipaddrv4($_POST['pptp_local0']))) {
 		$input_errors[] = gettext("A valid PPTP local IP address must be specified.");
 	}
-	if (($_POST['pptp_subnet'] && !is_numeric($_POST['pptp_subnet']))) {
+	if (($_POST['pptp_subnet0'] && !is_numeric($_POST['pptp_subnet0']))) {
 		$input_errors[] = gettext("A valid PPTP subnet bit count must be specified.");
 	}
-	if (($_POST['pptp_remote'] && !is_ipaddrv4($_POST['pptp_remote']) && !is_hostname($_POST['gateway'][$iface]))) {
+	if (($_POST['pptp_remote0'] && !is_ipaddrv4($_POST['pptp_remote0']) && !is_hostname($_POST['gateway'][$iface]))) {
 		$input_errors[] = gettext("A valid PPTP remote IP address must be specified.");
 	}
 	if (($_POST['pptp_idletimeout'] != "") && !is_numericint($_POST['pptp_idletimeout'])) {
@@ -1011,6 +1015,12 @@ if ($_POST['apply']) {
 		}
 	}
 	if (!$input_errors) {
+		// These 3 fields can be a list of multiple data items when used for MLPPP.
+		// The UI in this code only processes the first of the list, so save the data here then we can preserve any other entries.
+		$poriginal['pptp_localip'] = explode(",", $a_ppps[$pppid]['localip']);
+		$poriginal['pptp_subnet'] = explode(",", $a_ppps[$pppid]['subnet']);
+		$poriginal['pptp_remote'] = explode(",", $a_ppps[$pppid]['gateway']);
+
 		if ($wancfg['ipaddr'] != $_POST['type']) {
 			if (in_array($wancfg['ipaddr'], array("ppp", "pppoe", "pptp", "l2tp"))) {
 				$wancfg['if'] = $a_ppps[$pppid]['ports'];
@@ -1236,9 +1246,13 @@ if ($_POST['apply']) {
 				}
 				$a_ppps[$pppid]['username'] = $_POST['pptp_username'];
 				$a_ppps[$pppid]['password'] = base64_encode($_POST['pptp_password']);
-				$a_ppps[$pppid]['localip'] = $_POST['pptp_local'];
-				$a_ppps[$pppid]['subnet'] = $_POST['pptp_subnet'];
-				$a_ppps[$pppid]['gateway'] = $_POST['pptp_remote'];
+				// Replace the first (0) entry with the posted data. Preserve any other entries that might be there.
+				$poriginal['pptp_localip'][0] = $_POST['pptp_local0'];
+				$a_ppps[$pppid]['localip'] = implode(',', $poriginal['pptp_localip']);
+				$poriginal['pptp_subnet'][0] = $_POST['pptp_subnet0'];
+				$a_ppps[$pppid]['subnet'] = implode(',', $poriginal['pptp_subnet']);
+				$poriginal['pptp_remote'][0] = $_POST['pptp_remote0'];
+				$a_ppps[$pppid]['gateway'] = implode(',', $poriginal['pptp_remote']);
 				$a_ppps[$pppid]['ondemand'] = $_POST['pptp_dialondemand'] ? true : false;
 				if (!empty($_POST['pptp_idletimeout'])) {
 					$a_ppps[$pppid]['idletimeout'] = $_POST['pptp_idletimeout'];
@@ -2443,7 +2457,7 @@ $section->add($group);
 $form->add($section);
 
 $section = new Form_Section('6RD Configuration');
-$section->addClass('6rd');
+$section->addClass('_6rd');
 
 $section->addInput(new Form_Input(
 	'prefix-6rd',
@@ -2461,10 +2475,10 @@ $section->addInput(new Form_Input(
 
 $section->addInput(new Form_Select(
 	'prefix-6rd-v4plen',
-	'DHCPv6 Prefix Delegation size',
+	'6RD IPv4 Prefix length',
 	$pconfig['prefix-6rd-v4plen'],
 	array_combine(range(0, 32), range(0, 32))
-))->setHelp('6RD IPv4 prefix length. Normally specified by the ISP. A value of 0 means we embed the entire IPv4 address in the 6RD prefix..');
+))->setHelp('6RD IPv4 prefix length. Normally specified by the ISP. A value of 0 means we embed the entire IPv4 address in the 6RD prefix.');
 
 $form->add($section);
 
@@ -2772,13 +2786,13 @@ $section->addInput(new Form_Input(
 ));
 
 $section->addInput(new Form_IpAddress(
-	'pptp_local',
+	'pptp_local0',
 	'Local IP address',
-	$pconfig['pptp_local'][0]
-))->addMask('pptp_subnet', $pconfig['pptp_subnet'][0]);
+	$pconfig['pptp_localip'][0]
+))->addMask('pptp_subnet0', $pconfig['pptp_subnet'][0]);
 
 $section->addInput(new Form_IpAddress(
-	'pptp_remote',
+	'pptp_remote0',
 	'Remote IP address',
 	$pconfig['pptp_remote'][0]
 ));
@@ -2802,9 +2816,15 @@ $section->addInput(new Form_Input(
 			'An idle timeout of zero disables this feature.');
 
 if (isset($pconfig['pppid'])) {
+	if (isset($pconfig['pptp_localip'][1]) || isset($pconfig['pptp_subnet'][1]) || isset($pconfig['pptp_remote'][1])) {
+		$mlppp_text = gettext("There are additional Local and Remote IP addresses defined for MLPPP.") . "<br />";
+	} else {
+		$mlppp_text = "";
+	}
+
 	$section->addInput(new Form_StaticText(
 		'Advanced and MLPPP',
-		'<a href="/interfaces_ppps_edit.php?id=' . htmlspecialchars($pconfig['pppid']) . '" class="navlnk">Click here for additional PPTP and L2TP configuration options. Save first if you made changes.</a>'
+		$mlppp_text . '<a href="/interfaces_ppps_edit.php?id=' . htmlspecialchars($pconfig['pppid']) . '" class="navlnk">Click here for additional PPTP and L2TP configuration options. Save first if you made changes.</a>'
 	));
 } else {
 	$section->addInput(new Form_StaticText(
@@ -2894,39 +2914,41 @@ if (isset($wancfg['wireless'])) {
 	))->setHelp('Legend: wireless standards - channel # (frequency @ max TX power / TX power allowed in reg. domain)' . '<br />' .
 				'Not all channels may be supported by your card.  Auto may override the wireless standard selected above.');
 
-	if (isset($wl_sysctl["{$wl_sysctl_prefix}.diversity"]) || isset($wl_sysctl["{$wl_sysctl_prefix}.txantenna"]) || isset($wl_sysctl["{$wl_sysctl_prefix}.rxantenna"])) {
-		$group = new Form_Group('Antenna Settings');
+	if (ANTENNAS) {
+		if (isset($wl_sysctl["{$wl_sysctl_prefix}.diversity"]) || isset($wl_sysctl["{$wl_sysctl_prefix}.txantenna"]) || isset($wl_sysctl["{$wl_sysctl_prefix}.rxantenna"])) {
+			$group = new Form_Group('Antenna Settings');
 
-		if (isset($wl_sysctl["{$wl_sysctl_prefix}.diversity"])) {
-			$group->add(new Form_Select(
-				'diversity',
-				null,
-				(isset($pconfig['diversity'])) ? $pconfig['diversity']:'',
-				['' => 'Default', '0' => 'Off', '1' => 'On']
-			))->setHelp('Diversity');
+			if (isset($wl_sysctl["{$wl_sysctl_prefix}.diversity"])) {
+				$group->add(new Form_Select(
+					'diversity',
+					null,
+					(isset($pconfig['diversity'])) ? $pconfig['diversity']:'',
+					['' => 'Default', '0' => 'Off', '1' => 'On']
+				))->setHelp('Diversity');
+			}
+
+			if (isset($wl_sysctl["{$wl_sysctl_prefix}.txantenna"])) {
+				$group->add(new Form_Select(
+					'txantenna',
+					null,
+					(isset($pconfig['txantenna'])) ? $pconfig['txantenna']:'',
+					['' => 'Default', '0' => 'Auto', '1' => '#1', '2' => '#2']
+				))->setHelp('Transmit antenna');
+			}
+
+			if (isset($wl_sysctl["{$wl_sysctl_prefix}.rxantenna"])) {
+				$group->add(new Form_Select(
+					'rxantenna',
+					null,
+					(isset($pconfig['rxantenna'])) ? $pconfig['rxantenna']:'',
+					['' => 'Default', '0' => 'Auto', '1' => '#1', '2' => '#2']
+				))->setHelp('Receive antenna');
+			}
+
+			$group->setHelp('Note: The antenna numbers do not always match up with the labels on the card.');
+
+			$section->add($group);
 		}
-
-		if (isset($wl_sysctl["{$wl_sysctl_prefix}.txantenna"])) {
-			$group->add(new Form_Select(
-				'txantenna',
-				null,
-				(isset($pconfig['txantenna'])) ? $pconfig['txantenna']:'',
-				['' => 'Default', '0' => 'Auto', '1' => '#1', '2' => '#2']
-			))->setHelp('Transmit antenna');
-		}
-
-		if (isset($wl_sysctl["{$wl_sysctl_prefix}.rxantenna"])) {
-			$group->add(new Form_Select(
-				'rxantenna',
-				null,
-				(isset($pconfig['rxantenna'])) ? $pconfig['rxantenna']:'',
-				['' => 'Default', '0' => 'Auto', '1' => '#1', '2' => '#2']
-			))->setHelp('Receive antenna');
-		}
-
-		$group->setHelp('Note: The antenna numbers do not always match up with the labels on the card.');
-
-		$section->add($group);
 	}
 
 	if (isset($wl_sysctl["{$wl_sysctl_prefix}.slottime"]) && isset($wl_sysctl["{$wl_sysctl_prefix}.acktimeout"]) && isset($wl_sysctl["{$wl_sysctl_prefix}.ctstimeout"])) {
@@ -3013,7 +3035,7 @@ if (isset($wancfg['wireless'])) {
 		$section->addInput(new Form_Checkbox(
 			'puremode',
 			'802.11g only',
-			'Preserve common wireless configuration through interface deletions and reassignments.',
+			null,
 			$pconfig['puremode'],
 			'11g'
 		))->setHelp('When operating as an access point in 802.11g mode, allow only 11g-capable stations to associate (11b-only stations are not permitted to associate)');
@@ -3331,31 +3353,31 @@ events.push(function(){
 
 		switch (t) {
 			case "none": {
-				$('.dhcp6advanced, .staticv6, .dhcp6, .6rd, ._6to4, .track6, .slaac').hide();
+				$('.dhcp6advanced, .staticv6, .dhcp6, ._6rd, ._6to4, .track6, .slaac').hide();
 				break;
 			}
 			case "staticv6": {
-				$('.dhcp6advanced, .none, .dhcp6, .6rd, ._6to4, .track6, .slaac').hide();
+				$('.dhcp6advanced, .none, .dhcp6, ._6rd, ._6to4, .track6, .slaac').hide();
 				break;
 			}
 			case "slaac": {
-				$('.dhcp6advanced, .none, .staticv6, .6rd, ._6to4, .track6, .dhcp6').hide();
+				$('.dhcp6advanced, .none, .staticv6, ._6rd, ._6to4, .track6, .dhcp6').hide();
 				break;
 			}
 			case "dhcp6": {
-				$('.dhcp6advanced, .none, .staticv6, .6rd, ._6to4, .track6, .slaac').hide();
+				$('.dhcp6advanced, .none, .staticv6, ._6rd, ._6to4, .track6, .slaac').hide();
 				break;
 			}
-			case "_6rd": {
-				$('.dhcp6advanced, .none, .dhcp6, .staticv6, .6to4, .track6, .slaac').hide();
+			case "6rd_": {
+				$('.dhcp6advanced, .none, .dhcp6, .staticv6, ._6to4, .track6, .slaac').hide();
 				break;
 			}
 			case "_6to4": {
-				$('.dhcp6advanced, .none, .dhcp6, .staticv6, .6rd, .track6, .slaac').hide();
+				$('.dhcp6advanced, .none, .dhcp6, .staticv6, ._6rd, .track6, .slaac').hide();
 				break;
 			}
 			case "track6": {
-				$('.dhcp6advanced, .none, .dhcp6, .staticv6, .6rd, .6to4, .slaac').hide();
+				$('.dhcp6advanced, .none, .dhcp6, .staticv6, ._6rd, ._6to4, .slaac').hide();
 				update_track6_prefix();
 				break;
 			}

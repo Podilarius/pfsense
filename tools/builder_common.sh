@@ -782,8 +782,10 @@ awk '
 		# Wrap up the show, Johnny
 		echo ">>> NanoBSD Image completed for size: $_NANO_MEDIASIZE." | tee -a ${LOGFILE}
 
-		gzip -f $IMG &
-		gzip -f $IMGUPDATE &
+		gzip -qf $IMG &
+		_bg_pids="${_bg_pids}${_bg_pids:+ }$!"
+		gzip -qf $IMGUPDATE &
+		_bg_pids="${_bg_pids}${_bg_pids:+ }$!"
 	done
 
 	unset IMG
@@ -1064,6 +1066,7 @@ clone_to_staging_area() {
 		.
 
 	core_pkg_create base "" ${CORE_PKG_VERSION} ${STAGE_CHROOT_DIR}
+	core_pkg_create base-nanobsd "" ${CORE_PKG_VERSION} ${STAGE_CHROOT_DIR}
 	core_pkg_create default-config "" ${CORE_PKG_VERSION} ${STAGE_CHROOT_DIR}
 
 	local DEFAULTCONF=${STAGE_CHROOT_DIR}/conf.default/config.xml
@@ -1090,8 +1093,6 @@ clone_to_staging_area() {
 
 	# Make sure pkg is present
 	pkg_bootstrap ${STAGE_CHROOT_DIR}
-
-	pkg_chroot_add ${STAGE_CHROOT_DIR} base
 
 	echo "Done!"
 }
@@ -1122,6 +1123,13 @@ create_final_staging_area() {
 customize_stagearea_for_image() {
 	# Prepare final stage area
 	create_final_staging_area
+
+	if [ "${1}" = "nanobsd" -o \
+	     "${1}" = "nanobsd-vga" ]; then
+		pkg_chroot_add ${FINAL_CHROOT_DIR} base-nanobsd
+	else
+		pkg_chroot_add ${FINAL_CHROOT_DIR} base
+	fi
 
 	if [ "${1}" = "iso" -o \
 	     "${1}" = "memstick" -o \
@@ -1184,6 +1192,7 @@ create_iso_image() {
 		print_error_pfS
 	fi
 	gzip -qf $ISOPATH &
+	_bg_pids="${_bg_pids}${_bg_pids:+ }$!"
 
 	echo ">>> ISO created: $(LC_ALL=C date)" | tee -a ${LOGFILE}
 }
@@ -1226,6 +1235,7 @@ create_memstick_image() {
 	trap "-" 1 2 15 EXIT
 	mdconfig -d -u ${MD} 2>&1 | tee -a ${LOGFILE}
 	gzip -qf $MEMSTICKPATH &
+	_bg_pids="${_bg_pids}${_bg_pids:+ }$!"
 
 	echo ">>> MEMSTICK created: $(LC_ALL=C date)" | tee -a ${LOGFILE}
 }
@@ -1287,6 +1297,7 @@ create_memstick_serial_image() {
 	trap "-" 1 2 15 EXIT
 	mdconfig -d -u ${MD} 2>&1 >> ${LOGFILE}
 	gzip -qf $MEMSTICKSERIALPATH &
+	_bg_pids="${_bg_pids}${_bg_pids:+ }$!"
 
 	echo ">>> MEMSTICKSERIAL created: $(LC_ALL=C date)" | tee -a ${LOGFILE}
 }
@@ -1350,6 +1361,7 @@ create_memstick_adi_image() {
 	trap "-" 1 2 15 EXIT
 	mdconfig -d -u ${MD} 2>&1 >> ${LOGFILE}
 	gzip -qf $MEMSTICKADIPATH &
+	_bg_pids="${_bg_pids}${_bg_pids:+ }$!"
 
 	echo ">>> MEMSTICKADI created: $(LC_ALL=C date)" | tee -a ${LOGFILE}
 }

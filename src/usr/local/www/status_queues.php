@@ -1,38 +1,62 @@
-#!/usr/local/bin/php
 <?php
 /* $Id$ */
 /*
 	status_queues.php
-	Part of the pfSense project
-	Copyright (C) 2004, 2005 Scott Ullrich
-	Copyright (C) 2009 Ermal Luçi
-	Copyright (C) 2013-2015 Electric Sheep Fencing, LP
-	All rights reserved.
-
-	Redistribution and use in source and binary forms, with or without
-	modification, are permitted provided that the following conditions are met:
-
-	1. Redistributions of source code must retain the above copyright notice,
-	   this list of conditions and the following disclaimer.
-
-	2. Redistributions in binary form must reproduce the above copyright
-	   notice, this list of conditions and the following disclaimer in the
-	   documentation and/or other materials provided with the distribution.
-
-	THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES,
-	INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
-	AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-	AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY,
-	OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-	SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-	INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-	CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-	ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-	POSSIBILITY OF SUCH DAMAGE.
 */
+/* ====================================================================
+ *	Copyright (c)  2004-2015  Electric Sheep Fencing, LLC. All rights reserved.
+ *	Copyright (c)  2004, 2005 Scott Ullrich
+ *
+ *	Redistribution and use in source and binary forms, with or without modification,
+ *	are permitted provided that the following conditions are met:
+ *
+ *	1. Redistributions of source code must retain the above copyright notice,
+ *		this list of conditions and the following disclaimer.
+ *
+ *	2. Redistributions in binary form must reproduce the above copyright
+ *		notice, this list of conditions and the following disclaimer in
+ *		the documentation and/or other materials provided with the
+ *		distribution.
+ *
+ *	3. All advertising materials mentioning features or use of this software
+ *		must display the following acknowledgment:
+ *		"This product includes software developed by the pfSense Project
+ *		 for use in the pfSense software distribution. (http://www.pfsense.org/).
+ *
+ *	4. The names "pfSense" and "pfSense Project" must not be used to
+ *		 endorse or promote products derived from this software without
+ *		 prior written permission. For written permission, please contact
+ *		 coreteam@pfsense.org.
+ *
+ *	5. Products derived from this software may not be called "pfSense"
+ *		nor may "pfSense" appear in their names without prior written
+ *		permission of the Electric Sheep Fencing, LLC.
+ *
+ *	6. Redistributions of any form whatsoever must retain the following
+ *		acknowledgment:
+ *
+ *	"This product includes software developed by the pfSense Project
+ *	for use in the pfSense software distribution (http://www.pfsense.org/).
+ *
+ *	THIS SOFTWARE IS PROVIDED BY THE pfSense PROJECT ``AS IS'' AND ANY
+ *	EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ *	IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ *	PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE pfSense PROJECT OR
+ *	ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ *	SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *	NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ *	LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ *	HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ *	STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *	ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+ *	OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ *	====================================================================
+ *
+ */
 /*
 	pfSense_BUILDER_BINARIES:	/sbin/pfctl
-	pfSense_MODULE:	shaper
+	pfSense_MODULE: shaper
 */
 
 ##|+PRIV
@@ -41,11 +65,12 @@
 ##|*DESCR=Allow access to the 'Status: Traffic shaper: Queues' page.
 ##|*MATCH=status_queues.php*
 ##|-PRIV
-
+/*
 header("Last-Modified: " . gmdate("D, j M Y H:i:s") . " GMT");
 header("Expires: " . gmdate("D, j M Y H:i:s", time()) . " GMT");
 header("Cache-Control: no-cache, no-store, must-revalidate"); // HTTP/1.1
 header("Pragma: no-cache"); // HTTP/1.0
+*/
 
 require("guiconfig.inc");
 class QueueStats {
@@ -132,8 +157,7 @@ include("head.inc");
 <?php
 if (!is_array($config['shaper']['queue']) || count($config['shaper']['queue']) < 1) {
 	print_info_box(gettext("Traffic shaping is not configured."));
-	include("fend.inc");
-	echo "</body></html>";
+	include("foot.inc");
 	exit;
 }
 ?>
@@ -160,9 +184,9 @@ if (!is_array($config['shaper']['queue']) || count($config['shaper']['queue']) <
 	});
 //]]>
 </script>
-<?php endif; 
+<?php endif;
 
-if ($error): 
+if ($error):
 	print_info_box($error);
 else: ?>
 	<div class="panel panel-default">
@@ -170,7 +194,7 @@ else: ?>
 		<div class="panel-body table-responsive">
 			<table class="table table-striped table-hover">
 				<thead>
-					<tr>  
+					<tr>
 						<th><?=gettext("Queue"); ?></th>
 						<th><?=gettext("Statistics"); ?>
 							<select id="selStatistic">
@@ -185,18 +209,26 @@ else: ?>
 						<th><?=gettext("Drops"); ?></th>
 						<th><?=gettext("Length"); ?></th>
 					</tr>
-				</thead>	
+				</thead>
+				<tbody>
 <?php
 	$if_queue_list = get_configured_interface_list_by_realif(false, true);
 	processQueues($altqstats, 0, "");
 ?>
 <?php endif; ?>
+				</tbody>
 			</table>
+		<br />
+<?php
+		print_info_box(gettext("Queue graphs take 5 seconds to sample data"));
+?>
+		</div>
+	</div>
 </br>
 
-<?php 
+<?php
 
-	print_info_box(gettext("Queue graphs take 5 seconds to sample data"));
+
 
 ?>
 
@@ -213,10 +245,10 @@ else: ?>
 //]]>
 </script>
 </form>
-<?php include("fend.inc"); ?>
-</body>
-</html>
 <?php
+
+include("foot.inc");
+
 function processQueues($altqstats, $level, $parent_name) {
 	global $g;
 	global $if_queue_list;
@@ -259,7 +291,7 @@ function processQueues($altqstats, $level, $parent_name) {
 		$cpuUsage = 0;
 		echo "<td bgcolor=\"#{$row_background}\">";
 		echo "<div class='progress' style='height: 7px;width: 170px;'>
-				<div class='progress-bar' role='progressbar' name='queue{$q['name']}{$q['interface']}width' id='queue{$q['name']}{$q['interface']}width' aria-valuenow='70' aria-valuemin='0' aria-valuemax='100' style='width: ".  ($cpuUsage*100) ."%;'></div>
+				<div class='progress-bar' role='progressbar' name='queue{$q['name']}{$q['interface']}width' id='queue{$q['name']}{$q['interface']}width' aria-valuenow='70' aria-valuemin='0' aria-valuemax='100' style='width: ".	($cpuUsage*100) ."%;'></div>
 			  </div>";
 		echo " </td>";
 		echo "<td bgcolor=\"#{$row_background}\"><input style='border: 0px solid white; background-color:#{$row_background}; color:#000000;width:70px;text-align:right;' size='10' name='queue{$q['name']}{$q['interface']}pps' id='queue{$q['name']}{$q['interface']}pps' value='(" . gettext("Loading") . ")' align='left' /></td>";
@@ -276,6 +308,7 @@ function processQueues($altqstats, $level, $parent_name) {
 		}
 	};
 }
+
 function statsQueues($xml) {
 	global $statistics;
 

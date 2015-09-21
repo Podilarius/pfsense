@@ -99,6 +99,15 @@ function vpn_ipsec_convert_to_modp($index) {
 		case '21':
 			$convertion = "ecp521";
 			break;
+		case '22':
+			$convertion = "modp1024s160";
+			break;
+		case '23':
+			$convertion = "modp2048s224";
+			break;
+		case '24':
+			$convertion = "modp2048s256";
+			break;
 		case '28':
 			$convertion = "ecp256bp";
 			break;
@@ -1645,6 +1654,12 @@ function vpn_l2tp_configure() {
 	switch ($l2tpcfg['mode']) {
 
 		case 'server':
+			$l2tp_listen="";
+			$ipaddr = get_interface_ip(get_failover_interface($l2tpcfg['interface']));
+			if (is_ipaddrv4($ipaddr)) {
+				$l2tp_listen="set l2tp self $ipaddr";
+			}
+
 			if ($l2tpcfg['paporchap'] == "chap") {
 				$paporchap = "set link enable chap";
 			} else {
@@ -1703,6 +1718,7 @@ l2tp_standard:
 	set link yes acfcomp protocomp
 	set link no pap chap
 	{$paporchap}
+	{$l2tp_listen}
 	set link keep-alive 10 180
 
 EOD;
