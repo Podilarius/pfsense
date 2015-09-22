@@ -57,15 +57,17 @@ if (is_subsystem_dirty('packagelock')) {
 	exit;
 }
 
+include("head.inc");
+
 if(is_array($config['installedpackages']['package'])) {
 	foreach($config['installedpackages']['package'] as $instpkg) {
 		$tocheck[] = $instpkg['name'];
 	}
+
 	$currentvers = get_pkg_info($tocheck, array('version', 'xmlver', 'pkginfolink', 'descr'));
 }
 $closehead = false;
 $pgtitle = array(gettext("System"), gettext("Package Manager"));
-include("head.inc");
 
 /* Print package server mismatch warning. See https://redmine.pfsense.org/issues/484 */
 if (!verify_all_package_servers())
@@ -75,10 +77,9 @@ if (!verify_all_package_servers())
 if (check_package_server_ssl() === false)
 	print_info_box(package_server_ssl_failure_message());
 
-$version = file_get_contents("/etc/version");
 $tab_array = array();
 $tab_array[] = array(gettext("Available Packages"), false, "pkg_mgr.php");
-//	$tab_array[] = array("{$version} " . gettext("packages"), false, "pkg_mgr.php");
+//	$tab_array[] = array("{$g['product_version']} " . gettext("packages"), false, "pkg_mgr.php");
 //	$tab_array[] = array("Packages for any platform", false, "pkg_mgr.php?ver=none");
 //	$tab_array[] = array("Packages for a different platform", $requested_version == "other" ? true : false, "pkg_mgr.php?ver=other");
 $tab_array[] = array(gettext("Installed Packages"), true, "pkg_mgr_installed.php");
@@ -112,6 +113,8 @@ if(!is_array($config['installedpackages']['package'])):?>
 		$pkg = $config['installedpackages']['package'][$index];
 		if(!$pkg['name'])
 			continue;
+
+		$full_name = $g['pkg_prefix'] . get_package_internal_name($pkg);
 
 		// get history/changelog git dir
 		$commit_dir=explode("/",$pkg['config_file']);
@@ -163,9 +166,9 @@ if(!is_array($config['installedpackages']['package'])):?>
 			<?=$pkgdescr?>
 		</td>
 		<td>
-			<a href="pkg_mgr_install.php?mode=delete&amp;pkg=<?=$pkg['name']?>" class="btn btn-danger">remove</a>
-			<a href="pkg_mgr_install.php?mode=reinstallpkg&amp;pkg=<?=$pkg['name']?>" class="btn btn-info">reinstall</a>
-			<a href="pkg_mgr_install.php?mode=reinstallxml&amp;pkg=<?=$pkg['name']?>" class="btn btn-info"><?=gettext("reinstall GUI")?></a>
+			<a href="pkg_mgr_install.php?mode=delete&amp;pkg=<?=$full_name?>" class="btn btn-danger">remove</a>
+			<a href="pkg_mgr_install.php?mode=reinstallpkg&amp;pkg=<?=$full_name?>" class="btn btn-info">reinstall</a>
+			<a href="pkg_mgr_install.php?mode=reinstallxml&amp;pkg=<?=$full_name?>" class="btn btn-info"><?=gettext("reinstall GUI")?></a>
 <?php if(!$g['disablepackageinfo'] && $pkg['pkginfolink'] && $pkg['pkginfolink'] != $pkg['website']):?>
 			<a target="_blank" title="<?=gettext("View more inforation")?>" href="<?=htmlspecialchars($pkg['pkginfolink'])?>" class="btn btn-default">info</a>
 <?php endif;?>

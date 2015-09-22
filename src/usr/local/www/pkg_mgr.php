@@ -73,12 +73,6 @@ require_once("globals.inc");
 require_once("guiconfig.inc");
 require_once("pkg-utils.inc");
 
-$timezone = $config['system']['timezone'];
-if (!$timezone)
-	$timezone = "Etc/UTC";
-
-date_default_timezone_set($timezone);
-
 /* if upgrade in progress, alert user */
 if(is_subsystem_dirty('packagelock')) {
 	$pgtitle = array(gettext("System"),gettext("Package Manager"));
@@ -88,68 +82,26 @@ if(is_subsystem_dirty('packagelock')) {
 	exit;
 }
 
-//get_pkg_info only if cache file has more then $g[min_pkg_cache_file_time] seconds
-$pkg_cache_file_time=($g['min_pkg_cache_file_time'] ? $g['min_pkg_cache_file_time'] : 120);
-
-$xmlrpc_base_url = get_active_xml_rpc_base_url();
-if (!file_exists("{$g['tmp_path']}/pkg_info.cache") || (time() - filemtime("{$g['tmp_path']}/pkg_info.cache")) > $pkg_cache_file_time) {
-	$pkg_info = get_pkg_info('all', array("noembedded", "name", "category", "website", "version", "status", "descr", "maintainer", "required_version", "maximum_version", "pkginfolink", "config_file"));
-	//create cache file after get_pkg_info
-	if($pkg_info) {
-		$fout = fopen("{$g['tmp_path']}/pkg_info.cache", "w");
-		fwrite($fout, serialize($pkg_info));
-		fclose($fout);
-		//$pkg_sizes = get_pkg_sizes();
-	} else {
-		$using_cache = true;
-		if(file_exists("{$g['tmp_path']}/pkg_info.cache")) {
-			$savemsg = sprintf(gettext("Unable to retrieve package info from %s. Cached data will be used."), $xmlrpc_base_url);
-			$pkg_info = unserialize(@file_get_contents("{$g['tmp_path']}/pkg_info.cache"));
-		} else {
-			$savemsg = sprintf(gettext('Unable to communicate with %1$s. Please verify DNS and interface configuration, and that %2$s has functional Internet connectivity.'), $xmlrpc_base_url, $g['product_name']);
-		}
-	}
-} else {
-	$pkg_info = unserialize(@file_get_contents("{$g['tmp_path']}/pkg_info.cache"));
-}
-
-if (! empty($_GET))
-	if (isset($_GET['ver']))
-		$requested_version = htmlspecialchars($_GET['ver']);
-
-$pgtitle = array(gettext("System"),gettext("Package Manager"));
 include("head.inc");
 
-/* Print package server mismatch warning. See https://redmine.pfsense.org/issues/484 */
-if (!verify_all_package_servers())
-	print_info_box(package_server_mismatch_message());
+$pkg_info = get_pkg_info();
 
-/* Print package server SSL warning. See https://redmine.pfsense.org/issues/484 */
-if (check_package_server_ssl() === false)
-	print_info_box(package_server_ssl_failure_message());
-
-if ($savemsg)
-	print_info_box($savemsg);
-
-$version = rtrim(file_get_contents("/etc/version"));
+$pgtitle = array(gettext("System"),gettext("Package Manager"));
 
 $tab_array = array();
-$tab_array[] = array(gettext("Available Packages"), $requested_version <> "" ? false : true, "pkg_mgr.php");
+$tab_array[] = array(gettext("Available Packages"), true, "pkg_mgr.php");
 $tab_array[] = array(gettext("Installed Packages"), false, "pkg_mgr_installed.php");
 display_top_tabs($tab_array);
 
-$version = rtrim(file_get_contents("/etc/version"));
 if($pkg_info) {
-	$pkg_keys = array_keys($pkg_info);
-	natcasesort($pkg_keys);
-
 	//Check categories
 	$categories=array();
-	if(is_array($pkg_keys)) {
-		foreach($pkg_keys as $key) {
-				$categories[$pkg_info[$key]['category']]++;
-			}
+	foreach ($pkg_info as $pkg_data) {
+		if (isset($pkg_data['categories'][0])) {
+			$categories[$pkg_data['categories'][0]]++;
 		}
+	}
+
 	ksort($categories);
 	$cm_count=0;
 	$tab_array = array();
@@ -176,12 +128,13 @@ if($pkg_info) {
 			$cm_count++;
 		}
 	}
+
 	$tab_array[] = array(gettext("Other Categories"), $menu_category=="Other" ? true : false, "pkg_mgr.php?category=Other");
 	if (count($categories) > 1)
 		display_top_tabs($tab_array);
 }
 
-if(!$pkg_info || !is_array($pkg_keys)):?>
+if(!$pkg_info || !is_array($pkg_info)):?>
 	<div class="alert alert-warning">
 		<?=gettext("There are currently no packages available for installation.")?>
 	</div>
@@ -200,46 +153,48 @@ if(!$pkg_info || !is_array($pkg_keys)):?>
 	</thead>
 	<tbody>
 <?php
-	foreach($pkg_keys as $key):
-		$index = &$pkg_info[$key];
 
-		if(get_pkg_id($index['name']) >= 0 )
+	foreach($pkg_info as $index):
+
+		if(get_package_id($index['name']) >= 0 ) {
 			continue;
-		continue;
+		}
 
-		/* get history/changelog git dir */
-		$commit_dir=explode("/",$index['config_file']);
-		$changeloglink = "https://github.com/pfsense/pfsense-packages/commits/master/config/";
-		if ($commit_dir[(count($commit_dir)-2)] == "config")
-			$changeloglink .= $commit_dir[(count($commit_dir)-1)];
-		else
-			$changeloglink .= $commit_dir[(count($commit_dir)-2)];
+		$shortname = $index['name'];
+		pkg_remove_prefix($shortname);
 
-		if ($menu_category != "All" && $index['category'] != $menu_category && !($menu_category == "Other" && !in_array($index['category'], $visible_categories)))
+		if ($menu_category != "All" && $index['categories'][0] != $menu_category && !($menu_category == "Other" && !in_array($index['categories'][0], $visible_categories))) {
 			continue;
+		}
 ?>
 		<tr>
 			<td>
 <?php if ($index['www']):?>
 				<a title="<?=gettext("Visit official website")?>" target="_blank" href="<?=htmlspecialchars($index['www'])?>">
 <?php endif; ?>
-					<?=htmlspecialchars($index['name'])?>
+					<?=htmlspecialchars($shortname)?>
 				</a>
 			</td>
 
-<?php if (!$g['disablepackagehistory']):?>
+<?php
+/*	// We no longer have a package revision history URL
+	 if (!$g['disablepackagehistory']):?>
 			<td>
+				<!-- XXX: $changeloglink is undefined -->
 				<a target="_blank" title="<?=gettext("View changelog")?>" href="<?=htmlspecialchars($changeloglink)?>">
 					<?=htmlspecialchars($index['version'])?>
 				</a>
 			</td>
-<?php endif;?>
+<?php 
+endif;
+*/
+?>
 			<td>
 				<?=$index['desc']?>
 			</td>
 			<td>
 				<a title="<?=gettext("Click to install")?>" href="pkg_mgr_install.php?id=<?=$index['name']?>" class="btn btn-success">install</a>
-<?php if(!$g['disablepackageinfo'] && $index['pkginfolink'] && $index['pkginfolink'] != $index['website']):?>
+<?php if(!$g['disablepackageinfo'] && $index['pkginfolink'] && $index['pkginfolink'] != $index['www']):?>
 				<a target="_blank" title="<?=gettext("View more inforation")?>" href="<?=htmlspecialchars($index['pkginfolink'])?>" class="btn btn-default">info</a>
 <?php endif;?>
 			</td>

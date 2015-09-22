@@ -280,7 +280,8 @@ function get_package_id($package_name) {
 	}
 
 	foreach ($config['installedpackages']['package'] as $idx => $pkg) {
-		if ($pkg['name'] == $package_name) {
+		if ($pkg['name'] == $package_name ||
+		    get_package_internal_name($pkg) == $package_name) {
 			return $idx;
 		}
 	}
@@ -305,7 +306,7 @@ function get_package_internal_name($package_data) {
 
 /* Get information about packages */
 function get_pkg_info($pkgs = 'all', $info = 'all') {
-	global $g, $static_output;
+	global $g, $static_output, $input_errors;
 
 	$out = '';
 	$err = '';
@@ -318,6 +319,7 @@ function get_pkg_info($pkgs = 'all', $info = 'all') {
 	$static_output .= "\n" . gettext("Updating package repository metadada...") . "\n";
 	update_status($static_output);
 	if (!pkg_call("update")) {
+		$input_errors[] = gettext("ERROR: An error occurred when updating packages repository. Aborting...") . "\n";
 		$static_output .= "\n" . gettext("ERROR: An error occurred when updating packages repository. Aborting...") . "\n";
 		update_status($static_output);
 		return array();
@@ -328,6 +330,8 @@ function get_pkg_info($pkgs = 'all', $info = 'all') {
 	if ($rc != 0) {
 		$static_output .= "\n" . gettext("ERROR: Error trying to get packages list. Aborting...") . "\n";
 		$static_output .= $err;
+		$input_errors[] =  gettext("ERROR: Error trying to get packages list. Aborting...") . "\n";
+		$input_errors[] =  $err;
 		update_status($static_output);
 		return array();
 	}
@@ -529,10 +533,6 @@ function install_package($package_name) {
 
 function install_package_xml($package_name) {
 	global $g, $config, $static_output, $pkg_interface;
-
-	if ($pkg_interface == "console") {
-		echo "\n";
-	}
 
 	if (($pkg_info = read_package_config($package_name)) == false) {
 		return false;

@@ -608,7 +608,7 @@ if ($_POST['apply']) {
 				$reqdfields = explode(" ", "pptp_username pptp_password pptp_local0 pptp_subnet0 pptp_remote0 pptp_dialondemand pptp_idletimeout");
 				$reqdfieldsn = array(gettext("PPTP username"), gettext("PPTP password"), gettext("PPTP local IP address"), gettext("PPTP subnet"), gettext("PPTP remote IP address"), gettext("Dial on demand"), gettext("Idle timeout value"));
 			} else {
-				$reqdfields = explode(" ", "pptp_username pptp_password pptp_local0 pptp_subnet0 pptp_remote");
+				$reqdfields = explode(" ", "pptp_username pptp_password pptp_local0 pptp_subnet0 pptp_remote0");
 				$reqdfieldsn = array(gettext("PPTP username"), gettext("PPTP password"), gettext("PPTP local IP address"), gettext("PPTP subnet"), gettext("PPTP remote IP address"));
 			}
 			do_input_validation($_POST, $reqdfields, $reqdfieldsn, $input_errors);
@@ -742,6 +742,9 @@ if ($_POST['apply']) {
 		if (!is_ipaddrv6($_POST['ipaddrv6'])) {
 			$input_errors[] = gettext("A valid IPv6 address must be specified.");
 		} else {
+			if (ip_in_subnet($_POST['ipaddrv6'], "fe80::/10")) {
+				$input_errors[] = gettext("IPv6 link local addresses cannot be configured as an interface IP.");
+			}
 			$where_ipaddr_configured = where_is_ipaddr_configured($_POST['ipaddrv6'], $if, true, true, $_POST['subnetv6']);
 			if (count($where_ipaddr_configured)) {
 				$subnet_conflict_text = sprintf(gettext("IPv6 address %s is being used by or overlaps with:"), $_POST['ipaddrv6'] . "/" . $_POST['subnetv6']);
@@ -3189,6 +3192,10 @@ if (isset($wancfg['wireless'])) {
 		$pconfig['wpa_strict_rekey'],
 		'yes'
 	));
+
+	$form->add($section);
+
+	$section = new Form_Section('802.1x RADIUS options');
 
 	$section->addInput(new Form_Checkbox(
 		'ieee8021x',
