@@ -429,7 +429,7 @@ $section->addInput(new Form_IpAddress(
 			'If no IPv4 address is given, one will be dynamically allocated from the pool.');
 
 $section->addInput(new Form_Input(
-	'hostnme',
+	'hostname',
 	'Hostname',
 	'text',
 	$pconfig['hostname']
@@ -455,7 +455,7 @@ $section->addInput(new Form_Input(
 	'descr',
 	'Description',
 	'text',
-	$pconfig['hostname']
+	$pconfig['descr']
 ))->setHelp('You may enter a description here for your reference (not parsed).');
 
 $section->addInput(new Form_Checkbox(
@@ -476,10 +476,10 @@ $group->add(new Form_Input(
 ));
 
 $group->add(new Form_Input(
-	'win2',
+	'wins2',
 	null,
 	'text',
-	$pconfig['win2'],
+	$pconfig['wins2'],
 	['placeholder' => 'WINS 2']
 ));
 
@@ -518,7 +518,7 @@ $group->add(new Form_Input(
 	['placeholder' => 'DNS 4']
 ));
 
-$group->setHelp('NOTE: leave blank to use the system default DNS servers - this interface\'s IP if DNS forwarder is enabled, otherwise the servers configured on the General page.');
+$group->setHelp('Note: leave blank to use the system default DNS servers - this interface\'s IP if DNS Forwarder or Resolver is enabled, otherwise the servers configured on the General page.');
 
 $section->add($group);
 
@@ -562,7 +562,7 @@ $btndyndns = new Form_Button(
 	'Advanced'
 );
 
-$btndyndns->removeClass('btn-primary')->addClass('btn-success btn-sm');
+$btndyndns->removeClass('btn-primary')->addClass('btn-default btn-sm');
 
 $section->addInput(new Form_StaticText(
 	'Dynamic DNS',
@@ -608,7 +608,7 @@ $btnntp = new Form_Button(
 	'Advanced'
 );
 
-$btnntp->removeClass('btn-primary')->addClass('btn-success btn-sm');
+$btnntp->removeClass('btn-primary')->addClass('btn-default btn-sm');
 
 $section->addInput(new Form_StaticText(
 	'NTP servers',
@@ -627,7 +627,7 @@ $group->add(new Form_Input(
 
 $group->add(new Form_Input(
 	'ntp2',
-	'NTP Server 1',
+	'NTP Server 2',
 	'text',
 	$pconfig['ntp2'],
 	['placeholder' => 'NTP 2']
@@ -642,7 +642,7 @@ $btntftp = new Form_Button(
 	'Advanced'
 );
 
-$btntftp->removeClass('btn-primary')->addClass('btn-success btn-sm');
+$btntftp->removeClass('btn-primary')->addClass('btn-default btn-sm');
 
 $section->addInput(new Form_StaticText(
 	'TFTP servers',
