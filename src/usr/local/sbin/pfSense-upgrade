@@ -46,45 +46,17 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 # OF THE POSSIBILITY OF SUCH DAMAGE.
 
-pid_file="/var/run/$(basename $0).pid"
-last_update_file="/var/run/$(basename $0)-last-update"
-logfile=/cf/conf/upgrade_log.txt
-
-# pkg should not ask for confirmations
-export ASSUME_ALWAYS_YES=true
-
-# Disable automatic update
-export REPO_AUTOUPDATE=false
-
-# File used to detect second call, after kernel update and reboot
-upgrade_in_progress="/cf/conf/upgrade_in_progress"
-
-stdout='/dev/null'
-unset yes
-action="run_upgrade"
-while getopts duy opt; do
-	case ${opt} in
-		d)
-			stdout=''
-			;;
-		u)
-			action="run_update"
-			;;
-		y)
-			yes=1
-			;;
-		*)
-			usage
-			exit 1
-			;;
-	esac
-done
-
 usage() {
-	_echo "Usage: $(basename ${0}) [-duy]"
-	_echo "	-d - Turn on debug"
-	_echo "	-u - Update repository information"
-	_echo "	-y - Consider yes as the answer for any possible interaction"
+	echo "Usage: $(basename ${0}) [-dy] [-u|-i PKG_NAME|-r PKG_NAME]" >&2
+	echo "	-d          - Turn on debug" >&2
+	echo "	-h          - Show this usage help" >&2
+	echo "	-p FIFO     - Write pkg progress to FIFO"
+	echo "	-y          - Consider yes as the answer for any possible interaction" >&2
+	echo "" >&2
+	echo "Following parameters are mutually exclusive:" >&2
+	echo "	-i PKG_NAME - Install package PKG_NAME" >&2
+	echo "	-r PKG_NAME - Remove package PKG_NAME" >&2
+	echo "	-u          - Update repository information" >&2
 }
 
 _echo() {
@@ -148,14 +120,16 @@ _exit() {
 		rm -f ${pid_file}
 	fi
 
-	if [ -n "${1}" ]; then
-		exit ${1}
-	fi
+	local _rc=${1:-"0"}
 
-	exit 0
+	# If EVENT_PIPE is defined, GUI is calling
+	[ -n "${EVENT_PIPE}" ] \
+		&& _echo "__RC=${_rc}"
+
+	exit ${_rc}
 }
 
-upgrade_first_step() {
+pkg_upgrade_first_step() {
 	# figure out which kernel variant is running
 	kernel_pkg=$(pkg query %n $(pkg info pfSense-kernel-\*))
 
@@ -164,21 +138,7 @@ upgrade_first_step() {
 		_exit 1
 	fi
 
-	kernel_local=$(pkg query %v ${kernel_pkg})
-
-	if [ -z "${kernel_local}" ]; then
-		_echo "ERROR: It was not possible to determine pfSense kernel local version"
-		_exit 1
-	fi
-
-	kernel_remote=$(pkg rquery %v ${kernel_pkg})
-
-	if [ -z "${kernel_remote}" ]; then
-		_echo "ERROR: It was not possible to determine pfSense kernel remote version"
-		_exit 1
-	fi
-
-	kernel_version_compare=$(pkg version -t ${kernel_local} ${kernel_remote})
+	kernel_version_compare=$(compare_pkg_version ${kernel_pkg})
 
 	if [ "${kernel_version_compare}" = "<" ]; then
 		kernel_update=1
@@ -237,7 +197,7 @@ upgrade_first_step() {
 	fi
 }
 
-upgrade_second_step() {
+pkg_upgrade_second_step() {
 	_echo "Upgrading necessary packages..."
 	if ! pkg upgrade 2>&1 | tee -a ${logfile}; then
 		_echo "ERROR: An error occurred when upgrade was running..."
@@ -253,15 +213,17 @@ upgrade_second_step() {
 	rm -f ${firmwarelock}
 }
 
-update() {
-	_exec "pkg update" "Updating repositories" mute
-	date +%s > ${last_update_file}
-}
-
-upgrade() {
+pkg_update() {
 	local _run_update=1
-	if [ -f ${last_update_file} ]; then
+
+	unset _force
+	if [ "${1}" = "force" ]; then
+		local _force=1
+	fi
+
+	if [ -z "${_force}" -a -f ${last_update_file} ]; then
 		local _last_update=$(head -n 1 ${last_update_file})
+		# Verify if content contain only numbers
 		if echo "${_last_update}" | grep -E -q '^[0-9]+$'; then
 			local _now=$(date +%s)
 			# Only run update hourly, and if last update is in the future
@@ -270,8 +232,15 @@ upgrade() {
 		fi
 	fi
 
-	[ -n "${_run_update}" ] \
-		&& update
+	[ -z "${_run_update}" ] \
+		&& return 0
+
+	_exec "pkg update" "Updating repositories" mute
+	date +%s > ${last_update_file}
+}
+
+pkg_upgrade() {
+	pkg_update
 
 	unset need_reboot
 	if [ ! -f "${upgrade_in_progress}" ]; then
@@ -279,11 +248,11 @@ upgrade() {
 			rm -f ${logfile}
 		fi
 
-		upgrade_first_step
+		pkg_upgrade_first_step
 		need_reboot=1
 	fi
 
-	upgrade_second_step
+	pkg_upgrade_second_step
 
 	if [ -n "${need_reboot}" ]; then
 		_echo "Rebooting..."
@@ -291,21 +260,192 @@ upgrade() {
 	fi
 }
 
+is_pkg_installed() {
+	local _pkg_name="${1}"
+
+	pkg info -e ${_pkg_name}
+	return $?
+}
+
+compare_pkg_version() {
+	local _pkg_name="${1}"
+
+	if ! is_pkg_installed ${_pkg_name}; then
+		echo '!'
+		return -1
+	fi
+
+	local _lver=$(pkg query %v ${_pkg_name})
+
+	if [ -z "${_lver}" ]; then
+		_echo "ERROR: It was not possible to determine ${_pkg_name} local version"
+		_exit 1
+	fi
+
+	local _rver=$(pkg rquery %v ${_pkg_name})
+
+	if [ -z "${_rver}" ]; then
+		_echo "ERROR: It was not possible to determine ${_pkg_name} remote version"
+		_exit 1
+	fi
+
+	local _version=$(pkg version -t ${_lver} ${_rver})
+
+	if [ $? -ne 0 ]; then
+		_echo "ERROR: Error comparing ${_pkg_name} local and remote versions"
+		_exit 1
+	fi
+
+	echo ${_version}
+	return 0
+}
+
+pkg_install() {
+	local _pkg_name="${1}"
+
+	if [ -z "${_pkg_name}" ]; then
+		_echo "ERROR: Blank package name"
+		_exit 1
+	fi
+
+	pkg_update
+
+	if is_pkg_installed ${_pkg_name}; then
+		local _cversion=$(compare_pkg_version ${_pkg_name})
+
+		if [ "${_cversion}" = "=" ]; then
+			_echo "Package ${_pkg_name} is up to date"
+			_exit 0
+		elif [ "${_cversion}" = ">" ]; then
+			_echo "Installed ${_pkg_name} version is newer than remote"
+			_exit 0
+		fi
+		local _cmd="upgrade"
+		local _msg="Upgrading"
+	else
+		local _cmd="install"
+		local _msg="Installing"
+	fi
+
+	_exec "pkg ${_cmd} ${_pkg_name}" "${_msg} ${_pkg_name}"
+	_exec "pkg clean" "Cleaning up cache" mute ignore_result
+}
+
+pkg_delete() {
+	local _pkg_name="${1}"
+
+	if [ -z "${_pkg_name}" ]; then
+		_echo "ERROR: Blank package name"
+		_exit 1
+	fi
+
+	if ! is_pkg_installed ${_pkg_name}; then
+		_echo "ERROR: Package ${_pkg_name} is not installed"
+		_exit 1
+	fi
+
+	_exec "pkg delete ${_pkg_name}" "Removing ${_pkg_name}"
+	_exec "pkg autoremove" "Removing stale packages" mute ignore_result
+}
+
+pid_file="/var/run/$(basename $0).pid"
+last_update_file="/var/run/$(basename $0)-last-update"
+logfile=/cf/conf/upgrade_log.txt
+stdout='/dev/null'
+
+# File used to detect second call, after kernel update and reboot
+upgrade_in_progress="/cf/conf/upgrade_in_progress"
+
+# pkg should not ask for confirmations
+export ASSUME_ALWAYS_YES=true
+
+# Disable automatic update
+export REPO_AUTOUPDATE=false
+
+unset yes
+unset progress_fifo
+unset action
+unset action_pkg
+while getopts di:hp:r:uy opt; do
+	case ${opt} in
+		d)
+			stdout=''
+			;;
+		i)
+			if [ -n "${action}" ]; then
+				usage
+				_exit 1
+			fi
+			action="install"
+			action_pkg="${OPTARG}"
+			;;
+		h)
+			usage
+			_exit 0
+			;;
+		p)
+			progress_fifo="${OPTARG}"
+			;;
+		r)
+			if [ -n "${action}" ]; then
+				usage
+				_exit 1
+			fi
+			action="delete"
+			action_pkg="${OPTARG}"
+			;;
+		u)
+			if [ -n "${action}" ]; then
+				usage
+				_exit 1
+			fi
+			action="update"
+			;;
+		y)
+			yes=1
+			;;
+		*)
+			usage
+			_exit 1
+			;;
+	esac
+done
+
+# Set default action when no parameter is set
+: ${action:="upgrade"}
+
 if pgrep -qF ${pid_file} >/dev/null 2>&1; then
 	echo "Another instance is already running... Aborting!"
-	exit 1
+	_exit 1
 fi
 
 echo $$ > ${pid_file}
 
 trap _exit 1 2 15 EXIT
 
+if [ -n "${progress_fifo}" ]; then
+	if [ ! -e "${progress_fifo}" ]; then
+		mkfifo ${progress_fifo}
+	fi
+	if [ ! -p "${progress_fifo}" ]; then
+		_echo "ERROR: ${progress_fifo} is not a FIFO"
+		_exit 1
+	fi
+	export EVENT_PIPE="${progress_fifo}"
+fi
+
 case "${action}" in
-	run_upgrade)
-		upgrade
+	upgrade)
+		pkg_upgrade
 		;;
-	run_update)
-		update
+	update)
+		pkg_update force
+		;;
+	install)
+		pkg_install ${action_pkg}
+		;;
+	delete)
+		pkg_delete ${action_pkg}
 		;;
 	*)
 		_echo "ERROR: Invalid action!"
