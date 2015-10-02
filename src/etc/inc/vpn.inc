@@ -671,6 +671,9 @@ EOD;
 
 				if (!empty($ph1ent['pre-shared-key'])) {
 					$pskconf .= "{$myid} {$peerid} : PSK 0s" . base64_encode(trim($ph1ent['pre-shared-key'])) . "\n";
+					if (isset($ph1ent['mobile'])) {
+						$pskconf .= " : PSK 0s" . base64_encode(trim($ph1ent['pre-shared-key'])) . "\n";
+					}
 				}
 			}
 		}
@@ -690,6 +693,9 @@ EOD;
 	if (is_array($ipseccfg['mobilekey'])) {
 		foreach ($ipseccfg['mobilekey'] as $key) {
 			if ($key['ident'] == "allusers") {
+				$key['ident'] = '%any';
+			}
+			if ($key['ident'] == "any") {
 				$key['ident'] = '%any';
 			}
 			if (empty($key['type'])) {
@@ -920,8 +926,12 @@ EOD;
 			}
 
 			$rightsourceip = NULL;
-			if (isset($ph1ent['mobile']) && !empty($a_client['pool_address'])) {
-				$rightsourceip = "\trightsourceip = {$a_client['pool_address']}/{$a_client['pool_netbits']}\n";
+			if (isset($ph1ent['mobile'])) {
+				if (!empty($a_client['pool_address'])) {
+					$rightsourceip = "\trightsourceip = {$a_client['pool_address']}/{$a_client['pool_netbits']}\n";
+				} elseif ($ph1ent['authentication_method'] == "eap-radius") {
+					$rightsourceip = "\trightsourceip = %radius\n";
+				}
 			}
 
 			$authentication = "";

@@ -4,59 +4,59 @@
 	index.php
 */
 /* ====================================================================
- *  Copyright (c)  2004-2015  Electric Sheep Fencing, LLC. All rights reserved. 
- *  Copyright (c)  2004-2012 Scott Ullrich
+ *	Copyright (c)  2004-2015  Electric Sheep Fencing, LLC. All rights reserved.
+ *	Copyright (c)  2004, 2005 Scott Ullrich
  *
- *  Redistribution and use in source and binary forms, with or without modification, 
- *  are permitted provided that the following conditions are met: 
+ *	Redistribution and use in source and binary forms, with or without modification,
+ *	are permitted provided that the following conditions are met:
  *
- *  1. Redistributions of source code must retain the above copyright notice,
- *      this list of conditions and the following disclaimer.
+ *	1. Redistributions of source code must retain the above copyright notice,
+ *		this list of conditions and the following disclaimer.
  *
- *  2. Redistributions in binary form must reproduce the above copyright
- *      notice, this list of conditions and the following disclaimer in
- *      the documentation and/or other materials provided with the
- *      distribution. 
+ *	2. Redistributions in binary form must reproduce the above copyright
+ *		notice, this list of conditions and the following disclaimer in
+ *		the documentation and/or other materials provided with the
+ *		distribution.
  *
- *  3. All advertising materials mentioning features or use of this software 
- *      must display the following acknowledgment:
- *      "This product includes software developed by the pfSense Project
- *       for use in the pfSense software distribution. (http://www.pfsense.org/). 
+ *	3. All advertising materials mentioning features or use of this software
+ *		must display the following acknowledgment:
+ *		"This product includes software developed by the pfSense Project
+ *		 for use in the pfSense software distribution. (http://www.pfsense.org/).
  *
- *  4. The names "pfSense" and "pfSense Project" must not be used to
- *       endorse or promote products derived from this software without
- *       prior written permission. For written permission, please contact
- *       coreteam@pfsense.org.
+ *	4. The names "pfSense" and "pfSense Project" must not be used to
+ *		 endorse or promote products derived from this software without
+ *		 prior written permission. For written permission, please contact
+ *		 coreteam@pfsense.org.
  *
- *  5. Products derived from this software may not be called "pfSense"
- *      nor may "pfSense" appear in their names without prior written
- *      permission of the Electric Sheep Fencing, LLC.
+ *	5. Products derived from this software may not be called "pfSense"
+ *		nor may "pfSense" appear in their names without prior written
+ *		permission of the Electric Sheep Fencing, LLC.
  *
- *  6. Redistributions of any form whatsoever must retain the following
- *      acknowledgment:
+ *	6. Redistributions of any form whatsoever must retain the following
+ *		acknowledgment:
  *
- *  "This product includes software developed by the pfSense Project
- *  for use in the pfSense software distribution (http://www.pfsense.org/).
+ *	"This product includes software developed by the pfSense Project
+ *	for use in the pfSense software distribution (http://www.pfsense.org/).
  *
- *  THIS SOFTWARE IS PROVIDED BY THE pfSense PROJECT ``AS IS'' AND ANY
- *  EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- *  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- *  PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE pfSense PROJECT OR
- *  ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- *  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
- *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- *  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- *  HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
- *  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
- *  OF THE POSSIBILITY OF SUCH DAMAGE.
+ *	THIS SOFTWARE IS PROVIDED BY THE pfSense PROJECT ``AS IS'' AND ANY
+ *	EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ *	IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ *	PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE pfSense PROJECT OR
+ *	ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ *	SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *	NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ *	LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ *	HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ *	STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *	ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+ *	OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- *  ====================================================================
+ *	====================================================================
  *
  */
 /*
 	pfSense_BUILDER_BINARIES:	/sbin/ifconfig
-	pfSense_MODULE:	interfaces
+	pfSense_MODULE: interfaces
 */
 
 ##|+PRIV
@@ -151,7 +151,7 @@ if (file_exists("/usr/sbin/swapinfo")) {
 ## If packages are installed lets resync
 if (file_exists('/conf/needs_package_sync')) {
 	if ($config['installedpackages'] <> '' && is_array($config['installedpackages']['package'])) {
-		if ($g['platform'] == "pfSense" || $g['platform'] == "nanobsd") {
+		if ($g['platform'] == $g['product_name'] || $g['platform'] == "nanobsd") {
 			## If the user has logged into webGUI quickly while the system is booting then do not redirect them to
 			## the package reinstall page. That is about to be done by the boot script anyway.
 			## The code in head.inc will put up a notice to the user.
@@ -175,17 +175,19 @@ if (file_exists('/conf/trigger_initial_wizard')) {
 <html lang="en">
 <head>
 	<link rel="stylesheet" href="/bootstrap/css/pfSense.css" />
-	<title>{$g['product_name']}.localdomain - {$g['product_name']} first time setup</title>
+	<title><?=$g['product_name']?>.localdomain - <?=$g['product_name']?> first time setup</title>
 	<meta http-equiv="refresh" content="1;url=wizard.php?xml=setup_wizard.xml" />
 </head>
 <body id="loading-wizard" class="no-menu">
 	<div id="jumbotron">
 		<div class="container">
 			<div class="col-sm-offset-3 col-sm-6 col-xs-12">
-				<p><?=sprintf(gettext("Welcome to %s!\n"), $g['product_name'])?></p>
+				<font color="white">
+				<p><h3><?=sprintf(gettext("Welcome to %s!\n"), $g['product_name'])?></h3></p>
 				<p><?=gettext("One moment while we start the initial setup wizard.")?></p>
 				<p><?=gettext("Embedded platform users: Please be patient, the wizard takes a little longer to run than the normal GUI.")?></p>
 				<p><?=sprintf(gettext("To bypass the wizard, click on the %s logo on the initial page."), $g['product_name'])?></p>
+				</font>
 			</div>
 		</div>
 	</div>
@@ -284,11 +286,15 @@ pfSense_handle_custom_code("/usr/local/pkg/dashboard/pre_dashboard");
 <div class="panel panel-default">
 	<div class="panel-heading"><h2 class="panel-title"><?=gettext("Available Widgets"); ?></h2></div>
 	<div class="panel-body">
+		<div class="content">
+			<div class="row">
 <?php foreach ($widgets as $widgetname => $widgetconfig): ?>
 	<?php if ($widgetconfig['display'] == 'none'): ?>
 		<div class="col-sm-3"><a href="#"><i class="icon icon-plus"></i> <?=$widgetconfig['name']?></a></div>
 	<?php endif; ?>
 <?php endforeach; ?>
+			</div>
+		</div>
 	</div>
 </div>
 
@@ -302,7 +308,7 @@ pfSense_handle_custom_code("/usr/local/pkg/dashboard/pre_dashboard");
 			<div class="modal-body">
 				<p>
 					<?=gettext("This page allows you to customize the information you want to be displayed!");?>
-					<?=gettext("To get started click the");?> FIXME <?=gettext("icon to add widgets.");?><br />
+					<?=gettext("To get started click the ");?> <i class="icon icon-plus"> <?=gettext(" icon to add widgets.");?><br />
 					<br />
 					<?=gettext("You can move any widget around by clicking and dragging the title.");?>
 				</p>

@@ -111,49 +111,47 @@ if (($pagename == "pkg.php") || ($pagename == "pkg_edit.php") || ($pagename == "
 	}
 }
 
-/* Build the full help URL. */
+// Build the full help URL.
 $helpurl .= "{$g['help_base_url']}?page={$pagename}";
 
+// Create a menu entry of any installed packages in the specified category
+// (Now reads the menu information from $config['installedpackages']['menu'] only)
 function return_ext_menu($section) {
 	global $config;
 
 	$htmltext = "";
 	$extarray = array();
 
-	if (!empty($config['installedpackages']['package'])) {
-		foreach ($config['installedpackages']['package'] as $package) {
-
-			if ($package['category'] != $section) {
+	if ( (!empty($config['installedpackages']['package'])) && (!empty($config['installedpackages']['menu']))) {
+		foreach ($config['installedpackages']['menu'] as $menu) {
+//			print('Name: ' . $menu['name'] . ', Pkg category: ' . $menu['category'] . ', Section: ' . $section . '<br />');
+			if ($menu['section'] != $section) {
 				continue;
 			}
 
-			// A package has been found that matches the specified category. We need to read it's config file
-			$pkg_config = parse_xml_config_pkg("/usr/local/pkg/" . $package['configurationfile'], "packagegui");
-
-			$menuitem = $pkg_config['menu'][0];
-
-			if ($menuitem['url'] != "") {
-				$test_url=$menuitem['url'];
+			if ($menu['url'] != "") {
+				$test_url = $menu['url'];
 				$addresswithport = getenv("HTTP_HOST");
 				$colonpos = strpos($addresswithport, ":");
-				if ($colonpos !== False) {
+
+				if ($colonpos !== false) {
 					//my url is actually just the IP address of the pfsense box
 					$myurl = substr($addresswithport, 0, $colonpos);
 				} else {
 					$myurl = $addresswithport;
 				}
-				$description = str_replace('$myurl', $myurl, $menuitem['url']);
+				$description = str_replace('$myurl', $myurl, $menu['url']);
 			} else {
-				$description = '/pkg.php?xml=' . $menuitem['configfile'];
+				$description = '/pkg.php?xml=' . $menu['configfile'];
 				$test_url=$description;
 			}
 
 			if (isAllowedPage($test_url)) {
-				$extarray[] = array($menuitem['name'], $description);
+				$extarray[] = array($menu['name'], $description);
 			}
-
 		}
 	}
+
 	return $extarray;
 }
 
@@ -184,7 +182,7 @@ $system_menu[] = array(gettext("Advanced"), "/system_advanced_admin.php");
 $system_menu[] = array(gettext("Firmware"), "/system_firmware.php");
 $system_menu[] = array(gettext("General Setup"), "/system.php");
 $system_menu[] = array(gettext("High Avail. Sync"), "/system_hasync.php");
-if ($g['platform'] == "pfSense" or $g['platform'] == "nanobsd") {
+if ($g['platform'] == $g['product_name'] or $g['platform'] == "nanobsd") {
 	$system_menu[] = array(gettext("Packages"), "/pkg_mgr_installed.php");
 }
 $system_menu[] = array(gettext("Setup Wizard"), "/wizard.php?xml=setup_wizard.xml");
@@ -233,6 +231,7 @@ if ($g['services_dhcp_server_enable']) {
 	$services_menu[] = array(gettext("DHCP Server"), "/services_dhcp.php");
 	$services_menu[] = array(gettext("DHCPv6 Server/RA"), "/services_dhcpv6.php");
 }
+
 $services_menu[] = array(gettext("Dynamic DNS"), "/services_dyndns.php");
 $services_menu[] = array(gettext("IGMP proxy"), "/services_igmpproxy.php");
 $services_menu[] = array(gettext("Load Balancer"), "/load_balancer_pool.php");
@@ -276,7 +275,7 @@ $status_menu[] = array(gettext("Load Balancer"), "/status_lb_pool.php");
 $status_menu[] = array(gettext("NTP"), "/status_ntpd.php");
 $status_menu[] = array(gettext("OpenVPN"), "/status_openvpn.php");
 
-if ($g['platform'] == "pfSense") {
+if ($g['platform'] == $g['product_name']) {
 	$status_menu[] = array(gettext("Package Logs"), "/diag_pkglogs.php");
 }
 
@@ -412,7 +411,6 @@ if (!$g['disablehelpmenu']) {
 					</li>
 <?php
 				endif;
-
 ?>
 			</ul>
 		</div>
@@ -421,9 +419,20 @@ if (!$g['disablehelpmenu']) {
 
 <div class="container">
 	<header class="header">
-		<?=genhtmltitle($pgtitle)?>
+
+<?php
+	// If you set $notitle = true BEFORE including head.inc, the page title will be supressed
+	if(isset($notitle)) {
+		print('<br />');
+		unset($notitle);
+	} else {
+
+	print(genhtmltitle($pgtitle));
+	}
+?>
 		<ul class="context-links">
 <?php
+
 if (!$hide_service_status && !empty($shortcuts[$shortcut_section]['service'])) {
 	$ssvc = array();
 	switch ($shortcut_section) {

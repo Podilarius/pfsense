@@ -120,6 +120,8 @@ _exit() {
 		rm -f ${pid_file}
 	fi
 
+	/etc/rc.conf_mount_ro
+
 	local _rc=${1:-"0"}
 
 	# If EVENT_PIPE is defined, GUI is calling
@@ -131,11 +133,21 @@ _exit() {
 
 pkg_upgrade_first_step() {
 	# figure out which kernel variant is running
-	kernel_pkg=$(pkg query %n $(pkg info pfSense-kernel-\*))
+	kernel_pkg=$(pkg query %n $(pkg info ${product}-kernel-\*))
 
 	if [ -z "${kernel_pkg}" ]; then
-		_echo "ERROR: It was not possible to identify which pfSense kernel is installed"
+		_echo "ERROR: It was not possible to identify which ${product} kernel is installed"
 		_exit 1
+	fi
+
+	if [ "$(compare_pkg_version pkg)" = "<" ]; then
+		_exec "pkg upgrade pkg" "Upgrading pkg" mute
+		pkg_update force
+	fi
+
+	if [ $(pkg upgrade -nq | wc -l) -le 1 ]; then
+		_echo "Your packages are up to date"
+		_exit 0
 	fi
 
 	kernel_version_compare=$(compare_pkg_version ${kernel_pkg})
@@ -151,15 +163,8 @@ pkg_upgrade_first_step() {
 		_echo "ERROR: You are using a newer kernel version than remote repository"
 		_exit 1
 	else
-		_echo "ERROR: Error comparing pfSense kernel local and remote versions"
+		_echo "ERROR: Error comparing ${product} kernel local and remote versions"
 		_exit 1
-	fi
-
-	# XXX find a samrter way to do it
-	l=$(pkg upgrade -nq | wc -l)
-	if [ ${l} -eq 1 ]; then
-		_echo "Your packages are up to date"
-		_exit 0
 	fi
 
 	if [ -z "${yes}" ]; then
@@ -167,7 +172,7 @@ pkg_upgrade_first_step() {
 		pkg upgrade -nq 2>&1 | tee -a ${logfile}
 
 		_echo ""
-		if [ ${kernel_update} -eq 1 ]; then
+		if [ $(pkg upgrade -r ${product}-core -nq | wc -l) -le 1 ]; then
 			_echo "**** WARNING ****"
 			_echo "Reboot will be required!!"
 		fi
@@ -185,12 +190,9 @@ pkg_upgrade_first_step() {
 		_exit 1
 	fi
 
-	# Mark firmware subsystem dirty
-	touch ${firmwarelock}
-
 	# First upgrade kernel and reboot
 	if [ ${kernel_update} -eq 1 ]; then
-		_exec "pkg upgrade ${kernel_pkg}" "Upgrading pfSense kernel"
+		_exec "pkg upgrade ${kernel_pkg}" "Upgrading ${product} kernel"
 		touch ${upgrade_in_progress}
 		_echo "Rebooting..."
 		/etc/rc.reboot
@@ -210,7 +212,6 @@ pkg_upgrade_second_step() {
 	# cleanup caches
 
 	rm -f ${upgrade_in_progress}
-	rm -f ${firmwarelock}
 }
 
 pkg_update() {
@@ -240,16 +241,19 @@ pkg_update() {
 }
 
 pkg_upgrade() {
-	pkg_update
-
 	unset need_reboot
 	if [ ! -f "${upgrade_in_progress}" ]; then
+		pkg_update
+
 		if [ -f "${logfile}" ]; then
 			rm -f ${logfile}
 		fi
 
 		pkg_upgrade_first_step
-		need_reboot=1
+
+		if [ $(pkg upgrade -r ${product}-core -nq | wc -l) -le 1 ]; then
+			need_reboot=1
+		fi
 	fi
 
 	pkg_upgrade_second_step
@@ -362,6 +366,8 @@ export ASSUME_ALWAYS_YES=true
 # Disable automatic update
 export REPO_AUTOUPDATE=false
 
+export product=$(/usr/local/bin/php -n /usr/local/sbin/read_global_var product_name pfSense)
+
 unset yes
 unset progress_fifo
 unset action
@@ -416,8 +422,10 @@ done
 
 if pgrep -qF ${pid_file} >/dev/null 2>&1; then
 	echo "Another instance is already running... Aborting!"
-	_exit 1
+	exit 1
 fi
+
+/etc/rc.conf_mount_rw
 
 echo $$ > ${pid_file}
 

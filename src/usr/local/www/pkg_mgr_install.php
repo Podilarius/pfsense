@@ -144,10 +144,11 @@ display_top_tabs($tab_array);
 
 		<div class="panel-body">
 			<textarea rows="15" class="form-control" id="output"></textarea>
-
+<!--
 			<div class="progress">
 				<div id="progressbar" class="progress-bar progress-bar-striped" role="progressbar" aria-valuemin="0" aria-valuemax="100" style="width: 1%"><span class="sr-only">1% Complete</span></div>
 			</div>
+-->
 		</div>
 	</div>
 <?php endif?>
@@ -197,8 +198,8 @@ if ($_GET) {
 			filter_configure();
 			break;
 		case 'reinstallxml':
-			pkg_fetch_config_file($pkgid);
-			pkg_fetch_additional_files($pkgid);
+//			pkg_fetch_config_file($pkgid);
+//			pkg_fetch_additional_files($pkgid);
 			break;
 		case 'reinstallpkg':
 			delete_package_xml($pkgid);

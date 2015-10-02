@@ -324,35 +324,6 @@ install_default_kernel() {
 	unset KERNEL_NAME
 }
 
-# Items that need to be fixed up that are
-# specific to nanobsd builds
-cust_fixup_nanobsd() {
-	local _NANO_WITH_VGA="${1}"
-
-	echo ">>> Fixing up NanoBSD Specific items..." | tee -a ${LOGFILE}
-
-	echo "nanobsd" > $FINAL_CHROOT_DIR/etc/platform
-
-	local BOOTCONF=${FINAL_CHROOT_DIR}/boot.config
-	local LOADERCONF=${FINAL_CHROOT_DIR}/boot/loader.conf
-
-	if [ "${_NANO_WITH_VGA}" = "nanobsd" ]; then
-		# Tell loader to use serial console early.
-		echo "-S115200 -h" >> ${BOOTCONF}
-	fi
-
-	# Remove old console options if present.
-	[ -f "${LOADERCONF}" ] \
-		&& sed -i "" -Ee "/(console|boot_multicons|boot_serial|hint.uart)/d" ${LOADERCONF}
-	# Activate serial console+video console in loader.conf
-	echo 'autoboot_delay="5"' >> ${LOADERCONF}
-	echo 'loader_color="NO"' >> ${LOADERCONF}
-	echo 'beastie_disable="YES"' >> ${LOADERCONF}
-	echo 'boot_serial="YES"' >> ${LOADERCONF}
-	echo 'console="comconsole"' >> ${LOADERCONF}
-	echo 'comconsole_speed="115200"' >> ${LOADERCONF}
-}
-
 # Creates a full update file
 create_Full_update_tarball() {
 	mkdir -p $UPDATESDIR
@@ -563,8 +534,28 @@ create_nanobsd_diskimage () {
 	customize_stagearea_for_image "${1}"
 	install_default_kernel ${DEFAULT_KERNEL} "no"
 
-	# Must be run after customize_stagearea_for_image
-	cust_fixup_nanobsd ${1}
+	echo ">>> Fixing up NanoBSD Specific items..." | tee -a ${LOGFILE}
+
+	echo "nanobsd" > $FINAL_CHROOT_DIR/etc/platform
+
+	local BOOTCONF=${FINAL_CHROOT_DIR}/boot.config
+	local LOADERCONF=${FINAL_CHROOT_DIR}/boot/loader.conf
+
+	if [ "${1}" = "nanobsd" ]; then
+		# Tell loader to use serial console early.
+		echo "-S115200 -h" >> ${BOOTCONF}
+	fi
+
+	# Remove old console options if present.
+	[ -f "${LOADERCONF}" ] \
+		&& sed -i "" -Ee "/(console|boot_multicons|boot_serial|hint.uart)/d" ${LOADERCONF}
+	# Activate serial console+video console in loader.conf
+	echo 'autoboot_delay="5"' >> ${LOADERCONF}
+	echo 'loader_color="NO"' >> ${LOADERCONF}
+	echo 'beastie_disable="YES"' >> ${LOADERCONF}
+	echo 'boot_serial="YES"' >> ${LOADERCONF}
+	echo 'console="comconsole"' >> ${LOADERCONF}
+	echo 'comconsole_speed="115200"' >> ${LOADERCONF}
 
 	for _NANO_MEDIASIZE in ${2}; do
 		if [ -z "${_NANO_MEDIASIZE}" ]; then
@@ -1122,6 +1113,16 @@ customize_stagearea_for_image() {
 
 	if [ "${1}" = "nanobsd" -o \
 	     "${1}" = "nanobsd-vga" ]; then
+
+		mkdir -p ${FINAL_CHROOT_DIR}/root/var/db \
+			 ${FINAL_CHROOT_DIR}/root/var/cache \
+			 ${FINAL_CHROOT_DIR}/var/db/pkg \
+			 ${FINAL_CHROOT_DIR}/var/cache/pkg
+		mv -f ${FINAL_CHROOT_DIR}/var/db/pkg ${FINAL_CHROOT_DIR}/root/var/db
+		mv -f ${FINAL_CHROOT_DIR}/var/cache/pkg ${FINAL_CHROOT_DIR}/root/var/cache
+		ln -sf ../../root/var/db/pkg ${FINAL_CHROOT_DIR}/var/db/pkg
+		ln -sf ../../root/var/cache/pkg ${FINAL_CHROOT_DIR}/var/cache/pkg
+
 		pkg_chroot_add ${FINAL_CHROOT_DIR} base-nanobsd
 	else
 		pkg_chroot_add ${FINAL_CHROOT_DIR} base
@@ -1396,6 +1397,8 @@ builder_setup() {
 		[ -d /usr/local/etc/pkg/repos ] \
 			|| mkdir -p /usr/local/etc/pkg/repos
 
+		update_freebsd_sources
+
 		local _arch=$(uname -m)
 		setup_pkg_repo /usr/local/etc/pkg/repos/${PRODUCT_NAME}.conf ${_arch} ${_arch} ${PKG_REPO_CONF_BRANCH}
 	fi
@@ -1536,7 +1539,12 @@ install_pkg_install_ports() {
 
 install_bsdinstaller() {
 	echo ">>> Installing BSDInstaller in chroot (${FINAL_CHROOT_DIR})... (starting)"
-	pkg_chroot ${FINAL_CHROOT_DIR} install -f bsdinstaller ${MAIN_PKG} ${custom_package_list}
+	pkg_chroot ${FINAL_CHROOT_DIR} install -f bsdinstaller
+	sed -i '' -e "s,%%PRODUCT_NAME%%,${PRODUCT_NAME}," \
+		  -e "s,%%PRODUCT_VERSION%%,${PRODUCT_VERSION}," \
+		  -e "s,%%ARCH%%,${TARGET}," \
+		  ${FINAL_CHROOT_DIR}/usr/local/share/dfuibe_lua/conf/pfSense.lua \
+		  ${FINAL_CHROOT_DIR}/usr/local/share/dfuibe_lua/conf/pfSense_rescue.lua
 	echo ">>> Installing BSDInstaller in chroot (${FINAL_CHROOT_DIR})... (finished)"
 }
 

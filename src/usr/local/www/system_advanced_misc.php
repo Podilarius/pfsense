@@ -280,8 +280,8 @@ if ($_POST) {
 			unset($config['system']['use_mfs_tmpvar']);
 		}
 
-		$config['system']['use_mfs_tmp_size'] = $_POST['-tmp-ram-disk-size'];
-		$config['system']['use_mfs_var_size'] = $_POST['-var-ram-disk-size'];
+		$config['system']['use_mfs_tmp_size'] = $_POST['use_mfs_tmp_size'];
+		$config['system']['use_mfs_var_size'] = $_POST['use_mfs_var_size'];
 
 		if (isset($_POST['rrdbackup'])) {
 			$config['system']['rrdbackup'] = $_POST['rrdbackup'];
@@ -536,7 +536,7 @@ $section->addInput(new Form_Checkbox(
 	'use_mfs_tmpvar',
 	'Use RAM Disks',
 	'Use memory file system for /tmp and /var',
-	($pconfig['use_mfs_tmpvar'] || $g['platform'] != "pfSense")
+	($pconfig['use_mfs_tmpvar'] || $g['platform'] != $g['product_name'])
 ))->setHelp('Set this if you wish to use /tmp and /var as RAM disks (memory file '.
 	'system disks) on a full install rather than use the hard disk. Setting this will '.
 	'cause the data in /tmp and /var to be lost at reboot, including log data. RRD '.

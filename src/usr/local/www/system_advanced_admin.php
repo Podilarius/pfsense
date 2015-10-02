@@ -474,7 +474,7 @@ $section->addInput(new Form_Input(
 ))->setHelp('Note: Leave this blank for the default of 22.');
 
 
-if (!$g['enableserial_force'] && ($g['platform'] == "pfSense" || $g['platform'] == "cdrom"))
+if (!$g['enableserial_force'] && ($g['platform'] == $g['product_name'] || $g['platform'] == "cdrom"))
 {
 	$form->add($section);
 	$section = new Form_Section('Serial Communications');
@@ -527,24 +527,14 @@ print $form;
 //<![CDATA[
 events.push(function(){
 
-	//---------- "Standard" show/hide functions ---------------------------------------------------
-
-	// Hides the <div> in which the specified input element lives so that the input, its label and help text are hidden
-	function hideInput(id, hide) {
-		if(hide)
-			$('#' + id).parent().parent('div').addClass('hidden');
-		else
-			$('#' + id).parent().parent('div').removeClass('hidden');
-	}
-
 	// ---------- On initial page load ------------------------------------------------------------
 
-	hideInput('ssl-certificate', $('input[name=webguiproto]:checked').val() == 'http');
+	hideInput('ssl-certref', $('input[name=webguiproto]:checked').val() == 'http');
 
 	// ---------- Click checkbox handlers ---------------------------------------------------------
 
 	 $('[id=webguiproto]').click(function () {
-		hideInput('ssl-certificate', $('input[name=webguiproto]:checked').val() == 'http');
+		hideInput('ssl-certref', $('input[name=webguiproto]:checked').val() == 'http');
 	});
 });
 //]]>

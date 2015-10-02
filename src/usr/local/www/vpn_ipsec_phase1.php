@@ -535,7 +535,7 @@ function build_interface_list() {
 }
 
 function build_auth_method_list() {
-	global $p1_authentication_methods;
+	global $p1_authentication_methods, $pconfig;
 
 	$list = array();
 
@@ -934,6 +934,7 @@ events.push(function(){
 
 		switch ($('#authentication_method').val()) {
 			case 'eap-mschapv2':
+			case 'eap-radius':
 			case 'eap-tls':
 			case 'hybrid_rsa_server':
 			case 'xauth_rsa_server':
@@ -1020,48 +1021,6 @@ events.push(function(){
 
 		if(! $('#dpd_maxfail').val())
 			$('#dpd_maxfail').val('5')
-	}
-
-	// ---------- Library of show/hide functions --------------------------------------------------
-
-	// Hides the <div> in which the specified input element lives so that the input,
-	// its label and help text are hidden
-	function hideInput(id, hide) {
-		if(hide)
-			$('#' + id).parent().parent('div').addClass('hidden');
-		else
-			$('#' + id).parent().parent('div').removeClass('hidden');
-	}
-
-	// Hides the <div> in which the specified group input element lives so that the input,
-	// its label and help text are hidden
-	function hideGroupInput(id, hide) {
-		if(hide)
-			$('#' + id).parent('div').addClass('hidden');
-		else
-			$('#' + id).parent('div').removeClass('hidden');
-	}
-
-	// Hides the <div> in which the specified checkbox lives so that the checkbox,
-	// its label and help text are hidden
-	function hideCheckbox(id, hide) {
-		if(hide)
-			$('#' + id).parent().parent().parent('div').addClass('hidden');
-		else
-			$('#' + id).parent().parent().parent('div').removeClass('hidden');
-	}
-
-	// Disables the specified input element
-	function disableInput(id, disable) {
-		$('#' + id).prop("disabled", disable);
-	}
-
-	// Hides all elements of the specified class. This will usually be a section or group
-	function hideClass(s_class, hide) {
-		if(hide)
-			$('.' + s_class).hide();
-		else
-			$('.' + s_class).show();
 	}
 
 	// ---------- Monitor elements for change and call the appropriate display functions ----------
