@@ -1230,6 +1230,7 @@ $section->addInput(new Form_Select(
 $form->add($section);
 
 // Source and destination share a lot of logic. Loop over the two
+// ToDo: Unfortunately they seem to differ more than they share. This needs to be unrolled
 foreach (['src' => 'Source', 'dst' => 'Destination'] as $type => $name) {
 	$section = new Form_Section($name);
 
@@ -1241,15 +1242,19 @@ foreach (['src' => 'Source', 'dst' => 'Destination'] as $type => $name) {
 		$pconfig[$type.'not']
 	))->setWidth(2);
 
-	$ruleType = $pconfig[$type];
-	if ($pconfig[$type] == 'any') {
-		$ruleType = 'any';
-	} elseif (is_specialnet($pconfig[$type])) {
-		$ruleType = 'network';
+	// The rule type dropdown on the GUI can be one of the special names like
+	// "any" "LANnet" "LAN address"... or "Single host or alias" or "Network"
+	if (is_specialnet($pconfig[$type])) {
+		// It is one of the special names, let it through as-is.
+		$ruleType = $pconfig[$type];
 	} elseif ((is_ipaddrv6($pconfig[$type]) && $pconfig[$type.'mask'] == 128) ||
-			(is_ipaddrv4($pconfig[$type]) && $pconfig[$type.'mask'] == 32) ||
-			(is_alias($pconfig[$type]))) {
+	    (is_ipaddrv4($pconfig[$type]) && $pconfig[$type.'mask'] == 32) ||
+	    (is_alias($pconfig[$type]))) {
+		// It is a single-host IP address or an alias
 		$ruleType = 'single';
+	} else {
+		// Everything else must be a network
+		$ruleType = 'network';
 	}
 
 	$ruleValues = array(
@@ -1257,6 +1262,11 @@ foreach (['src' => 'Source', 'dst' => 'Destination'] as $type => $name) {
 		'single' => 'Single host or alias',
 		'network' => 'Network',
 	);
+
+	if($type == 'dst') {
+		$ruleValues['(self)'] = "This firewall (self)";
+	}
+
 	if (isset($a_filter[$id]['floating']) || $if == "FloatingRules")
 		$ruleValues['(self)'] = 'This Firewall (self)';
 	if (have_ruleint_access("pppoe"))
