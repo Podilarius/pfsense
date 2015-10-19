@@ -108,13 +108,20 @@ if ($_REQUEST['ajax']) {
 
 	// Check to see if our process is still running
 	$pidfile = $g['varrun_path'] . '/' . $g['product_name'] . '-upgrade.pid';
+	$running = "running";
 
+	// When we do a reinstallall, it is technically possible that we might catch the system in-between
+	// packages, hence the de-bounce here
 	if (!isvalidpid($pidfile)) {
-		$running = "stopped";
-		// The log files may not be complete when the process terminates so we need wait
-		waitfor_string_in_file($_REQUEST['logfilename'] . '.txt', "__RC=", 10);
-	} else {
-		$running = "running";
+		usleep(100000);
+		if (!isvalidpid($pidfile)) {
+			$running = "stopped";
+			// The log files may not be complete when the process terminates so we need wait until we see the
+			// exit status (__RC=x)
+			waitfor_string_in_file($_REQUEST['logfilename'] . '.txt', "__RC=", 10);
+			filter_configure();
+			send_event("service restart packages");
+		}
 	}
 
 	$pidarray = array('pid' => $running);
@@ -246,7 +253,7 @@ display_top_tabs($tab_array);
 
 ?>
 <form action="pkg_mgr_install.php" method="post" class="form-horizontal">
-	<h2>Add / remove package</h2>
+	<h2>Install / remove package</h2>
 <?php if ((empty($_GET['mode']) && $_GET['id']) || (!empty($_GET['mode']) && (!empty($_GET['pkg']) || $_GET['mode'] == 'reinstallall') && ($_GET['mode'] != 'installedinfo' && $_GET['mode'] != 'showlog'))):
 	if (empty($_GET['mode']) && $_GET['id']) {
 		$pkgname = str_replace(array("<", ">", ";", "&", "'", '"', '.', '/'), "", htmlspecialchars_decode($_GET['id'], ENT_QUOTES | ENT_HTML401));
@@ -263,7 +270,7 @@ display_top_tabs($tab_array);
 			$pkgtxt = 'reinstalled';
 			break;
 		case 'delete':
-			$pkgtxt = 'deleted';
+			$pkgtxt = 'removed';
 			break;
 		default:
 			$pkgtxt = $pkgmode;
@@ -273,7 +280,17 @@ display_top_tabs($tab_array);
 	<div class="panel panel-default">
 		<div class="panel-body">
 			<div class="content">
+<?php
+			if ($pkgmode == 'reinstallall') {
+?>
+				<p><?=gettext("All packages will be reinstalled.");?></p>
+<?php
+			} else {
+?>
 				<p>Package: <b><?=$pkgname;?></b> will be <?=$pkgtxt;?>.</p>
+<?php
+			}
+?>
 			</div>
 		</div>
 		<div class="panel-footer">
@@ -293,7 +310,7 @@ if ($_POST['mode'] == 'delete') {
 	$modetxt = gettext("installation");
 }
 
-if (!empty($_POST['id']) || $_GET['mode'] == 'showlog' || ($_GET['mode'] == 'installedinfo' && !empty($_GET['pkg']))):
+if (!empty($_POST['id']) || $_POST['mode'] == "reinstallall" || $_GET['mode'] == 'showlog' || ($_GET['mode'] == 'installedinfo' && !empty($_GET['pkg']))):
 	// What if the user navigates away from this page and then come back via his/her "Back" button?
 	$pidfile = $g['varrun_path'] . '/' . $g['product_name'] . '-upgrade.pid';
 
@@ -308,7 +325,7 @@ if (!empty($_POST['id']) || $_GET['mode'] == 'showlog' || ($_GET['mode'] == 'ins
 	<br />
 	<div class="panel panel-default">
 		<div class="panel-heading">
-			<h2 class="panel-title" id="status"><?=gettext("Beginning package ") . $modetxt?>.</h2>
+			<h2 class="panel-title" id="status"><?=gettext("Package") . " " . $modetxt?></h2>
 		</div>
 
 		<div class="panel-body">
@@ -355,25 +372,31 @@ if ($_GET) {
 	/* Write out configuration to create a backup prior to pkg install. */
 	write_config(gettext("Creating restore point before package installation."));
 
+	$progbar = true;
+
 	switch ($_POST['mode']) {
 		case 'delete':
-			$pid = mwexec('/usr/local/sbin/pfSense-upgrade -l /tmp/webgui-log.txt -p /tmp/webgui-log.sock -r ' . $pkgid, false, false, true);
+			mwexec('/usr/local/sbin/pfSense-upgrade -l /tmp/webgui-log.txt -p /tmp/webgui-log.sock -r ' . $pkgid, false, false, true);
 			$start_polling = true;
-			filter_configure();
 			break;
 
 		case 'reinstallall':
+			if (is_array($config['installedpackages']) && is_array($config['installedpackages']['package'])) {
+				$progbar = false; // We don't show the progress bar for reinstallall. It would be far too confusing
+				mwexec('/usr/local/sbin/pfSense-upgrade -l /tmp/webgui-log.txt -p /tmp/webgui-log.sock -i ' . "ALL_PACKAGES" . ' -f', false, false, true);
+				$start_polling = true;
+			}
+
+			break;
 		case 'reinstallpkg':
-			$pid = mwexec('/usr/local/sbin/pfSense-upgrade -l /tmp/webgui-log.txt -p /tmp/webgui-log.sock -i ' . $pkgid . ' -f', false, false, true);
-			filter_configure();
+			mwexec('/usr/local/sbin/pfSense-upgrade -l /tmp/webgui-log.txt -p /tmp/webgui-log.sock -i ' . $pkgid . ' -f', false, false, true);
 			$start_polling = true;
 			break;
 
 		case 'installed':
 		default:
-			$pid = mwexec('/usr/local/sbin/pfSense-upgrade -l /tmp/webgui-log.txt -p /tmp/webgui-log.sock -i ' . $pkgid, false, false, true);
+			mwexec('/usr/local/sbin/pfSense-upgrade -l /tmp/webgui-log.txt -p /tmp/webgui-log.sock -i ' . $pkgid, false, false, true);
 			$start_polling = true;
-			filter_configure();
 			break;
 	}
 
@@ -403,7 +426,11 @@ function setProgress(barName, percent) {
 // Display a success banner
 function show_success() {
 	$('#final').removeClass("alert-info").addClass("alert-success");
-	$('#final').html("<?=$pkgid?>" + " " + "<?=$modetxt?>" + " " + "<?=gettext(' successfully completed')?>");
+	if("<?=$progbar?>")
+		$('#final').html("<?=$pkgid?>" + " " + "<?=$modetxt?>" + " " + "<?=gettext(' successfully completed')?>");
+	else
+		$('#final').html("<?=gettext('Reinstallation of all packages successfully completed')?>");
+
 	$('#final').show();
 }
 
@@ -451,11 +478,13 @@ function getLogsStatus() {
 
 			// Update the progress bar
 			progress = 0;
-			if (json.data) {
-				setProgress('progressbar', ((json.data.current * 100) / json.data.total));
-				progress = json.data.total - json.data.current
-			}
 
+			if("<?=$progbar?>") {
+				if (json.data) {
+					setProgress('progressbar', ((json.data.current * 100) / json.data.total));
+					progress = json.data.total - json.data.current
+				}
+			}
 			// Now we need to determine if the installation/removal was successful, and tell the user. Not as easy as it sounds :)
 			if ((json.pid == "stopped") && (progress == 0) && (json.exitstatus == 0)) {
 				show_success();

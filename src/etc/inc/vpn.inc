@@ -428,15 +428,9 @@ cisco_unity = {$unity_enabled}
 {$ifacesuse}
 {$makebeforebreak}
 
-# And two loggers using syslog. The subsections define the facility to log
-# to, currently one of: daemon, auth.
 syslog {
 	identifier = charon
 	daemon {
-		ike_name = yes
-{$strongswanlog}
-	}
-	auth {
 		ike_name = yes
 {$strongswanlog}
 	}
@@ -580,28 +574,6 @@ EOD;
 	@file_put_contents("{$g['varetc_path']}/ipsec/strongswan.conf", $strongswan);
 	unset($strongswan);
 
-	/* generate CA certificates files */
-	if (is_array($config['ca']) && count($config['ca'])) {
-		foreach ($config['ca'] as $ca) {
-			if (!isset($ca['crt'])) {
-				log_error(sprintf(gettext("Error: Invalid certificate info for %s"), $ca['descr']));
-				continue;
-			}
-			$cert = base64_decode($ca['crt']);
-			$x509cert = openssl_x509_parse(openssl_x509_read($cert));
-			if (!is_array($x509cert) || !isset($x509cert['hash'])) {
-				log_error(sprintf(gettext("Error: Invalid certificate hash info for %s"), $ca['descr']));
-				continue;
-			}
-			$fname = "{$capath}/{$x509cert['hash']}.0.crt";
-			if (!@file_put_contents($fname, $cert)) {
-				log_error(sprintf(gettext("Error: Cannot write IPsec CA file for %s"), $ca['descr']));
-				continue;
-			}
-			unset($cert);
-		}
-	}
-
 	/* write out CRL files */
 	if (is_array($config['crl']) && count($config['crl'])) {
 		foreach ($config['crl'] as $crl) {
@@ -619,6 +591,7 @@ EOD;
 
 	$pskconf = "";
 
+	$vpncas = array();
 	if (is_array($a_phase1) && count($a_phase1)) {
 		foreach ($a_phase1 as $ph1ent) {
 
@@ -636,6 +609,16 @@ EOD;
 				if (!$cert) {
 					log_error(sprintf(gettext("Error: Invalid phase1 certificate reference for %s"), $ph1ent['name']));
 					continue;
+				}
+
+				/* add signing CA cert chain of server cert
+				 * to the list of CAs to write
+				 */
+				$cachain = ca_chain_array($cert);
+				if ($cachain && is_array($cachain)) {
+					foreach ($cachain as $cacrt) {
+						$vpncas[$cacrt['refid']] = $cacrt;
+					}
 				}
 
 				@chmod($certpath, 0600);
@@ -686,6 +669,41 @@ EOD;
 					}
 				}
 			}
+
+			/* if the client authenticates with a cert add the
+			 * client cert CA chain to the list of CAs to write
+			 */
+			if (in_array($ph1ent['authentication_method'],
+			array('rsasig', 'eap-tls', 'xauth_rsa_server'))) {
+
+				if (!empty($ph1ent['caref']) && !array_key_exists($ph1ent['caref'], $vpncas)) {
+					$thisca = lookup_ca($ph1ent['caref']);
+					$vpncas[$ph1ent['caref']] = $thisca;
+
+					/* follow chain up to root */
+					$cachain = ca_chain_array($thisca);
+					if ($cachain and is_array($cachain)) {
+						foreach ($cachain as $cacrt) {
+							$vpncas[$cacrt['refid']] = $cacrt;
+						}
+					}
+				}
+			}
+		}
+	}
+
+	/* write the required CAs */
+	foreach ($vpncas as $carefid => $cadata) {
+		$cacrt = base64_decode($cadata['crt']);
+		$cacrtattrs = openssl_x509_parse($cacrt);
+		if (!is_array($cacrtattrs) || !isset($cacrtattrs['hash'])) {
+			log_error(sprintf(gettext("Error: Invalid certificate hash info for %s"), $cadata['descr']));
+			continue;
+		}
+		$cafilename = "{$capath}/{$cacrtattrs['hash']}.0.crt";
+		if (!@file_put_contents($cafilename, $cacrt)) {
+				log_error(sprintf(gettext("Error: Cannot write IPsec CA file for %s"), $cadata['descr']));
+				continue;
 		}
 	}
 
@@ -951,6 +969,21 @@ EOD;
 				}
 			}
 
+			if (!empty($ph1ent['caref'])) {
+				$ca = lookup_ca($ph1ent['caref']);
+				if ($ca) {
+					$casubarr = cert_get_subject_array($ca['crt']);
+					$casub = "";
+					foreach ($casubarr as $casubfield) {
+						if (empty($casub)) {
+							$casub = "/";
+						}
+						$casub .= "{$casubfield['a']}={$casubfield['v']}/";
+					}
+
+				}
+			}
+
 			$authentication = "";
 			switch ($ph1ent['authentication_method']) {
 				case 'eap-mschapv2':
@@ -975,6 +1008,9 @@ EOD;
 							$authentication .= "\n\tleftcert={$certpath}/cert-{$ph1ent['ikeid']}.crt";
 						}
 					}
+					if (isset($casub)) {
+						$authentication .= "\n\trightca=\"$casub\"";
+					}
 					break;
 				case 'eap-radius':
 					if (isset($ph1ent['mobile'])) {
@@ -996,6 +1032,9 @@ EOD;
 					if (!empty($ph1ent['certref'])) {
 						$authentication .= "\n\tleftcert={$certpath}/cert-{$ph1ent['ikeid']}.crt";
 					}
+					if (isset($casub)) {
+						$authentication .= "\n\trightca=\"$casub\"";
+					}
 					break;
 				case 'xauth_psk_server':
 					$authentication = "leftauth = psk\n\trightauth = psk";
@@ -1008,6 +1047,9 @@ EOD;
 					$authentication = "leftauth = pubkey\n\trightauth = pubkey";
 					if (!empty($ph1ent['certref'])) {
 						$authentication .= "\n\tleftcert={$certpath}/cert-{$ph1ent['ikeid']}.crt";
+					}
+					if (isset($casub)) {
+						$authentication .= "\n\trightca=\"$casub\"";
 					}
 					break;
 				case 'hybrid_rsa_server':
