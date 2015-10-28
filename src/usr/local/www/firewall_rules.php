@@ -266,7 +266,7 @@ display_top_tabs($tab_array);
 	<div class="panel panel-default">
 		<div class="panel-heading"><?=gettext("Rules (Drag to change order)")?></div>
 		<div id="mainarea" class="table-responsive panel-body">
-			<table class="table table-striped table-hover table-condensed">
+			<table name="ruletable" class="table table-hover table-condensed">
 				<thead>
 					<tr>
 						<th><!-- checkbox --></th>
@@ -304,7 +304,7 @@ display_top_tabs($tab_array);
 						<td></td>
 						<td><?=gettext("Anti-Lockout Rule");?></td>
 						<td>
-							<a href="system_advanced_admin.php" class="fa fa-pencil" title="<?=gettext("edit");?>"></a>
+							<a href="system_advanced_admin.php" class="fa fa-cog" title="<?=gettext("Settings");?>"></a>
 						</td>
 					</tr>
 <?php endif;?>
@@ -322,7 +322,7 @@ display_top_tabs($tab_array);
 						<td></td>
 						<td><?=gettext("Block private networks");?></td>
 						<td>
-							<a href="interfaces.php?if=<?=htmlspecialchars($if)?>" class="fa fa-pencil" title="<?=gettext("edit rule");?>"></a>
+							<a href="interfaces.php?if=<?=htmlspecialchars($if)?>" class="fa fa-cog" title="<?=gettext("Settings");?>"></a>
 						</td>
 					</tr>
 <?php endif;?>
@@ -340,7 +340,7 @@ display_top_tabs($tab_array);
 						<td>*</td>
 						<td><?=gettext("Block bogon networks");?></td>
 						<td>
-							<a href="interfaces.php?if=<?=htmlspecialchars($if)?>" class="fa fa-pencil" title="<?=gettext("edit");?>"></a>
+							<a href="interfaces.php?if=<?=htmlspecialchars($if)?>" class="fa fa-cog" title="<?=gettext("Settings");?>"></a>
 						</td>
 					</tr>
 <?php endif;?>
@@ -615,7 +615,7 @@ for ($i = 0; isset($a_filter[$i]); $i++):
 						</td>
 						<td>
 						<!-- <?=(isset($filterent['disabled']) ? 'enable' : 'disable')?> -->
-							<a href="firewall_rules_edit.php?id=<?=$i;?>" class="fa fa-pencil" title=<?=gettext('Edit')?>"></a>
+							<a href="firewall_rules_edit.php?id=<?=$i;?>" class="fa fa-pencil" title="<?=gettext('Edit')?>"></a>
 							<a href="firewall_rules_edit.php?dup=<?=$i;?>" class="fa fa-clone" title="<?=gettext('Copy')?>"></a>
 <?php if (isset($filterent['disabled'])) {
 ?>
@@ -625,7 +625,7 @@ for ($i = 0; isset($a_filter[$i]); $i++):
 							<a href="?act=toggle&amp;if=<?=htmlspecialchars($if);?>&amp;id=<?=$i;?>" class="fa fa-ban" title="<?=gettext('Disable')?>"></a>
 <?php }
 ?>
-							<a href="?act=del&amp;if=<?=htmlspecialchars($if);?>&amp;id=<?=$i;?>" class="fa fa-trash" title="<?=gettext('Delete')?>"></a>
+							<a href="?act=del&amp;if=<?=htmlspecialchars($if);?>&amp;id=<?=$i;?>" class="fa fa-trash" title="<?=gettext('Delete')?>" onclick="return confirm('<?=gettext("Are you sure you want to delete this rule?")?>')"></a>
 						</td>
 					</tr>
 <?php
@@ -689,6 +689,11 @@ else
 ?>
 
 <script>
+function stripe_table() {
+	$("tr:odd").addClass('active');
+	$("tr:even").removeClass('active');
+}
+
 function fr_toggle(id, prefix) {
 	if (!prefix)
 		prefix = 'fr';
@@ -698,28 +703,37 @@ function fr_toggle(id, prefix) {
 	fr_bgcolor(id, prefix);
 }
 
+// Change background color based on state of checkbox
+// On resetting background, reapply table striping
 function fr_bgcolor(id, prefix) {
 	if (!prefix)
 		prefix = 'fr';
 
-	var row = document.getElementById(prefix + id);
-	var checkbox = document.getElementById(prefix + 'c' + id);
-	var cells = row.getElementsByTagName('td');
-	var cellcnt = cells.length;
+	var row = $('#' + prefix + id);
 
-	for (i = 0; i < cellcnt-1; i++) {
-		cells[i].style.backgroundColor = checkbox.checked ? "#DDF4FF" : "#FFFFFF";
+	if ($('#' + prefix + 'c' + id).prop('checked') ) {
+		row.css("background-color", "#DDF4FF");
+		row.removeClass('active');
+	} else {
+		row.css("background-color", "#FFFFFF");
+		stripe_table();
 	}
 }
+
 </script>
 
 <script>
+
 events.push(function() {
+
+	stripe_table();
+
 	// Make rules sortable
 	$('table tbody.user-entries').sortable({
 		cursor: 'grabbing',
 		update: function(event, ui) {
 			$('#order-store').removeAttr('disabled');
+			stripe_table();
 		}
 	});
 

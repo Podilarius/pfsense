@@ -126,7 +126,7 @@ display_top_tabs($tab_array);
 				<th><?=gettext("Gateways")?></th>
 				<th><?=gettext("Priority")?></th>
 				<th><?=gettext("Description")?></th>
-				<th><!-- Action Buttons --></th>
+				<th><?=gettext("Actions")?></th>
 			</tr>
 		</thead>
 		<tbody>
@@ -158,9 +158,9 @@ foreach ($a_gateway_groups as $gateway_group):
 					<?=htmlspecialchars($gateway_group['descr'])?>
 				</td>
 				<td>
-					<a href="system_gateway_groups_edit.php?id=<?=$i?>" class="btn btn-xs btn-success"><?=gettext('Edit')?></a>
-					<a href="system_gateway_groups_edit.php?dup=<?=$i?>" class="btn btn-xs btn-info"><?=gettext('Duplicate')?></a>
-					<a href="system_gateway_groups.php?act=del&amp;id=<?=$i?>" class="btn btn-xs btn-danger" ><?=gettext('Delete')?></a>
+					<a href="system_gateway_groups_edit.php?id=<?=$i?>" class="fa fa-pencil" title="<?=gettext('Edit')?>"></a>
+					<a href="system_gateway_groups_edit.php?dup=<?=$i?>" class="fa fa-clone" title="<?=gettext('Copy')?>"></a>
+					<a href="system_gateway_groups.php?act=del&amp;id=<?=$i?>" class="fa fa-trash" title="<?=gettext('Delete')?>" onclick="return confirm('<?=gettext("Are you sure you want to delete this group?")?>')"></a>
 				</td>
 			</tr>
 <?php
