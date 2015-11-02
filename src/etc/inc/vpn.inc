@@ -143,9 +143,8 @@ function vpn_ipsec_configure($restart = false) {
 		/* wait for process to die */
 		sleep(2);
 
-		/* disallow IPSEC, it is off */
+		/* IPSEC is off, shutdown enc interface. */
 		mwexec("/sbin/ifconfig enc0 down");
-		set_single_sysctl("net.inet.ip.ipsec_in_use", "0");
 
 		return 0;
 	}
@@ -160,7 +159,6 @@ function vpn_ipsec_configure($restart = false) {
 	$crlpath = "{$g['varetc_path']}/ipsec/ipsec.d/crls";
 
 	mwexec("/sbin/ifconfig enc0 up");
-	set_single_sysctl("net.inet.ip.ipsec_in_use", "1");
 	if (php_uname('m') != "amd64") {
 		set_single_sysctl("net.inet.ipsec.directdispatch", "0");
 	}
@@ -206,9 +204,6 @@ function vpn_ipsec_configure($restart = false) {
 	if (platform_booting()) {
 		echo gettext("Configuring IPsec VPN... ");
 	}
-
-	/* fastforwarding is not compatible with ipsec tunnels */
-	set_single_sysctl("net.inet.ip.fastforwarding", "0");
 
 	/* resolve all local, peer addresses and setup pings */
 	$ipmap = array();

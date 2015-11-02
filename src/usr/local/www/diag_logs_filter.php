@@ -367,7 +367,6 @@ if (!isset($config['syslog']['rawfilter'])) {
 	   <div class="table-responsive">
 		<table class="table table striped table-hover table-compact">
 			<tr>
-				<th><?=gettext("Act")?></th>
 				<th><?=gettext("Time")?></th>
 				<th><?=gettext("IF")?></th>
 <?php
@@ -382,6 +381,7 @@ if (!isset($config['syslog']['rawfilter'])) {
 				<th><?=gettext("Source")?></th>
 				<th><?=gettext("Destination")?></th>
 				<th><?=gettext("Proto")?></th>
+				<th><?=gettext("Act")?></th>
 			</tr>
 <?php
 	if ($config['syslog']['filterdescriptions'])
@@ -390,14 +390,6 @@ if (!isset($config['syslog']['rawfilter'])) {
 	foreach ($filterlog as $filterent) {
 ?>
 			<tr>
-				<td>
-					<a data-toggle="tooltip" title="<?php echo $filterent['act'] .'/'. $filterent['tracker'];?>" class="btn btn-xs btn-info" onclick="javascript:getURL('diag_logs_filter.php?getrulenum=<?="{$filterent['rulenum']},{$filterent['tracker']},{$filterent['act']}"; ?>', outputrule);">
-					<?=gettext('Block')?></a>
-<?php
-		if ($filterent['count'])
-			echo $filterent['count'];
-?>
-				</td>
 				<td>
 					<?=htmlspecialchars($filterent['time'])?>
 				</td>
@@ -434,19 +426,19 @@ if (!isset($config['syslog']['rawfilter'])) {
 		$dst_htmlclass = str_replace(array('.', ':'), '-', $filterent['dstip']);
 ?>
 				<td>
-					<i class="icon icon-map-marker" onclick="javascript:resolve_with_ajax('<?="{$filterent['srcip']}"; ?>');" title="<?=gettext("Click to resolve")?>" alt="Reverse Resolve with DNS"/>
+					<i class="fa fa-info icon-pointer icon-primary" onclick="javascript:resolve_with_ajax('<?="{$filterent['srcip']}"; ?>');" title="<?=gettext("Click to resolve")?>" alt="Reverse Resolve with DNS"/>
 					</i>
 
-					<i class="icon icon-download" href="easyrule.php?<?="action=block&amp;int={$int}&amp;src={$filterent['srcip']}&amp;ipproto={$ipproto}"; ?>" alt="Easy Rule: Add to Block List" title="<?=gettext("Easy Rule: Add to Block List")?>" onclick="return confirm('<?=gettext("Do you really want to add this BLOCK rule?")?>')">
+					<i class="fa fa-minus-square-o icon-pointer icon-primary" href="easyrule.php?<?="action=block&amp;int={$int}&amp;src={$filterent['srcip']}&amp;ipproto={$ipproto}"; ?>" alt="Easy Rule: Add to Block List" title="<?=gettext("Easy Rule: Add to Block List")?>" onclick="return confirm('<?=gettext("Do you really want to add this BLOCK rule?")?>')">
 					</i>
 
 					<?=$srcstr . '<span class="RESOLVE-' . $src_htmlclass . '"></span>'?>
 				</td>
 				<td>
-					<i class="icon icon-map-marker" onclick="javascript:resolve_with_ajax('<?="{$filterent['dstip']}"; ?>');" title="<?=gettext("Click to resolve")?>" class="ICON-<?= $dst_htmlclass; ?>" alt="Reverse Resolve with DNS"/>
+					<i class="fa fa-info icon-pointer icon-primary" onclick="javascript:resolve_with_ajax('<?="{$filterent['dstip']}"; ?>');" title="<?=gettext("Click to resolve")?>" class="ICON-<?= $dst_htmlclass; ?>" alt="Reverse Resolve with DNS"/>
 					</i>
 
-					<i class="icon icon-upload" href="easyrule.php?<?="action=pass&amp;int={$int}&amp;proto={$proto}&amp;src={$filterent['srcip']}&amp;dst={$filterent['dstip']}&amp;dstport={$filterent['dstport']}&amp;ipproto={$ipproto}"; ?>" title="<?=gettext("Easy Rule: Pass this traffic")?>" onclick="return confirm('<?=gettext("Do you really want to add this PASS rule?")?>')">
+					<i class="fa fa-plus-square-o icon-pointer icon-primary" href="easyrule.php?<?="action=pass&amp;int={$int}&amp;proto={$proto}&amp;src={$filterent['srcip']}&amp;dst={$filterent['dstip']}&amp;dstport={$filterent['dstport']}&amp;ipproto={$ipproto}"; ?>" title="<?=gettext("Easy Rule: Pass this traffic")?>" onclick="return confirm('<?=gettext("Do you really want to add this PASS rule?")?>')">
 					</i>
 					<?=$dststr . '<span class="RESOLVE-' . $dst_htmlclass . '"></span>'?>
 				</td>
@@ -454,7 +446,28 @@ if (!isset($config['syslog']['rawfilter'])) {
 		if ($filterent['proto'] == "TCP")
 			$filterent['proto'] .= ":{$filterent['tcpflags']}";
 ?>
-				<td><?=htmlspecialchars($filterent['proto'])?></td>
+				<td>
+					<?=htmlspecialchars($filterent['proto'])?>
+				</td>
+
+				<td>
+<?php
+		if ($filterent['act'] == "block") {
+?>
+					<i  class="fa fa-times icon-danger icon-pointer" title="<?php echo $filterent['act'] .'/'. $filterent['tracker'];?>" onclick="javascript:getURL('diag_logs_filter.php?getrulenum=<?="{$filterent['rulenum']},{$filterent['tracker']},{$filterent['act']}"; ?>', outputrule);"></i>
+<?php
+		 }
+		 else {
+?>
+					<i class="fa fa-check icon-success icon-pointer" title="<?php echo $filterent['act'] .'/'. $filterent['tracker'];?>" onclick="javascript:getURL('diag_logs_filter.php?getrulenum=<?="{$filterent['rulenum']},{$filterent['tracker']},{$filterent['act']}"; ?>', outputrule);"></i>
+<?php
+		}
+?>
+<?php
+		if ($filterent['count'])
+			echo $filterent['count'];
+?>
+				</td>
 			</tr>
 <?php
 		if (isset($config['syslog']['filterdescriptions']) && $config['syslog']['filterdescriptions'] === "2") {
@@ -498,7 +511,7 @@ else
 
 print_info_box('<a href="https://doc.pfsense.org/index.php/What_are_TCP_Flags%3F">' .
 	gettext("TCP Flags") . '</a>: F - FIN, S - SYN, A or . - ACK, R - RST, P - PSH, U - URG, E - ECE, C - CWR' . '<br />' .
-	'<i class="icon icon-download"></i> = Add to block list., <i class="icon icon-upload"></i> = Pass traffic, <i class="icon icon-map-marker"></i> = Resolve');
+	'<i class="fa fa-minus-square-o icon-primary"></i> = Add to block list., <i class="fa fa-plus-square-o icon-primary"></i> = Pass traffic, <i class="fa fa-info icon-primary"></i> = Resolve');
 
 ?>
 
@@ -582,5 +595,8 @@ if (typeof getURL == 'undefined') {
 	};
 }
 
+events.push(function(){
+    $('.fa').tooltip();
+});
 //]]>
 </script>
