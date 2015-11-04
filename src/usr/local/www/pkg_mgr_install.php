@@ -227,9 +227,6 @@ if ($_POST) {
 	switch ($_GET['mode']) {
 		case 'reinstallall':
 			$headline = gettext("Reinstall all packages");
-		case 'showlog':
-			break;
-		case 'installedinfo':
 		case 'reinstallpkg':
 			if($_GET['from'] && $_GET['from']) {
 				$headline = gettext("Upgrade package");
@@ -259,7 +256,7 @@ display_top_tabs($tab_array);
 ?>
 <form action="pkg_mgr_install.php" method="post" class="form-horizontal">
 <!--	<h2><?=$headline?></h2> -->
-<?php if (($POST['complete'] != "true")	 && (empty($_GET['mode']) && $_GET['id']) || (!empty($_GET['mode']) && (!empty($_GET['pkg']) || $_GET['mode'] == 'reinstallall') && ($_GET['mode'] != 'installedinfo' && $_GET['mode'] != 'showlog'))):
+<?php if (($POST['complete'] != "true")	 && (empty($_GET['mode']) && $_GET['id']) || (!empty($_GET['mode']) && (!empty($_GET['pkg']) || $_GET['mode'] == 'reinstallall'))):
 	if (empty($_GET['mode']) && $_GET['id']) {
 		$pkgname = str_replace(array("<", ">", ";", "&", "'", '"', '.', '/'), "", htmlspecialchars_decode($_GET['id'], ENT_QUOTES | ENT_HTML401));
 		$pkgmode = 'installed';
@@ -321,7 +318,7 @@ if ($_POST['mode'] == 'delete') {
 	$modetxt = gettext("installation");
 }
 
-if (!empty($_POST['id']) || $_POST['mode'] == "reinstallall" || $_GET['mode'] == 'showlog' || ($_GET['mode'] == 'installedinfo' && !empty($_GET['pkg']))):
+if (!empty($_POST['id']) || $_POST['mode'] == "reinstallall"):
 	// What if the user navigates away from this page and then come back via his/her "Back" button?
 	$pidfile = $g['varrun_path'] . '/' . $g['product_name'] . '-upgrade.pid';
 
@@ -354,31 +351,7 @@ if (!empty($_POST['id']) || $_POST['mode'] == "reinstallall" || $_GET['mode'] ==
 
 ob_flush();
 
-if ($_GET) {
-	$pkgname = str_replace(array("<", ">", ";", "&", "'", '"', '.', '/'), "", htmlspecialchars_decode($_GET['pkg'], ENT_QUOTES | ENT_HTML401));
-	switch ($_GET['mode']) {
-		case 'showlog':
-			if (strpos($pkgname, ".")) {
-				update_output_window(gettext("Something is wrong on the request."));
-			} else if (file_exists("/tmp/pkg_mgr_{$pkgname}.log")) {
-				update_output_window(@file_get_contents("/tmp/pkg_mgr_{$pkgname}.log"));
-			} else {
-				update_output_window(gettext("Log was not retrievable."));
-			}
-			break;
-		case 'installedinfo':
-			if (file_exists("/tmp/{$pkgname}.info")) {
-				$status = @file_get_contents("/tmp/{$pkgname}.info");
-				update_status("{$pkgname} " . gettext("installation completed."));
-				update_output_window($status);
-			} else {
-				update_output_window(sprintf(gettext("Could not find %s."), $pkgname));
-			}
-			break;
-		default:
-			break;
-	}
-} else if ($_POST && ($_POST['completed'] != "true") ) {
+if ($_POST && ($_POST['completed'] != "true") ) {
 	$pkgid = str_replace(array("<", ">", ";", "&", "'", '"', '.', '/'), "", htmlspecialchars_decode($_POST['id'], ENT_QUOTES | ENT_HTML401));
 
 	/* All other cases make changes, so mount rw fs */
@@ -387,29 +360,30 @@ if ($_GET) {
 	write_config(gettext("Creating restore point before package installation."));
 
 	$progbar = true;
+	$upgrade_script = "/usr/local/sbin/{$g['product_name']}-upgrade -l {$g['tmp_path']}/webgui-log.txt -p {$g['tmp_path']}/webgui-log.sock";
 
 	switch ($_POST['mode']) {
 		case 'delete':
-			mwexec_bg('/usr/local/sbin/pfSense-upgrade -l /tmp/webgui-log.txt -p /tmp/webgui-log.sock -r ' . $pkgid);
+			mwexec_bg("{$upgrade_script} -r {$pkgid}");
 			$start_polling = true;
 			break;
 
 		case 'reinstallall':
 			if (is_array($config['installedpackages']) && is_array($config['installedpackages']['package'])) {
 				$progbar = false; // We don't show the progress bar for reinstallall. It would be far too confusing
-				mwexec_bg('/usr/local/sbin/pfSense-upgrade -l /tmp/webgui-log.txt -p /tmp/webgui-log.sock -i ALL_PACKAGES -f');
+				mwexec_bg("{$upgrade_script} -i ALL_PACKAGES -f");
 				$start_polling = true;
 			}
 
 			break;
 		case 'reinstallpkg':
-			mwexec_bg('/usr/local/sbin/pfSense-upgrade -l /tmp/webgui-log.txt -p /tmp/webgui-log.sock -i ' . $pkgid . ' -f');
+			mwexec_bg("{$upgrade_script} -i {$pkgid} -f");
 			$start_polling = true;
 			break;
 
 		case 'installed':
 		default:
-			mwexec_bg('/usr/local/sbin/pfSense-upgrade -l /tmp/webgui-log.txt -p /tmp/webgui-log.sock -i ' . $pkgid);
+			mwexec_bg("{$upgrade_script} -i {$pkgid}");
 			$start_polling = true;
 			break;
 	}
@@ -488,7 +462,7 @@ function getLogsStatus() {
 			url: "pkg_mgr_install.php",
 			type: "post",
 			data: { ajax: "ajax",
-					logfilename: "/tmp/webgui-log",
+					logfilename: "<?=$g['tmp_path'];?>/webgui-log",
 					next_log_line: "0"
 				  }
 		});

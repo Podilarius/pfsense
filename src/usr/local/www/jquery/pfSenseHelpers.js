@@ -364,3 +364,21 @@ $('[id^=delete]').click(function(event) {
 	else
 		alert('You may not delete the last row!');
 });
+
+// "More information" handlers
+
+// If there is an infoblock, automatically add an info icon that toggles its display
+if($('#infoblock').length != 0) {
+	$('#infoblock').before('<i class="fa fa-info-circle icon-pointer" style="color: #337AB7;; font-size:20px; margin-left: 10px; margin-bottom: 10px;" id="showinfo" title="More information"></i>');
+
+	// and remove the 'X' button from the text box
+	$('.close').remove();
+}
+
+// Hide information on page load
+$('#infoblock').hide();
+
+// SHow the help on clicking the info icon
+$('#showinfo').click(function() {
+	$('#infoblock').toggle();
+});

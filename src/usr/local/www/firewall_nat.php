@@ -367,11 +367,20 @@ endforeach;
 		</div>
 	</div>
 
-	<div class="pull-right">
-		<a href="firewall_nat_edit.php?after=-1" class="btn btn-sm btn-success" title="<?=gettext('Add new rule')?>"><?=gettext('Add new rule')?></a>
-		<input name="del_x" type="submit" class="btn btn-danger btn-sm" value="<?=gettext("Delete selected rules"); ?>"	 />
-		<input type="submit" id="order-store" name="order-store" class="btn btn-primary btn-sm" value="<?=gettext("Save changes")?>" disabled="disabled" />
-	</div>
+	<nav class="action-buttons" style="margin-top: 10px;">
+		<a href="firewall_nat_edit.php?after=-1" class="btn btn-sm btn-success" title="<?=gettext('Add new rule')?>">
+			<i class="fa fa-plus" style="font-size:15px; vertical-align: middle; margin-right: 6px;"></i>
+			<?=gettext('Add')?>
+		</a>
+		<button name="del_x" type="submit" class="btn btn-danger btn-sm">
+			<i class="fa fa-trash" style="font-size:15px; vertical-align: middle; margin-right: 6px;"></i>
+			<?=gettext("Delete"); ?>
+		</button>
+		<button type="submit" id="order-store" name="order-store" class="btn btn-primary btn-sm" disabled="disabled">
+			<i class="fa fa-save" style="font-size:15px; vertical-align: middle; margin-right: 6px;"></i>
+			<?=gettext("Save")?>
+		</button>
+	</nav>
 </form>
 
 <script>

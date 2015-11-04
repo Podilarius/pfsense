@@ -143,7 +143,7 @@ function vpn_ipsec_configure($restart = false) {
 		/* wait for process to die */
 		sleep(2);
 
-		/* IPSEC is off, shutdown enc interface. */
+		/* IPSEC is off, shutdown enc interface.*/
 		mwexec("/sbin/ifconfig enc0 down");
 
 		return 0;
@@ -213,6 +213,7 @@ function vpn_ipsec_configure($restart = false) {
 	$aggressive_mode_psk = false;
 	unset($iflist);
 	$ifacesuse = array();
+	$mobile_ipsec_auth = "";
 	if (is_array($a_phase1) && count($a_phase1)) {
 
 		$ipsecpinghosts = "";
@@ -256,6 +257,7 @@ function vpn_ipsec_configure($restart = false) {
 			   try to resolve it now and add it to the list for filterdns */
 
 			if (isset ($ph1ent['mobile'])) {
+				$mobile_ipsec_auth = $ph1ent['authentication_method'];
 				continue;
 			}
 
@@ -440,26 +442,37 @@ EOD;
 
 	$strongswan .= "\tplugins {\n";
 
-	$a_servers = auth_get_authserver_list();
-	foreach ($a_servers as $id => $pconfig) {
-		if ($id == $config['ipsec']['client']['user_source'] && $pconfig['type'] == "radius") {
-			$strongswan .= <<<EOD
+	/* Find RADIUS servers designated for Mobile IPsec user auth */
+	$radius_server_txt = "";
+	$user_sources = explode(',', $config['ipsec']['client']['user_source']);
+	foreach ($user_sources as $user_source) {
+		$auth_server = auth_get_authserver($user_source);
+		$nice_user_source = strtolower(preg_replace('/\s+/', '_', $user_source));
+		if ($auth_server && $auth_server['type'] === 'radius') {
+			$radius_server_txt .= <<<EOD
+				{$nice_user_source} {
+					address = {$auth_server['host']}
+					secret = {$auth_server['radius_secret']}
+					auth_port = {$auth_server['radius_auth_port']}
+					acct_port = {$auth_server['radius_acct_port']}
+				}
+
+EOD;
+		}
+	}
+
+	/* write an eap-radius config section if appropriate */
+	if (strlen($radius_server_txt) && ($mobile_ipsec_auth === "eap-radius")) {
+		$strongswan .= <<<EOD
 		eap-radius {
 			class_group = yes
 			eap_start = no
 			servers {
-				primary {
-					address = {$pconfig['host']}
-					secret = {$pconfig['radius_secret']}
-					auth_port = {$pconfig['radius_auth_port']}
-					acct_port = {$pconfig['radius_acct_port']}
-				}
+{$radius_server_txt}
 			}
 		}
 
 EOD;
-			break;
-		}
 	}
 
 	if (is_array($a_client) && isset($a_client['enable'])) {

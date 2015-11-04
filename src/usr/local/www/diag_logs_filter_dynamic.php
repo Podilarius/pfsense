@@ -127,12 +127,12 @@ include("head.inc");
 		}
 
 		var line =
+			'<td>' + row[0] + '</td>' +
 			'<td>' + row[1] + '</td>' +
 			'<td>' + row[2] + '</td>' +
 			'<td>' + srcIP + srcPort + '</td>' +
 			'<td>' + dstIP + dstPort + '</td>' +
-			'<td>' + row[7] + '</td>' +
-			'<td>' + row[0] + '</td>';
+			'<td>' + row[7] + '</td>';
 
 		return line;
 	}
@@ -355,12 +355,12 @@ display_top_tabs($tab_array, false, 'nav nav-tabs');
 			<table class="table table-striped table-hover table-condensed">
 				<thead>
 					<tr>
+						<th><?=gettext("Act")?></th>
 						<th><?=gettext("Time")?></th>
 						<th><?=gettext("IF")?></th>
 						<th><?=gettext("Source")?></th>
 						<th><?=gettext("Destination")?></th>
 						<th><?=gettext("Proto")?></th>
-						<th><?=gettext("Act")?></th> <!-- For the "Block" buttons-->
 					</tr>
 				</thead>
 				<tbody id="filter-log-entries">
@@ -390,6 +390,16 @@ display_top_tabs($tab_array, false, 'nav nav-tabs');
 						$dstPort = "";
 ?>
 					<tr>
+						<td>
+<?php
+		if ($filterent['act'] == "block") {
+			$icon_act = "fa-times icon-danger";
+		} else {
+			$icon_act = "fa-check icon-success";
+		}
+?>
+							<i class="fa <?php echo $icon_act;?> icon-pointer" title="<?php echo $filterent['act'] .'/'. $filterent['tracker'];?>" onclick="javascript:getURL('diag_logs_filter.php?getrulenum=<?="{$filterent['rulenum']},{$filterent['tracker']},{$filterent['act']}"; ?>', outputrule);"></i>
+						</td>
 						<td><?=htmlspecialchars($filterent['time'])?></td>
 						<td><?=htmlspecialchars($filterent['interface'])?></td>
 						<td><?=$srcIP . $srcPort?></td>
@@ -401,21 +411,6 @@ display_top_tabs($tab_array, false, 'nav nav-tabs');
 						}
 ?>
 						<td><?=htmlspecialchars($filterent['proto'])?></td>
-						<td>
-<?php
-		if ($filterent['act'] == "block") {
-?>
-							<i class="fa fa-times icon-danger icon-pointer" title="<?php echo $filterent['act'] .'/'. $filterent['tracker'];?>" onclick="javascript:getURL('diag_logs_filter.php?getrulenum=<?="{$filterent['rulenum']},{$filterent['tracker']},{$filterent['act']}"; ?>', outputrule);"></i>
-<?php
-		 }
-		 else {
-?>
-							<i class="fa fa-check icon-success icon-pointer" title="<?php echo $filterent['act'] .'/'. $filterent['tracker'];?>" onclick="javascript:getURL('diag_logs_filter.php?getrulenum=<?="{$filterent['rulenum']},{$filterent['tracker']},{$filterent['act']}"; ?>', outputrule);"></i>
-<?php
-		}
-?>
-
-						</td>
 					</tr>
 <?php
 				} // e-o-foreach()
