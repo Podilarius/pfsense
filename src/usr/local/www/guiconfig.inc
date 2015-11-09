@@ -4,7 +4,9 @@
 */
 /* ====================================================================
  *	Copyright (c)  2004-2015  Electric Sheep Fencing, LLC. All rights reserved.
- *	Copyright (c)  2004, 2005 Scott Ullrich
+ *
+ *  Some or all of this file is based on the m0n0wall project which is
+ *  Copyright (c)  2004 Manuel Kasper (BSD 2 clause)
  *
  *	Redistribution and use in source and binary forms, with or without modification,
  *	are permitted provided that the following conditions are met:
@@ -1071,9 +1073,10 @@ function display_top_tabs(& $tab_array, $no_drop_down = false, $type = 'pills') 
 
 	// If the character count of the tab names is > 670
 	// then show a select item dropdown menubox.
-	if ($tabcharcount > $tab_array_char_limit): ?>
+	if ($tabcharcount > $tab_array_char_limit) {
 		echo gettext("Currently viewing: ");
 		echo "<select name=\"TabSelect\" onchange=\"tabs_will_go(this)\">\n";
+
 		foreach ($tab_array as $ta) {
 			if ($ta[1] == "true")
 				$selected = " selected=\"selected\"";
@@ -1083,19 +1086,27 @@ function display_top_tabs(& $tab_array, $no_drop_down = false, $type = 'pills') 
 			// echo "<option onclick=\"document.location='{$ta[2]}';\"{$selected}>{$ta['0']}</option>\n";
 			echo "<option value=\"{$ta[2]}\"{$selected}>{$ta['0']}</option>\n";
 		}
+
 		echo "</select>\n<p>&nbsp;</p>";
 		echo "<script type=\"text/javascript\">";
 		echo "\n//<![CDATA[\n";
 		echo " function tabs_will_go(obj){ document.location = obj.value; }\n";
 		echo "//]]>\n";
 		echo "</script>";
-<? else: ?>
-	<ul class="nav nav-<?= $type ?>">
-		<?php foreach ($tab_array as $ta): ?>
-			<li role="presentation"<?=($ta[1] ? ' class="active"' : '')?>><a href="<?=$ta[2]?>"><?=$ta[0]?></a></li>
-		<?php endforeach; ?>
-	</ul>
-<?php endif;
+	} else {
+		echo '<ul class="nav nav-' . $type . '">';
+
+		foreach ($tab_array as $ta) {
+			echo '<li role="presentation"';
+			if ($ta[1]) {
+				echo ' class="active"';
+			}
+
+			echo '><a href="' . $ta[2] . '">' . $ta[0] . '</a></li>';
+		}
+
+		echo '</ul>';
+	}
 }
 
 function add_package_tabs($tabgroup, &$tab_array) {
@@ -1220,8 +1231,13 @@ var_dump($content);die;
 <?php
 }
 
-$timezone = $config['system']['timezone'];
-if (!$timezone) {
+/* set timezone */
+if (isset($config['system']['timezone']) &&
+    !empty($config['system']['timezone'])) {
+	$timezone = $config['system']['timezone'];
+} elseif (isset($g['default_timezone']) && !empty($g['default_timezone'])) {
+	$timezone = $g['default_timezone'];
+} else {
 	$timezone = "Etc/UTC";
 }
 

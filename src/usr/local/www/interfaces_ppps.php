@@ -1,8 +1,12 @@
 <?php
-/* $Id$ */
+/*
+	interfaces_ppps.php
+*/
 /* ====================================================================
  *	Copyright (c)  2004-2015  Electric Sheep Fencing, LLC. All rights reserved.
- *  Originally from m0n0wall, copyright 2004 Manuel Kasper (BSD 2 clause)
+ *
+ *	Some or all of this file is based on the m0n0wall project which is
+ *	Copyright (c)  2004 Manuel Kasper (BSD 2 clause)
  *
  *	Redistribution and use in source and binary forms, with or without modification,
  *	are permitted provided that the following conditions are met:
@@ -156,7 +160,7 @@ foreach ($a_ppps as $id => $ppp) {
 				</td>
 				<td>
 					<a class="fa fa-pencil"	title="<?=gettext('Edit PPP interface')?>"	href="interfaces_ppps_edit.php?id=<?=$i?>"></a>
-					<a class="fa fa-trash"	title="<?=gettext('Delete PPP interface')?>"	href="interfaces_ppps.php?act=del&amp;id=<?=$i?>" onclick="return confirm('<?=gettext("Are you sure you want to delete this PPP interface?")?>')"></a>
+					<a class="fa fa-trash"	title="<?=gettext('Delete PPP interface')?>"	href="interfaces_ppps.php?act=del&amp;id=<?=$i?>"></a>
 				</td>
 			</tr>
 <?php
@@ -166,9 +170,9 @@ foreach ($a_ppps as $id => $ppp) {
 		</tbody>
 	</table>
 
-	<nav class="action-buttons" style="margin-top: 10px;">
+	<nav class="action-buttons">
 		<a href="interfaces_ppps_edit.php" class="btn btn-success btn-sm">
-	   		<i class="fa fa-plus" style="font-size:15px; vertical-align: middle; margin-right: 6px;"></i>
+	   		<i class="fa fa-plus icon-embed-btn"></i>
 	   		<?=gettext("Add")?>
 	   	</a>
 	</nav>

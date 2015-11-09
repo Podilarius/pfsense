@@ -1,11 +1,9 @@
 <?php
-/* $Id$ */
 /*
 	services_unbound.php
 */
 /* ====================================================================
  *	Copyright (c)  2004-2015  Electric Sheep Fencing, LLC. All rights reserved.
- *	Copyright (c)  2004, 2005 Scott Ullrich
  *	Copyright (c)  2014 Warren Baker (warren@pfsense.org)
  *
  *	Redistribution and use in source and binary forms, with or without modification,
@@ -123,8 +121,6 @@ if (empty($config['unbound']['outgoing_interface'])) {
 }
 
 if ($_POST) {
-	$pconfig = $_POST;
-	unset($input_errors);
 
 	if ($_POST['apply']) {
 		$retval = services_unbound_configure();
@@ -137,6 +133,9 @@ if ($_POST) {
 		/* Start or restart dhcpleases when it's necessary */
 		system_dhcpleases_configure();
 	} else {
+		$pconfig = $_POST;
+		unset($input_errors);
+
 		if (isset($_POST['enable']) && isset($config['dnsmasq']['enable'])) {
 			if ($_POST['port'] == $config['dnsmasq']['port']) {
 				$input_errors[] = "The DNS Forwarder is enabled using this port. Choose a non-conflicting port, or disable the DNS Forwarder.";
@@ -230,18 +229,19 @@ if ($_GET['act'] == "del") {
 	}
 }
 
-function build_if_list() {
+function build_if_list($selectedifs) {
 	$interface_addresses = get_possible_listen_ips(true);
 	$iflist = array('options' => array(), 'selected' => array());
 
 	$iflist['options']['all']	= "All";
-	if (empty($pconfig['interface']) || empty($pconfig['interface'][0]))
+	if (empty($selectedifs) || empty($selectedifs[0]) || in_array("all", $selectedifs)) {
 		array_push($iflist['selected'], "all");
+	}
 
 	foreach ($interface_addresses as $laddr => $ldescr) {
 		$iflist['options'][$laddr] = htmlspecialchars($ldescr);
 
-		if ($pconfig['interface'] && in_array($laddr, $pconfig['interface']))
+		if ($selectedifs && in_array($laddr, $selectedifs))
 			array_push($iflist['selected'], $laddr);
 	}
 
@@ -261,6 +261,10 @@ if ($input_errors)
 
 if ($savemsg)
 	print_info_box($savemsg, 'success');
+
+if (is_subsystem_dirty('unbound')) {
+	print_info_box_np(gettext("The configuration of the DNS Resolver has been changed. You must apply changes for them to take effect."));
+}
 
 $tab_array = array();
 $tab_array[] = array(gettext("General settings"), true, "services_unbound.php");
@@ -288,22 +292,24 @@ $section->addInput(new Form_Input(
 	$pconfig['port']
 ))->setHelp('The port used for responding to DNS queries. It should normally be left blank unless another service needs to bind to TCP/UDP port 53.');
 
-$iflist = build_if_list();
+$activeiflist = build_if_list($pconfig['active_interface']);
 
 $section->addInput(new Form_Select(
 	'active_interface',
 	'Network Interfaces',
-	$iflist['selected'],
-	$iflist['options'],
+	$activeiflist['selected'],
+	$activeiflist['options'],
 	true
 ))->setHelp('Interface IPs used by the DNS Resolver for responding to queries from clients. If an interface has both IPv4 and IPv6 IPs, both are used. Queries to other interface IPs not selected below are discarded. ' .
 			'The default behavior is to respond to queries on every available IPv4 and IPv6 address.');
 
+$outiflist = build_if_list($pconfig['outgoing_interface']);
+
 $section->addInput(new Form_Select(
 	'outgoing_interface',
 	'Outgoing Network Interfaces',
-	$iflist['selected'],
-	$iflist['options'],
+	$outiflist['selected'],
+	$outiflist['options'],
 	true
 ))->setHelp('Utilize different network interface(s) that the DNS Resolver will use to send queries to authoritative servers and receive their replies. By default all interfaces are used.');
 
@@ -366,17 +372,7 @@ $section->addInput(new Form_TextArea (
 
 $form->add($section);
 print($form);
-
-print_info_box(sprintf(gettext("If the DNS Resolver is enabled, the DHCP".
-" service (if enabled) will automatically serve the LAN IP".
-" address as a DNS server to DHCP clients so they will use".
-" the DNS Resolver. If Forwarding, is enabled, the DNS Resolver will use the DNS servers".
-" entered in %sSystem: General setup%s".
-" or those obtained via DHCP or PPP on WAN if the &quot;Allow".
-" DNS server list to be overridden by DHCP/PPP on WAN&quot;".
-" is checked."),'<a href="system.php">','</a>'));
 ?>
-
 <script>
 //<![CDATA[
 events.push(function(){
@@ -454,8 +450,8 @@ foreach ($a_hosts as $hostent):
 						<?=htmlspecialchars($hostent['descr'])?>
 					</td>
 					<td>
-						<a class="fa fa-pencil"	title="<?=gettext('Edit host override')?>" 	href="services_unbound_host_edit.php?id=<?=$i?>"></a>
-						<a class="fa fa-trash"	title="<?=gettext('Delete host override')?>"	href="services_unbound.php?type=host&amp;act=del&amp;id=<?=$i?>" onclick="return confirm('<?=gettext("Are you sure you want to delete this host override?")?>')"></a>
+						<a class="fa fa-pencil"	title="<?=gettext('Edit host override')?>" href="services_unbound_host_edit.php?id=<?=$i?>"></a>
+						<a class="fa fa-trash"	title="<?=gettext('Delete host override')?>" href="services_unbound.php?type=host&amp;act=del&amp;id=<?=$i?>"></a>
 					</td>
 				</tr>
 
@@ -492,7 +488,10 @@ endforeach;
 </div>
 
 <nav class="action-buttons">
-	<a href="services_unbound_host_edit.php" class="btn btn-sm btn-success"><?=gettext('Add')?></a>
+	<a href="services_unbound_host_edit.php" class="btn btn-sm btn-success">
+		<i class="fa fa-plus icon-embed-btn"></i>
+		<?=gettext('Add')?>
+	</a>
 </nav>
 
 <div class="panel panel-default">
@@ -524,8 +523,8 @@ foreach ($a_domainOverrides as $doment):
 						<?=htmlspecialchars($doment['descr'])?>&nbsp;
 					</td>
 					<td>
-						<a class="fa fa-pencil"	title="<?=gettext('Edit domain override')?>" 		href="services_unbound_domainoverride_edit.php?id=<?=$i?>"></a>
-						<a class="fa fa-trash"	title="<?=gettext('Delete domain override')?>"	href="services_unbound.php?act=del&amp;type=doverride&amp;id=<?=$i?>" onclick="return confirm('<?=gettext("Are you sure you want to delete this domain override?")?>')"></a>
+						<a class="fa fa-pencil"	title="<?=gettext('Edit domain override')?>" href="services_unbound_domainoverride_edit.php?id=<?=$i?>"></a>
+						<a class="fa fa-trash"	title="<?=gettext('Delete domain override')?>" href="services_unbound.php?act=del&amp;type=doverride&amp;id=<?=$i?>"></a>
 					</td>
 				</tr>
 <?php
@@ -538,6 +537,20 @@ endforeach;
 </div>
 
 <nav class="action-buttons">
-	<a href="services_unbound_domainoverride_edit.php" class="btn btn-sm btn-success"><?=gettext('Add')?></a>
+	<a href="services_unbound_domainoverride_edit.php" class="btn btn-sm btn-success">
+		<i class="fa fa-plus icon-embed-btn"></i>
+		<?=gettext('Add')?>
+	</a>
 </nav>
+
+<div id="infoblock">
+	<?=print_info_box(sprintf(gettext("If the DNS Resolver is enabled, the DHCP".
+		" service (if enabled) will automatically serve the LAN IP".
+		" address as a DNS server to DHCP clients so they will use".
+		" the DNS Resolver. If Forwarding, is enabled, the DNS Resolver will use the DNS servers".
+		" entered in %sSystem: General setup%s".
+		" or those obtained via DHCP or PPP on WAN if the &quot;Allow".
+		" DNS server list to be overridden by DHCP/PPP on WAN&quot;".
+		" is checked."),'<a href="system.php">','</a>'), info)?>
+</div>
 <?php include("foot.inc");

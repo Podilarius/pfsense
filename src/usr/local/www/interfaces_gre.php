@@ -1,5 +1,4 @@
 <?php
-/* $Id$ */
 /*
 	interfaces_gre.php
 */
@@ -149,7 +148,7 @@ display_top_tabs($tab_array);
 				</td>
 				<td>
 					<a class="fa fa-pencil"	title="<?=gettext('Edit GRE interface')?>"	href="interfaces_gre_edit.php?id=<?=$i?>"></a>
-					<a class="fa fa-trash"	title="<?=gettext('Delete GRE interface')?>"	href="interfaces_gre.php?act=del&amp;id=<?=$i?>" onclick="return confirm('<?=gettext("Are you sure you want to delete this GRE interface?")?>')"></a>
+					<a class="fa fa-trash"	title="<?=gettext('Delete GRE interface')?>"	href="interfaces_gre.php?act=del&amp;id=<?=$i?>"></a>
 				</td>
 			</tr>
 <?php endforeach; ?>
@@ -157,9 +156,9 @@ display_top_tabs($tab_array);
 	</table>
 </div>
 
-<nav class="action-buttons" style="margin-top: 10px;">
+<nav class="action-buttons">
 	<a href="interfaces_gre_edit.php" class="btn btn-success btn-sm">
-		<i class="fa fa-plus" style="font-size:15px; vertical-align: middle; margin-right: 6px;"></i>
+		<i class="fa fa-plus icon-embed-btn"></i>
 		<?=gettext("Add")?>
 	</a>
 </nav>

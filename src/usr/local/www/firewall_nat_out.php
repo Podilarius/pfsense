@@ -1,13 +1,12 @@
 <?php
-/* $Id$ */
 /*
 	firewall_nat_out.php
 */
 /* ====================================================================
  *	Copyright (c)  2004-2015  Electric Sheep Fencing, LLC. All rights reserved.
- *	Copyright (c)  2004 Scott Ullrich
- *	Copyright (c)  2003-2004 Manuel Kasper <mk@neon1.net>
- *	Originally part of pfSense (https://www.pfsense.org)
+ *
+ *	Some or all of this file is based on the m0n0wall project which is
+ *	Copyright (c)  2004 Manuel Kasper (BSD 2 clause)
  *
  *	Redistribution and use in source and binary forms, with or without modification,
  *	are permitted provided that the following conditions are met:
@@ -39,7 +38,7 @@
  *
  *	"This product includes software developed by the pfSense Project
  *	for use in the pfSense software distribution (http://www.pfsense.org/).
-  *
+ *
  *	THIS SOFTWARE IS PROVIDED BY THE pfSense PROJECT ``AS IS'' AND ANY
  *	EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  *	IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -501,8 +500,7 @@ print($form);
 						<td>
 							<a class="fa fa-pencil"	 title="<?=gettext("Edit mapping")?>" href="firewall_nat_out_edit.php?id=<?=$i?>"></a>
 							<a class="fa fa-clone" title="<?=gettext("Add a new mapping based on this one")?>" href="firewall_nat_out_edit.php?dup=<?=$i?>"></a>
-							<a class="fa fa-trash"	 title="<?=gettext("Delete mapping")?>" href="firewall_nat_out.php?act=del&amp;id=<?=$i?>"
-							onclick="return confirm('<?=gettext("Are you sure you want to delete this mapping?")?>')"></a>
+							<a class="fa fa-trash"	 title="<?=gettext("Delete mapping")?>" href="firewall_nat_out.php?act=del&amp;id=<?=$i?>"></a>
 						</td>
 <?php
 				$i++;
@@ -514,17 +512,17 @@ print($form);
 		</div>
 	</div>
 
-	<nav class="action-buttons" style="margin-top: 10px;">
+	<nav class="action-buttons">
 		<a href="firewall_nat_out_edit.php" class="btn btn-sm btn-success" title="<?=gettext('Add new mapping')?>">
-			<i class="fa fa-plus" style="font-size:15px; vertical-align: middle; margin-right: 6px;"></i>
+			<i class="fa fa-plus icon-embed-btn"></i>
 			<?=gettext('Add')?>
 		</a>
 		<button name="del_x" type="submit" class="btn btn-danger btn-sm" value="<?=gettext("Delete selected map"); ?>">
-			<i class="fa fa-trash" style="font-size:15px; vertical-align: middle; margin-right: 6px;"></i>
+			<i class="fa fa-trash icon-embed-btn"></i>
 			<?=gettext("Delete"); ?>
 		</button>
 		<button type="submit" id="order-store" class="btn btn-primary btn-sm" value="Save changes" disabled="disabled" name="order-store">
-			<i class="fa fa-save" style="font-size:15px; vertical-align: middle; margin-right: 6px;"></i>
+			<i class="fa fa-save icon-embed-btn"></i>
 			<?=gettext("Save")?>
 		</button>
 	</nav>

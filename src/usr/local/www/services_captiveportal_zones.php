@@ -98,11 +98,11 @@ if ($savemsg)
 	print_info_box($savemsg, success);
 
 if (is_subsystem_dirty('captiveportal'))
-	print_info_box_np(gettext("The CaptivePortal entry list has been changed") . ".<br />" . gettext("You must apply the changes in order for them to take effect."));
+	print_info_box_np(gettext("The Captive Portal entry list has been changed") . ".<br />" . gettext("You must apply the changes in order for them to take effect."));
 ?>
 <form action="services_captiveportal_zones.php" method="post">
 	<div class="panel panel-default">
-	<div class="panel-heading"><h2 class="panel-title"><?=gettext('Captive portal Zones')?></h2></div>
+	<div class="panel-heading"><h2 class="panel-title"><?=gettext('Captive Portal Zones')?></h2></div>
 		<div class="panel-body table-responsive">
 			<table class="table table-striped table-hover">
 				<thead>
@@ -136,7 +136,7 @@ if (is_subsystem_dirty('captiveportal'))
 						<td><?=htmlspecialchars($cpitem['descr']);?>&nbsp;</td>
 						<td>
 							<a class="fa fa-pencil" title="<?=gettext("Edit zone"); ?>" href="services_captiveportal.php?zone=<?=$cpzone?>"></a>
-							<a class="fa fa-trash"  title="<?=gettext("Delete zone")?>" href="services_captiveportal_zones.php?act=del&amp;zone=<?=$cpzone;?>" onclick="return confirm('<?=gettext("Are you sure you want to delete this zone?")?>')"></a>
+							<a class="fa fa-trash"  title="<?=gettext("Delete zone")?>" href="services_captiveportal_zones.php?act=del&amp;zone=<?=$cpzone;?>"></a>
 						</td>
 					</tr>
 <?php
@@ -148,9 +148,9 @@ if (is_subsystem_dirty('captiveportal'))
 	</div>
 </form>
 
-<nav class="action-buttons" style="margin-top: 10px;">
+<nav class="action-buttons">
 	<a href="services_captiveportal_zones_edit.php" class="btn btn-success btn-sm">
-		<i class="fa fa-plus" style="font-size:15px; vertical-align: middle; margin-right: 6px;"></i>
+		<i class="fa fa-plus icon-embed-btn"></i>
 		<?=gettext('Add')?>
 	</a>
 </nav>

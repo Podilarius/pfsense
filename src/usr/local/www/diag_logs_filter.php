@@ -1,14 +1,13 @@
 <?php
-/* $Id$ */
 /*
 	diag_logs_filter.php
 */
 
 /* ====================================================================
  *	Copyright (c)  2004-2015  Electric Sheep Fencing, LLC. All rights reserved.
- *	Copyright (c)  2004-2009 Scott Ullrich
- *	Copyright (c)  2003-2009 Manuel Kasper <mk@neon1.net>
- *	Copyright (c)  Jim Pingle jim@pingle.org
+ *
+ *  Some or all of this file is based on the m0n0wall project which is
+ *  Copyright (c)  2004 Manuel Kasper (BSD 2 clause)
  *
  *	Redistribution and use in source and binary forms, with or without modification,
  *	are permitted provided that the following conditions are met:
@@ -40,7 +39,7 @@
  *
  *	"This product includes software developed by the pfSense Project
  *	for use in the pfSense software distribution (http://www.pfsense.org/).
-  *
+ *
  *	THIS SOFTWARE IS PROVIDED BY THE pfSense PROJECT ``AS IS'' AND ANY
  *	EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  *	IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -121,7 +120,6 @@ if ($filterlogentries_submit) {
 
 	$actpass = getGETPOSTsettingvalue('actpass', null);
 	$actblock = getGETPOSTsettingvalue('actblock', null);
-
 	$filterfieldsarray['act'] = str_replace("  ", " ", trim($actpass . " " . $actblock));
 	$filterfieldsarray['act'] = $filterfieldsarray['act'] != "" ? $filterfieldsarray['act'] : 'All';
 	$filterfieldsarray['time'] = getGETPOSTsettingvalue('filterlogentries_time', null);
@@ -238,7 +236,8 @@ if (!isset($config['syslog']['rawfilter'])) { // Advanced log filter form
 		'actpass',
 		'Pass',
 		'Pass',
-		in_arrayi('Pass', $Include_Act)
+		in_arrayi('Pass', $Include_Act),
+		'Pass'
 	));
 
 	$group->add(new Form_Input(
@@ -277,7 +276,8 @@ if (!isset($config['syslog']['rawfilter'])) { // Advanced log filter form
 		'actblock',
 		'Block',
 		'Block',
-		in_arrayi('Block', $Include_Act)
+		in_arrayi('Block', $Include_Act),
+		'Block'
 	));
 
 	$group->add(new Form_Input(
@@ -309,8 +309,8 @@ else { // Simple log filter form
 	$section = new Form_Section('Log Filter');
 
 	$section->addInput(new Form_Select(
-		'filterdescriptions',
-		'Where to show rule descriptions',
+		'interface',
+		'Interface',
 		$interfacefilter,
 		build_if_list()
 	));

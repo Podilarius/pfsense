@@ -1,12 +1,12 @@
 <?php
-/* $Id$ */
 /*
 	services_dhcp.php
 */
 /* ====================================================================
  *	Copyright (c)  2004-2015  Electric Sheep Fencing, LLC. All rights reserved.
- *	Copyright (c)  2004, 2005 Scott Ullrich
- *	Copyright (c)  2003-2004 Manuel Kasper <mk@neon1.net>
+ *
+ *	Some or all of this file is based on the m0n0wall project which is
+ *	Copyright (c)  2004 Manuel Kasper (BSD 2 clause)
  *
  *	Redistribution and use in source and binary forms, with or without modification,
  *	are permitted provided that the following conditions are met:
@@ -692,7 +692,7 @@ function build_pooltable() {
 }
 
 $closehead = false;
-$pgtitle = array(gettext("Services"), gettext("DHCP server"));
+$pgtitle = array(gettext("Services"), gettext("DHCP Server"));
 $shortcut_section = "dhcp";
 
 include("head.inc");
@@ -1047,15 +1047,15 @@ $section->addInput(new Form_StaticText(
 
 $section->addInput(new Form_IpAddress(
 	'ntp1',
-	'Allow',
+	null,
 	$pconfig['ntp1']
-));
+))->setAttribute('placeholder', 'NTP Server 1');
 
 $section->addInput(new Form_IpAddress(
 	'ntp2',
-	'Deny',
+	null,
 	$pconfig['ntp2']
-));
+))->setAttribute('placeholder', 'NTP Server 2');
 
 // Advanced TFTP
 $btnadv = new Form_Button(
@@ -1072,7 +1072,7 @@ $section->addInput(new Form_StaticText(
 
 $section->addInput(new Form_IpAddress(
 	'tftp',
-	'Allow',
+	null,
 	$pconfig['tftp']
 ))->setHelp('Leave blank to disable.  Enter a full hostname or IP for the TFTP server')->setPattern('[.a-zA-Z0-9_]+');
 
@@ -1311,7 +1311,7 @@ if (!is_numeric($pool) && !($act == "newpool")) {
 						</td>
 						<td>
 							<a class="fa fa-pencil"	title="<?=gettext('Edit static mapping')?>"	href="services_dhcp_edit.php?if=<?=htmlspecialchars($if)?>&amp;id=<?=$i?>"></a>
-							<a class="fa fa-trash"	title="<?=gettext('Delete static mapping')?>"	href="services_dhcp.php?if=<?=htmlspecialchars($if)?>&amp;act=del&amp;id=<?=$i?>" onclick="return confirm('<?=gettext("Are you sure you want to delete this static mapping?")?>')"></a>
+							<a class="fa fa-trash"	title="<?=gettext('Delete static mapping')?>"	href="services_dhcp.php?if=<?=htmlspecialchars($if)?>&amp;act=del&amp;id=<?=$i?>"></a>
 						</td>
 					</tr>
 <?php
@@ -1326,9 +1326,9 @@ if (!is_numeric($pool) && !($act == "newpool")) {
 	</div>
 </div>
 
-<nav class="action-buttons" style="margin-top: 10px;">
+<nav class="action-buttons">
 	<a href="services_dhcp_edit.php?if=<?=htmlspecialchars($if)?>" class="btn btn-sm btn-success">
-		<i class="fa fa-plus" style="font-size:15px; vertical-align: middle; margin-right: 6px;"></i>
+		<i class="fa fa-plus icon-embed-btn"></i>
 		<?=gettext("Add")?>
 	</a>
 </nav>

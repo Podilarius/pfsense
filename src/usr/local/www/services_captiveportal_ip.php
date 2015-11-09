@@ -6,6 +6,9 @@
  *	Copyright (c)  2004-2015  Electric Sheep Fencing, LLC. All rights reserved.
  *  Copyright (c)  2004 Dinesh Nair <dinesh@alphaque.com>
  *
+ *  Some or all of this file is based on the m0n0wall project which is
+ *  Copyright (c)  2004 Manuel Kasper (BSD 2 clause)
+ *
  *	Redistribution and use in source and binary forms, with or without modification,
  *	are permitted provided that the following conditions are met:
  *
@@ -92,7 +95,7 @@ if (isset($cpzone) && !empty($cpzone) && isset($a_cp[$cpzone]['zoneid'])) {
 	$cpzoneid = $a_cp[$cpzone]['zoneid'];
 }
 
-$pgtitle = array(gettext("Services"), gettext("Captive portal"), $a_cp[$cpzone]['zone']);
+$pgtitle = array(gettext("Services"), gettext("Captive Portal"), $a_cp[$cpzone]['zone']);
 $shortcut_section = "captiveportal";
 
 if ($_GET['act'] == "del" && !empty($cpzone) && isset($cpzoneid)) {
@@ -128,7 +131,7 @@ if ($savemsg)
 	print_info_box($savemsg);
 
 $tab_array = array();
-$tab_array[] = array(gettext("Captive portal(s)"), false, "services_captiveportal.php?zone={$cpzone}");
+$tab_array[] = array(gettext("Captive Portal(s)"), false, "services_captiveportal.php?zone={$cpzone}");
 $tab_array[] = array(gettext("MAC"), false, "services_captiveportal_mac.php?zone={$cpzone}");
 $tab_array[] = array(gettext("Allowed IP Addresses"), true, "services_captiveportal_ip.php?zone={$cpzone}");
 $tab_array[] = array(gettext("Allowed Hostnames"), false, "services_captiveportal_hostname.php?zone={$cpzone}");
@@ -163,7 +166,7 @@ if (is_array($a_cp[$cpzone]['allowedip'])): ?>
 				</td>
 				<td>
 					<a class="fa fa-pencil"	title="<?=gettext("Edit IP"); ?>" href="services_captiveportal_ip_edit.php?zone=<?=$cpzone?>&amp;id=<?=$i?>"></a>
-					<a class="fa fa-trash"	title="<?=gettext("Delete IP")?>" href="services_captiveportal_ip.php?zone=<?=$cpzone?>&amp;act=del&amp;id=<?=$i?>" onclick="return confirm('<?=gettext("Are you sure you want to delete this IP?")?>')"></a>
+					<a class="fa fa-trash"	title="<?=gettext("Delete IP")?>" href="services_captiveportal_ip.php?zone=<?=$cpzone?>&amp;act=del&amp;id=<?=$i?>"></a>
 				</td>
 			</tr>
 <?php
@@ -185,9 +188,9 @@ endif;
 ?>
 </div>
 
-<nav class="action-buttons" style="margin-top: 10px;">
+<nav class="action-buttons">
 	<a href="services_captiveportal_ip_edit.php?zone=<?=$cpzone?>&amp;act=add" class="btn btn-success btn-sm">
-		<i class="fa fa-plus" style="font-size:15px; vertical-align: middle; margin-right: 6px;"></i>
+		<i class="fa fa-plus icon-embed-btn"></i>
 		<?=gettext("Add")?>
 	</a>
 </nav>

@@ -1,11 +1,12 @@
 <?php
-/* $Id$ */
 /*
 	system_routes.php
 */
 /* ====================================================================
  *	Copyright (c)  2004-2015  Electric Sheep Fencing, LLC. All rights reserved.
- *	Copyright (c)  2004, 2005 Scott Ullrich
+ *
+ *	Some or all of this file is based on the m0n0wall project which is
+ *	Copyright (c)  2004 Manuel Kasper (BSD 2 clause)
  *
  *	Redistribution and use in source and binary forms, with or without modification,
  *	are permitted provided that the following conditions are met:
@@ -298,18 +299,18 @@ foreach ($a_routes as $i => $route):
 		</td>
 		<td>
 			<a href="system_routes_edit.php?id=<?=$i?>" class="fa fa-pencil" title="<?=gettext('Edit')?>"></a>
-			
+
 			<a href="system_routes_edit.php?dup=<?=$i?>" class="fa fa-clone" title="<?=gettext('Copy')?>"></a>
-			
+
 	<?php if (isset($route['disabled'])) {
-	?>	
+	?>
 			<a href="?act=toggle&amp;id=<?=$i?>" class="fa fa-check-square-o" title="<?=gettext('Enable')?>"></a>
 	<?php } else {
 	?>
 			<a href="?act=toggle&amp;id=<?=$i?>" class="fa fa-ban" title="<?=gettext('Disable')?>"></a>
 	<?php }
-	?>		
-			<a href="system_routes.php?act=del&amp;id=<?=$i?>" class="fa fa-trash" title="<?=gettext('Delete')?>" onclick="return confirm('<?=gettext("Are you sure you want to delete this route?")?>')"></a>
+	?>
+			<a href="system_routes.php?act=del&amp;id=<?=$i?>" class="fa fa-trash" title="<?=gettext('Delete')?>"></a>
 
 		</td>
 <? endforeach?>
@@ -317,8 +318,9 @@ foreach ($a_routes as $i => $route):
 </table>
 
 <nav class="action-buttons">
-	<a href="system_routes_edit.php" role="button" class="btn btn-success">
-		<?=gettext("add new route")?>
+	<a href="system_routes_edit.php" role="button" class="btn btn-success btn-sm">
+		<i class="fa fa-plus icon-embed-btn"></i>
+		<?=gettext("Add")?>
 	</a>
 </nav>
 <?php

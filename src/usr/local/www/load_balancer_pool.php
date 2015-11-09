@@ -1,11 +1,10 @@
 <?php
-/* $Id$ */
 /*
 	load_balancer_pool.php
 */
 /* ====================================================================
  *	Copyright (c)  2004-2015  Electric Sheep Fencing, LLC. All rights reserved.
- *  Copyright (c)  2005-2008 Bill Marquette <bill.marquette@gmail.com>
+ *	Copyright (c)  2005-2008 Bill Marquette <bill.marquette@gmail.com>
  *
  *	Redistribution and use in source and binary forms, with or without modification,
  *	are permitted provided that the following conditions are met:
@@ -197,7 +196,7 @@ foreach($a_pool as $pool) {
 						<td>
 							<a class="fa fa-pencil"	title="<?=gettext('Edit pool')?>"	href="load_balancer_pool_edit.php?id=<?=$idx?>"></a>
 							<a class="fa fa-clone"	title="<?=gettext('Copy pool')?>"	href="load_balancer_pool_edit.php?act=dup&id=<?=$idx?>"></a>
-							<a class="fa fa-trash"	title="<?=gettext('Delete pool')?>"	href="load_balancer_pool.php?act=del&id=<?=$idx?>" onclick="return confirm('<?=gettext("Are you sure you want to delete this pool?")?>')"></a>
+							<a class="fa fa-trash"	title="<?=gettext('Delete pool')?>"	href="load_balancer_pool.php?act=del&id=<?=$idx?>"></a>
 						</td>
 					</tr>
 <?php
@@ -210,9 +209,9 @@ foreach($a_pool as $pool) {
 	</div>
 </form>
 
-<nav class="action-buttons" style="margin-top: 10px;">
+<nav class="action-buttons">
 	<a href="load_balancer_pool_edit.php" class="btn btn-success btn-sm">
-		<i class="fa fa-plus" style="font-size:15px; vertical-align: middle; margin-right: 6px;"></i>
+		<i class="fa fa-plus icon-embed-btn"></i>
 		<?=gettext('Add')?>
 	</a>
 </nav>

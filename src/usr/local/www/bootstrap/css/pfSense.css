@@ -159,6 +159,7 @@ tr.disabled th {
 
 .action-buttons {
 	text-align: right;
+	margin-top: 10px;
 	margin-bottom: 20px;
 }
 
@@ -318,4 +319,22 @@ form .btn + .btn {
 .icon-pointer
 {
 	cursor: pointer;
+}
+
+.fa-trash
+{
+	color: red;
+}
+
+.icon-embed-btn
+{
+	font-size: 15px;
+	vertical-align: middle;
+	color: white;
+}
+
+.btn
+{
+	padding-right: 4px;
+	padding-left: 4px;
 }

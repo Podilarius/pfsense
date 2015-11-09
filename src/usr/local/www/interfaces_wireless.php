@@ -1,11 +1,10 @@
 <?php
-/* $Id$ */
 /*
 	interfaces_wireless.php
 */
 /* ====================================================================
  *	Copyright (c)  2004-2015  Electric Sheep Fencing, LLC. All rights reserved.
- *  Copyright (c)  2010 Erik Fonnesbeck
+ *	Copyright (c)  2010 Erik Fonnesbeck
  *
  *	Redistribution and use in source and binary forms, with or without modification,
  *	are permitted provided that the following conditions are met:
@@ -157,7 +156,7 @@ foreach ($a_clones as $clone) {
 				</td>
 				<td>
 					<a class="fa fa-pencil"	title="<?=gettext('Edit WiFi interface')?>"	href="interfaces_wireless_edit.php?id=<?=$i?>"></a>
-					<a class="fa fa-trash"	title="<?=gettext('Delete WiFi interface')?>"	href="interfaces_wireless.php?act=del&amp;id=<?=$i?>" onclick="return confirm('<?=gettext("Are you sure you want to delete this WiFi interface?")?>')"></a>
+					<a class="fa fa-trash"	title="<?=gettext('Delete WiFi interface')?>"	href="interfaces_wireless.php?act=del&amp;id=<?=$i?>"></a>
 				</td>
 			</tr>
 <?php
@@ -167,9 +166,9 @@ foreach ($a_clones as $clone) {
 		</tbody>
 	</table>
 
-	<nav class="action-buttons" style="margin-top: 10px;">
+	<nav class="action-buttons">
 		<a href="interfaces_wireless_edit.php" class="btn btn-success btn-sm">
-			<i class="fa fa-plus" style="font-size:15px; vertical-align: middle; margin-right: 6px;"></i>
+			<i class="fa fa-plus icon-embed-btn"></i>
 			<?=gettext("Add")?></a>
 	</nav>
 </div>

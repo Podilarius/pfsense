@@ -7,6 +7,9 @@
  *  Copyright (c)  2005-2006 Jonathan De Graeve (jonathan.de.graeve@imelda.be)
  *	and Paul Taylor (paultaylor@winn-dixie.com)
  *
+ *  Some or all of this file is based on the m0n0wall project which is
+ *  Copyright (c)  2004 Manuel Kasper (BSD 2 clause)
+ *
  *	Redistribution and use in source and binary forms, with or without modification,
  *	are permitted provided that the following conditions are met:
  *
@@ -96,7 +99,7 @@ if (!is_array($config['captiveportal'])) {
 }
 $a_cp =& $config['captiveportal'];
 
-$pgtitle = array(gettext("Services"), gettext("Captive portal"), $a_cp[$cpzone]['zone']);
+$pgtitle = array(gettext("Services"), gettext("Captive Portal"), $a_cp[$cpzone]['zone']);
 $shortcut_section = "captiveportal";
 
 if (!is_array($a_cp[$cpzone]['element'])) {
@@ -168,9 +171,9 @@ if ($input_errors)
 	print_input_errors($input_errors);
 
 $tab_array = array();
-$tab_array[] = array(gettext("Captive portal(s)"), false, "services_captiveportal.php?zone={$cpzone}");
+$tab_array[] = array(gettext("Captive Portal(s)"), false, "services_captiveportal.php?zone={$cpzone}");
 $tab_array[] = array(gettext("MAC"), false, "services_captiveportal_mac.php?zone={$cpzone}");
-$tab_array[] = array(gettext("Allowed IP addresses"), false, "services_captiveportal_ip.php?zone={$cpzone}");
+$tab_array[] = array(gettext("Allowed IP Addresses"), false, "services_captiveportal_ip.php?zone={$cpzone}");
 $tab_array[] = array(gettext("Allowed Hostnames"), false, "services_captiveportal_hostname.php?zone={$cpzone}");
 $tab_array[] = array(gettext("Vouchers"), false, "services_captiveportal_vouchers.php?zone={$cpzone}");
 $tab_array[] = array(gettext("File Manager"), true, "services_captiveportal_filemanager.php?zone={$cpzone}");
@@ -232,7 +235,7 @@ if (is_array($a_cp[$cpzone]['element'])):
 							<td><?=htmlspecialchars($element['name'])?></td>
 							<td><?=format_bytes($element['size'])?></td>
 							<td>
-								<a class="fa fa-trash"	title="<?=gettext("Delete file")?>" href="services_captiveportal_filemanager.php?zone=<?=$cpzone?>&amp;act=del&amp;id=<?=$i?>" onclick="return confirm('<?=gettext("Are you sure you want to delete this file?")?>')"></a>
+								<a class="fa fa-trash"	title="<?=gettext("Delete file")?>" href="services_captiveportal_filemanager.php?zone=<?=$cpzone?>&amp;act=del&amp;id=<?=$i?>"></a>
 							</td>
 						</tr>
 <?php
@@ -260,10 +263,10 @@ if (is_array($a_cp[$cpzone]['element'])):
 endif;
 
 ?>
-	   <nav class="action-buttons" style="margin-top: 10px;">
+	   <nav class="action-buttons">
 <?php if (!$_GET['act'] == 'add'): ?>
 			<a href="services_captiveportal_filemanager.php?zone=<?=$cpzone?>&amp;act=add" class="btn btn-success">
-		   		<i class="fa fa-plus" style="font-size:15px; vertical-align: middle; margin-right: 6px;"></i>
+		   		<i class="fa fa-plus icon-embed-btn"></i>
 		   		<?=gettext("Add")?>
 		   	</a>
 <?php endif; ?>

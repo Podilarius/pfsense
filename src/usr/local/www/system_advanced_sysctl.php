@@ -1,12 +1,13 @@
 <?php
-/* $Id$ */
 /*
 	system_advanced_sysctl.php
 */
 /* ====================================================================
  *	Copyright (c)  2004-2015  Electric Sheep Fencing, LLC. All rights reserved.
- *	Copyright (c)  2004, 2005 Scott Ullrich
  *	Copyright (c)  2008 Shrew Soft Inc
+ *
+ *	Some or all of this file is based on the m0n0wall project which is
+ *	Copyright (c)  2004 Manuel Kasper (BSD 2 clause)
  *
  *	Redistribution and use in source and binary forms, with or without modification,
  *	are permitted provided that the following conditions are met:
@@ -161,7 +162,7 @@ include("head.inc");
 
 if ($input_errors)
 	print_input_errors($input_errors);
-	
+
 if ($savemsg)
 	print_info_box($savemsg, 'success');
 
@@ -207,7 +208,7 @@ if ($act != "edit" ): ?>
 					<td>
 					<a class="fa fa-pencil" title="<?=gettext("Edit tunable"); ?>" href="system_advanced_sysctl.php?act=edit&amp;id=<?=$i;?>"></a>
 						<?php if (isset($tunable['modified'])): ?>
-						<a class="fa fa-trash" title="<?=gettext("Delete/Reset tunable")?>" href="system_advanced_sysctl.php?act=del&amp;id=<?=$i;?>" onclick="return confirm('<?=gettext("Are you sure you want to delete this tunable?")?>')"></a>
+						<a class="fa fa-trash" title="<?=gettext("Delete/Reset tunable")?>" href="system_advanced_sysctl.php?act=del&amp;id=<?=$i;?>"></a>
 						<?php endif; ?>
 					</td>
 				</tr>

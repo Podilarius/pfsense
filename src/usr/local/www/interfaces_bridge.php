@@ -1,5 +1,4 @@
 <?php
-/* $Id$ */
 /*
 	interfaces_bridge.php
 */
@@ -173,7 +172,7 @@ foreach ($a_bridges as $bridge) {
 				</td>
 				<td>
 					<a class="fa fa-pencil"	title="<?=gettext('Edit interface bridge')?>"	href="interfaces_bridge_edit.php?id=<?=$i?>"></a>
-					<a class="fa fa-trash"	title="<?=gettext('Delete interface bridge')?>"	href="interfaces_bridge.php?act=del&amp;id=<?=$i?>" onclick="return confirm('<?=gettext("Are you sure you want to delete this interface bridge?")?>')"></a>
+					<a class="fa fa-trash"	title="<?=gettext('Delete interface bridge')?>"	href="interfaces_bridge.php?act=del&amp;id=<?=$i?>"></a>
 				</td>
 			</tr>
 <?php
@@ -183,9 +182,9 @@ foreach ($a_bridges as $bridge) {
 		</tbody>
 	</table>
 
-	<nav class="action-buttons" style="margin-top: 10px;">
+	<nav class="action-buttons">
 		<a href="interfaces_bridge_edit.php" class="btn btn-success btn-sm">
-			<i class="fa fa-plus" style="font-size:15px; vertical-align: middle; margin-right: 6px;"></i>
+			<i class="fa fa-plus icon-embed-btn"></i>
 			<?=gettext("Add")?>
 		</a>
 	</nav>

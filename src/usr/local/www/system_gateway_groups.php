@@ -1,11 +1,10 @@
 <?php
-/* $Id$ */
 /*
 	system_gateway_groups.php
 */
 /* ====================================================================
  *	Copyright (c)  2004-2015  Electric Sheep Fencing, LLC. All rights reserved.
- *  Copyright (c)  2010 Seth Mos <seth.mos@dds.nl>
+ *	Copyright (c)  2010 Seth Mos <seth.mos@dds.nl>
  *
  *	Redistribution and use in source and binary forms, with or without modification,
  *	are permitted provided that the following conditions are met:
@@ -185,7 +184,7 @@ foreach ($a_gateway_groups as $gateway_group):
 				<td>
 					<a href="system_gateway_groups_edit.php?id=<?=$i?>" class="fa fa-pencil" title="<?=gettext('Edit')?>"></a>
 					<a href="system_gateway_groups_edit.php?dup=<?=$i?>" class="fa fa-clone" title="<?=gettext('Copy')?>"></a>
-					<a href="system_gateway_groups.php?act=del&amp;id=<?=$i?>" class="fa fa-trash" title="<?=gettext('Delete')?>" onclick="return confirm('<?=gettext("Are you sure you want to delete this group?")?>')"></a>
+					<a href="system_gateway_groups.php?act=del&amp;id=<?=$i?>" class="fa fa-trash" title="<?=gettext('Delete')?>"></a>
 				</td>
 			</tr>
 <?php
@@ -197,12 +196,16 @@ endforeach;
 </div>
 
 <nav class="action-buttons">
-	<a href="system_gateway_groups_edit.php" class="btn btn-default"><?=gettext('Add')?></a>
+	<a href="system_gateway_groups_edit.php" class="btn btn-success btn-sm">
+		<i class="fa fa-plus icon-embed-btn"></i>
+		<?=gettext('Add')?>
+	</a>
 </nav>
 
-<?php
-	print_info_box(gettext('Remember to use these Gateway Groups in firewall rules in order to enable load balancing, failover, ' .
+<div id="infoblock">
+	<?=print_info_box(gettext('Remember to use these Gateway Groups in firewall rules in order to enable load balancing, failover, ' .
 						   'or policy-based routing.' . '<br />' .
-						   'Without rules directing traffic into the Gateway Groups, they will not be used.'));
-
+						   'Without rules directing traffic into the Gateway Groups, they will not be used.'), info)?>
+</div>
+<?php
 include("foot.inc");

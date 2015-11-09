@@ -1,11 +1,9 @@
 <?php
-/* $Id$ */
 /*
 	pkg_mgr.php
 */
 /* ====================================================================
  *	Copyright (c)  2004-2015  Electric Sheep Fencing, LLC. All rights reserved.
- *	Copyright (c)  2004, 2005 Scott Ullrich
  *	Copyright (c)  2013 Marcello Coutinho
  *
  *	Redistribution and use in source and binary forms, with or without modification,
@@ -259,7 +257,7 @@ events.push(function(){
 	// Make these controls plain buttons
 	$("#btnsearch").prop('type' ,'button');
 	$("#btnclear").prop('type' ,'button');
-	
+
 	// Search for a term in the package name and/or description
 	$("#btnsearch").click(function() {
 		var searchstr = $('#searchstr').val().toLowerCase();
@@ -294,7 +292,7 @@ events.push(function(){
 			$(this).show();
 		});
 	});
-	
+
 	// Hitting the enter key will do the same as clicking the search button
 	$("#searchstr").on("keyup", function (event) {
 	    if (event.keyCode==13) {

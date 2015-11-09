@@ -1,13 +1,12 @@
 <?php
-/* $Id$ */
 /*
 	firewall_rules.php
 */
 /* ====================================================================
  *	Copyright (c)  2004-2015  Electric Sheep Fencing, LLC. All rights reserved.
- *	Copyright (c)  2004 Scott Ullrich
- *	Copyright (c)  2003-2004 Manuel Kasper <mk@neon1.net>
- *	Originally part of pfSense (https://www.pfsense.org)
+ *
+ *	Some or all of this file is based on the m0n0wall project which is
+ *	Copyright (c)  2004 Manuel Kasper (BSD 2 clause)
  *
  *	Redistribution and use in source and binary forms, with or without modification,
  *	are permitted provided that the following conditions are met:
@@ -39,7 +38,7 @@
  *
  *	"This product includes software developed by the pfSense Project
  *	for use in the pfSense software distribution (http://www.pfsense.org/).
-  *
+ *
  *	THIS SOFTWARE IS PROVIDED BY THE pfSense PROJECT ``AS IS'' AND ANY
  *	EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  *	IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -625,7 +624,7 @@ for ($i = 0; isset($a_filter[$i]); $i++):
 							<a href="?act=toggle&amp;if=<?=htmlspecialchars($if);?>&amp;id=<?=$i;?>" class="fa fa-ban" title="<?=gettext('Disable')?>"></a>
 <?php }
 ?>
-							<a href="?act=del&amp;if=<?=htmlspecialchars($if);?>&amp;id=<?=$i;?>" class="fa fa-trash" title="<?=gettext('Delete')?>" onclick="return confirm('<?=gettext("Are you sure you want to delete this rule?")?>')"></a>
+							<a href="?act=del&amp;if=<?=htmlspecialchars($if);?>&amp;id=<?=$i;?>" class="fa fa-trash" title="<?=gettext('Delete')?>"></a>
 						</td>
 					</tr>
 <?php
@@ -651,17 +650,17 @@ for ($i = 0; isset($a_filter[$i]); $i++):
 	</div>
 <?php endif;?>
 
-	<nav class="action-buttons" style="margin-top: 10px;">
+	<nav class="action-buttons">
 		<a href="firewall_rules_edit.php?if=<?=htmlspecialchars($if);?>" role="button" class="btn btn-sm btn-success">
-			<i class="fa fa-plus" style="font-size:15px; vertical-align: middle; margin-right: 6px;"></i>
+			<i class="fa fa-plus icon-embed-btn"></i>
 			<?=gettext("Add");?>
 		</a>
 		<button name="del_x" type="submit" class="btn btn-danger btn-sm" value="<?=gettext("Delete selected rules"); ?>">
-			<i class="fa fa-trash" style="font-size:15px; vertical-align: middle; margin-right: 6px;"></i>
+			<i class="fa fa-trash icon-embed-btn"></i>
 			<?=gettext("Delete"); ?>
 		</button>
 		<button type="submit" id="order-store" name="order-store" class="btn btn-sm btn-primary" value="store changes" disabled="disabled">
-			<i class="fa fa-save" style="font-size:15px; vertical-align: middle; margin-right: 6px;"></i>
+			<i class="fa fa-save icon-embed-btn"></i>
 			<?=gettext("Save")?>
 		</button>
 	</nav>

@@ -1,12 +1,12 @@
 <?php
-/* $Id$ */
 /*
 	interfaces_vlan.php
 */
 /* ====================================================================
  *	Copyright (c)  2004-2015  Electric Sheep Fencing, LLC. All rights reserved.
- *	Copyright (c)  2004, 2005 Scott Ullrich
- *	Copyright (c)  2003-2004 Manuel Kasper <mk@neon1.net>
+ *
+ *	Some or all of this file is based on the m0n0wall project which is
+ *	Copyright (c)  2004 Manuel Kasper (BSD 2 clause)
  *
  *	Redistribution and use in source and binary forms, with or without modification,
  *	are permitted provided that the following conditions are met:
@@ -162,9 +162,9 @@ display_top_tabs($tab_array);
 	}
 ?>
 		</table>
-		<nav class="action-buttons" style="margin-top: 10px;">
+		<nav class="action-buttons">
 			<a class="btn btn-success btn-sm" role="button" href="interfaces_vlan_edit.php">
-				<i class="fa fa-plus" style="font-size:15px; vertical-align: middle; margin-right: 6px;"></i>
+				<i class="fa fa-plus icon-embed-btn"></i>
 				<?=gettext('Add'); ?>
 			</a>
 		</nav>

@@ -5,6 +5,9 @@
 /* ====================================================================
  *	Copyright (c)  2004-2015  Electric Sheep Fencing, LLC. All rights reserved.
  *
+ *  Some or all of this file is based on the m0n0wall project which is
+ *  Copyright (c)  2004 Manuel Kasper (BSD 2 clause)
+ *
  *	Redistribution and use in source and binary forms, with or without modification,
  *	are permitted provided that the following conditions are met:
  *
@@ -157,7 +160,7 @@ if (is_subsystem_dirty('ipsec'))
 					<?=htmlspecialchars($secretent['pre-shared-key'])?>
 				</td>
 				<td>
-					<a class="btn btn-primary btn-xs" href="system_usermanager.php?act=edit&amp;userid=<?=$secretent['id']?>">edit user</a>
+					<a class="fa fa-pencil"	title="<?=gettext('Edit user')?>"	href="system_usermanager.php?act=edit&amp;userid=<?=$secretent['id']?>"></a>
 				</td>
 			</tr>
 <?php $i++; endforeach; ?>
@@ -179,8 +182,8 @@ if (is_subsystem_dirty('ipsec'))
 					<?=htmlspecialchars($secretent['pre-shared-key'])?>
 				</td>
 				<td>
-					<a class="btn btn-primary btn-xs" href="vpn_ipsec_keys_edit.php?id=<?=$i?>">edit key</a>
-					<a class="btn btn-danger btn-xs" href="vpn_ipsec_keys.php?act=del&amp;id=<?=$i?>">delete key</a>
+					<a class="fa fa-pencil"	title="<?=gettext('Edit key')?>" href="vpn_ipsec_keys_edit.php?id=<?=$i?>"></a>
+					<a class="fa fa-trash"	title="<?=gettext('Delete key')?>" href="vpn_ipsec_keys.php?act=del&amp;id=<?=$i?>"></a>
 				</td>
 			</tr>
 <?php $i++; endforeach; ?>
@@ -189,12 +192,15 @@ if (is_subsystem_dirty('ipsec'))
 </div>
 
 <nav class="action-buttons">
-	<a class="btn btn-success" href="vpn_ipsec_keys_edit.php"><?=gettext("add key")?></a>
+	<a class="btn btn-success btn-sm" href="vpn_ipsec_keys_edit.php">
+		<i class="fa fa-plus icon-embed-btn"></i>
+		<?=gettext("Add")?>
+	</a>
 </nav>
 
 <div class="alert alert-info">
-	<strong><?=gettext("Note"); ?>:</strong><br />
-	<?=gettext("PSK for any user can be set by using an identifier of any")?>
+	<strong><?=gettext("Note"); ?>:</strong>
+	<?=gettext(" PSK for any user can be set by using an identifier of any")?>
 </div>
 
 <?php include("foot.inc"); ?>

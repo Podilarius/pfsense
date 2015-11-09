@@ -5,7 +5,9 @@
 /* ====================================================================
  *	Copyright (c)  2004-2015  Electric Sheep Fencing, LLC. All rights reserved.
  *	Copyright (c)  2003-2005 Bob Zoller (bob@kludgebox.com) and Manuel Kasper <mk@neon1.net>
- *	part of m0n0wall (http://m0n0.ch/wall)
+ *
+ *  Some or all of this file is based on the m0n0wall project which is
+ *  Copyright (c)  2004 Manuel Kasper (BSD 2 clause)
  *
  *	Redistribution and use in source and binary forms, with or without modification,
  *	are permitted provided that the following conditions are met:
@@ -37,7 +39,7 @@
  *
  *	"This product includes software developed by the pfSense Project
  *	for use in the pfSense software distribution (http://www.pfsense.org/).
-  *
+ *
  *	THIS SOFTWARE IS PROVIDED BY THE pfSense PROJECT ``AS IS'' AND ANY
  *	EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  *	IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -189,7 +191,7 @@ $section->addInput(new Form_Select(
 $section->addInput(new Form_Select(
 	'sourceip',
 	'Source address',
-	$pconfig['source'],
+	$sourceip,
 	create_sourceaddresslist()
 ))->setHelp('Select source address for the ping');
 
@@ -198,7 +200,7 @@ $section->addInput(new Form_Select(
 	'Maximum number of pings',
 	$count,
 	array_combine(range(1, MAX_COUNT), range(1, MAX_COUNT))
-))->setHelp('Select the maximum number pings');
+))->setHelp('Select the maximum number of pings');
 
 $form->add($section);
 print $form;

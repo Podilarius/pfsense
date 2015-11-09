@@ -4,7 +4,7 @@
 */
 /* ====================================================================
  *	Copyright (c)  2004-2015  Electric Sheep Fencing, LLC. All rights reserved.
- *	Copyright (c) 2 007 Marcel Wiget <mwiget@mac.com>
+ *	Copyright (c)  2007 Marcel Wiget <mwiget@mac.com>
  *
  *	Redistribution and use in source and binary forms, with or without modification,
  *	are permitted provided that the following conditions are met:
@@ -111,7 +111,7 @@ if (empty($a_cp[$cpzone])) {
 	exit;
 }
 
-$pgtitle = array(gettext("Services"), gettext("Captive portal"), gettext("Vouchers"), $a_cp[$cpzone]['zone']);
+$pgtitle = array(gettext("Services"), gettext("Captive Portal"), gettext("Vouchers"), $a_cp[$cpzone]['zone']);
 $shortcut_section = "captiveportal-vouchers";
 
 if (!is_array($config['voucher'][$cpzone]['roll'])) {
@@ -430,9 +430,9 @@ if ($savemsg)
 	print_info_box($savemsg. 'success');
 
 $tab_array = array();
-$tab_array[] = array(gettext("Captive portal(s)"), false, "services_captiveportal.php?zone={$cpzone}");
+$tab_array[] = array(gettext("Captive Portal(s)"), false, "services_captiveportal.php?zone={$cpzone}");
 $tab_array[] = array(gettext("MAC"), false, "services_captiveportal_mac.php?zone={$cpzone}");
-$tab_array[] = array(gettext("Allowed IP addresses"), false, "services_captiveportal_ip.php?zone={$cpzone}");
+$tab_array[] = array(gettext("Allowed IP Addresses"), false, "services_captiveportal_ip.php?zone={$cpzone}");
 $tab_array[] = array(gettext("Allowed Hostnames"), false, "services_captiveportal_hostname.php?zone={$cpzone}");
 $tab_array[] = array(gettext("Vouchers"), true, "services_captiveportal_vouchers.php?zone={$cpzone}");
 $tab_array[] = array(gettext("File Manager"), false, "services_captiveportal_filemanager.php?zone={$cpzone}");
@@ -475,7 +475,7 @@ foreach($a_roll as $rollent):
 						<td>
 							<!-- These buttons are hidden/shown on checking the 'enable' checkbox -->
 							<a class="fa fa-pencil"		title="<?=gettext("Edit voucher roll"); ?>" href="services_captiveportal_vouchers_edit.php?zone=<?=$cpzone?>&amp;id=<?=$i; ?>"></a>
-							<a class="fa fa-trash"		title="<?=gettext("Delete voucher roll")?>" href="services_captiveportal_vouchers.php?zone=<?=$cpzone?>&amp;act=del&amp;id=<?=$i; ?>" onclick="return confirm('<?=gettext("Are you sure you want to delete this voucher roll?")?>')"></a>
+							<a class="fa fa-trash"		title="<?=gettext("Delete voucher roll")?>" href="services_captiveportal_vouchers.php?zone=<?=$cpzone?>&amp;act=del&amp;id=<?=$i; ?>"></a>
 							<a class="fa fa-file-excel-o"	title="<?=gettext("Export vouchers for this roll to a .csv file")?>" href="services_captiveportal_vouchers.php?zone=<?=$cpzone?>&amp;act=csv&amp;id=<?=$i; ?>"></a>
 						</td>
 					</tr>
@@ -491,9 +491,9 @@ endforeach;
 <?php
 
 if ($pconfig['enable']) : ?>
-	<nav class="action-buttons" style="margin-top: 10px;">
+	<nav class="action-buttons">
 		<a href="services_captiveportal_vouchers_edit.php?zone=<?=$cpzone?>" class="btn btn-success">
-			<i class="fa fa-plus" style="font-size:15px; vertical-align: middle; margin-right: 6px;"></i>
+			<i class="fa fa-plus icon-embed-btn"></i>
 			<?=gettext("Add")?>
 		</a>
 	</nav>
@@ -613,7 +613,7 @@ $section->addInput(new Form_Input(
 	'vouchersyncpass',
 	'Voucher sync password',
 	'password',
-	$pconfig['vouchersyncuserpass']
+	$pconfig['vouchersyncpass']
 ))->setHelp('This is the password of the master voucher nodes webConfigurator.');
 
 $section->addInput(new Form_Input(

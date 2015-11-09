@@ -1,10 +1,12 @@
 <?php
-/* $Id$ */
 /*
 	services_igmpproxy.php
 */
 /* ====================================================================
  *	Copyright (c)  2004-2015  Electric Sheep Fencing, LLC. All rights reserved.
+ *
+ *	Some or all of this file is based on the m0n0wall project which is
+ *	Copyright (c)  2004 Manuel Kasper (BSD 2 clause)
  *
  *	Redistribution and use in source and binary forms, with or without modification,
  *	are permitted provided that the following conditions are met:
@@ -149,8 +151,8 @@ foreach ($a_igmpproxy as $igmpentry):
 						<?=htmlspecialchars($igmpentry['descr'])?>&nbsp;
 					</td>
 					<td>
-						<a class="fa fa-pencil"	title="<?=gettext('Edit IGMP entry')?>" 	href="services_igmpproxy_edit.php?id=<?=$i?>"></a>
-						<a class="fa fa-trash"	title="<?=gettext('Delete IGMP entry')?>"	href="services_igmpproxy.php?act=del&amp;id=<?=$i?>" onclick="return confirm('<?=gettext("Are you sure you want to delete this IGMP entry?")?>')"></a>
+						<a class="fa fa-pencil"	title="<?=gettext('Edit IGMP entry')?>" href="services_igmpproxy_edit.php?id=<?=$i?>"></a>
+						<a class="fa fa-trash"	title="<?=gettext('Delete IGMP entry')?>" href="services_igmpproxy.php?act=del&amp;id=<?=$i?>"></a>
 					</td>
 				</tr>
 <?php
@@ -162,13 +164,13 @@ endforeach;
 	</div>
 </form>
 
-<nav class="action-buttons" style="margin-top: 10px;">
+<nav class="action-buttons">
 	<button id="submit" name="submit" type="submit" class="btn btn-primary btn-sm" value="<?=gettext("Save")?>">
-		<i class="fa fa-save" style="font-size:15px; vertical-align: middle; margin-right: 6px;"></i>
+		<i class="fa fa-save icon-embed-btn"></i>
 		<?=gettext("Save")?>
 	</button>
 	<a href="services_igmpproxy_edit.php" class="btn btn-success btn-sm">
-		<i class="fa fa-plus" style="font-size:15px; vertical-align: middle; margin-right: 6px;"></i>
+		<i class="fa fa-plus icon-embed-btn"></i>
 		<?=gettext('Add')?>
 	</a>
 </nav>

@@ -1,13 +1,13 @@
 <?php
-/* $Id$ */
 /*
 	firewall_virtual_ip.php
 */
 /* ====================================================================
  *	Copyright (c)  2004-2015  Electric Sheep Fencing, LLC. All rights reserved.
- *	Copyright (c)  2004, 2005 Scott Ullrich
- *	Copyright (c)  22003-2005 Manuel Kasper <mk@neon1.net>
- *	part of pfSense (https://www.pfsense.org/)
+ *	Copyright (c)  2005 Bill Marquette <bill.marquette@gmail.com>
+ *
+ *	Some or all of this file is based on the m0n0wall project which is
+ *	Copyright (c)  2004 Manuel Kasper (BSD 2 clause)
  *
  *	Redistribution and use in source and binary forms, with or without modification,
  *	are permitted provided that the following conditions are met:
@@ -39,7 +39,7 @@
  *
  *	"This product includes software developed by the pfSense Project
  *	for use in the pfSense software distribution (http://www.pfsense.org/).
-  *
+ *
  *	THIS SOFTWARE IS PROVIDED BY THE pfSense PROJECT ``AS IS'' AND ANY
  *	EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  *	IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -282,7 +282,7 @@ else if ($savemsg)
 else if (is_subsystem_dirty('vip'))
 	print_info_box_np(gettext("The VIP configuration has been changed.")."<br />".gettext("You must apply the changes in order for them to take effect."));
 
-/* active tabs 
+/* active tabs
 $tab_array = array();
 $tab_array[] = array(gettext("Virtual IPs"), true, "firewall_virtual_ip.php");
  $tab_array[] = array(gettext("CARP Settings"), false, "system_hasync.php");
@@ -342,7 +342,7 @@ foreach ($a_vip as $vipent):
 					</td>
 					<td>
 						<a class="fa fa-pencil" title="<?=gettext("Edit virtual ip"); ?>" href="firewall_virtual_ip_edit.php?id=<?=$i?>"></a>
-						<a class="fa fa-trash"	title="<?=gettext("Delete virtual ip")?>" href="firewall_virtual_ip.php?act=del&amp;id=<?=$i?>" onclick="return confirm('<?=gettext("Are you sure you want to delete this virtual ip?")?>')"></a>
+						<a class="fa fa-trash"	title="<?=gettext("Delete virtual ip")?>" href="firewall_virtual_ip.php?act=del&amp;id=<?=$i?>"></a>
 					</td>
 				</tr>
 <?php
@@ -355,9 +355,9 @@ endforeach;
 	</div>
 </div>
 
-<nav class="action-buttons" style="margin-top: 10px;">
+<nav class="action-buttons">
 	<a href="firewall_virtual_ip_edit.php" class="btn btn-sm btn-success">
-		<i class="fa fa-plus" style="font-size:15px; vertical-align: middle; margin-right: 6px;"></i>
+		<i class="fa fa-plus icon-embed-btn"></i>
 		<?=gettext('Add')?>
 	</a>
 </nav>

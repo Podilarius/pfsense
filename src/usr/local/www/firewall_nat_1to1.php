@@ -1,12 +1,12 @@
 <?php
-/* $Id$ */
 /*
 	firewall_nat_1to1.php
 */
 /* ====================================================================
  *	Copyright (c)  2004-2015  Electric Sheep Fencing, LLC. All rights reserved.
- *	Copyright (c)  2003-2004 Manuel Kasper <mk@neon1.net>
- *	part of m0n0wall (http://m0n0.ch/wall)
+ *
+ *	Some or all of this file is based on the m0n0wall project which is
+ *	Copyright (c)  2004 Manuel Kasper (BSD 2 clause)
  *
  *	Redistribution and use in source and binary forms, with or without modification,
  *	are permitted provided that the following conditions are met:
@@ -38,7 +38,7 @@
  *
  *	"This product includes software developed by the pfSense Project
  *	for use in the pfSense software distribution (http://www.pfsense.org/).
-  *
+ *
  *	THIS SOFTWARE IS PROVIDED BY THE pfSense PROJECT ``AS IS'' AND ANY
  *	EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  *	IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -260,17 +260,17 @@ display_top_tabs($tab_array);
 		</div>
 	</div>
 
-	<nav class="action-buttons" style="margin-top: 10px;">
+	<nav class="action-buttons">
 		<a href="firewall_nat_1to1_edit.php?after=-1" class="btn btn-sm btn-success" title="<?=gettext('Add new mapping')?>">
-			<i class="fa fa-plus" style="font-size:15px; vertical-align: middle; margin-right: 6px;"></i>
+			<i class="fa fa-plus icon-embed-btn"></i>
 			<?=gettext('Add')?>
 		</a>
 		<button name="del_x" type="submit" class="btn btn-danger btn-sm" value="<?=gettext("Delete selected rule"); ?>">
-			<i class="fa fa-trash" style="font-size:15px; vertical-align: middle; margin-right: 6px;"></i>
+			<i class="fa fa-trash icon-embed-btn"></i>
 			<?=gettext("Delete"); ?>
 		</button>
 		<button type="submit" id="order-store" name="order-store" class="btn btn-primary btn-sm" value="Save changes" disabled="disabled">
-			<i class="fa fa-save" style="font-size:15px; vertical-align: middle; margin-right: 6px;"></i>
+			<i class="fa fa-save icon-embed-btn"></i>
 			<?=gettext("Save")?>
 		</button>
 	</nav>
