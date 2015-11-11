@@ -84,6 +84,7 @@ if (isset($_POST['zone'])) {
 if (empty($cpzone) || empty($config['captiveportal'][$cpzone])) {
 	header("Location: services_captiveportal_zones.php");
 	exit;
+}
 
 if (!is_array($config['captiveportal'])) {
 	$config['captiveportal'] = array();

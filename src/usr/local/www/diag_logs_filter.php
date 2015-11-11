@@ -69,6 +69,7 @@
 ##|-PRIV
 
 require("guiconfig.inc");
+require_once("ipsec.inc");
 require_once("filter_log.inc");
 
 # --- AJAX RESOLVE ---
@@ -169,7 +170,7 @@ function build_if_list() {
 		$interfaces['pppoe'] = "PPPoE Server";
 
 	/* add ipsec interfaces */
-	if (isset($config['ipsec']['enable']) || isset($config['ipsec']['client']['enable']))
+	if (ipsec_enabled())
 		$interfaces["enc0"] = "IPsec";
 
 	/* add openvpn/tun interfaces */
@@ -365,7 +366,7 @@ if (!isset($config['syslog']['rawfilter'])) {
 	</div>
 	<div class="panel-body">
 	   <div class="table-responsive">
-		<table class="table table striped table-hover table-compact">
+		<table class="table table-striped table-hover table-compact">
 			<tr>
 				<th><?=gettext("Act")?></th>
 				<th><?=gettext("Time")?></th>

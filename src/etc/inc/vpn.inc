@@ -1,5 +1,4 @@
 <?php
-
 /*
 	vpn.inc
 	Copyright (C) 2004 Scott Ullrich
@@ -432,7 +431,7 @@ syslog {
 		ike_name = yes
 {$strongswanlog}
 	}
-	# disable logging under auth so logs aren't duplicated 
+	# disable logging under auth so logs aren't duplicated
 	auth {
 		default = -1
 	}
@@ -1373,7 +1372,7 @@ EOD;
 
 	/* manage process */
 	if ($restart === true) {
-		mwexec("/usr/local/sbin/ipsec restart", false);
+		mwexec("/usr/local/sbin/ipsec restart --conf {$g['varetc_path']}/ipsec/ipsec.conf", false);
 	} else {
 		if (isvalidpid("{$g['varrun_path']}/starter.charon.pid")) {
 			/* Update configuration changes */
@@ -1381,7 +1380,7 @@ EOD;
 			mwexec("/usr/local/sbin/ipsec rereadall", false);
 			mwexec("/usr/local/sbin/ipsec reload", false);
 		} else {
-			mwexec("/usr/local/sbin/ipsec start", false);
+			mwexec("/usr/local/sbin/ipsec start --conf {$g['varetc_path']}/ipsec/ipsec.conf", false);
 		}
 	}
 
