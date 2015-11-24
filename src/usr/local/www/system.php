@@ -86,15 +86,12 @@ $pconfig['dns4gw'] = $config['system']['dns4gw'];
 
 $pconfig['dnsallowoverride'] = isset($config['system']['dnsallowoverride']);
 $pconfig['timezone'] = $config['system']['timezone'];
-$pconfig['timeupdateinterval'] = $config['system']['time-update-interval'];
 $pconfig['timeservers'] = $config['system']['timeservers'];
 $pconfig['language'] = $config['system']['language'];
-
+$pconfig['webguicss'] = $config['system']['webgui']['webguicss'];
+$pconfig['webguifixedmenu'] = $config['system']['webgui']['webguifixedmenu'];
 $pconfig['dnslocalhost'] = isset($config['system']['dnslocalhost']);
 
-if (!isset($pconfig['timeupdateinterval'])) {
-	$pconfig['timeupdateinterval'] = 300;
-}
 if (!$pconfig['timezone']) {
 	if (isset($g['default_timezone']) && !empty($g['default_timezone'])) {
 		$pconfig['timezone'] = $g['default_timezone'];
@@ -141,6 +138,18 @@ if ($_POST) {
 
 	do_input_validation($_POST, $reqdfields, $reqdfieldsn, $input_errors);
 
+	if ($_POST['webguicss']) {
+		$config['system']['webgui']['webguicss'] = $_POST['webguicss'];
+	} else {
+		unset($config['system']['webgui']['webguicss']);
+	}
+
+	if ($_POST['webguifixedmenu']) {
+		$config['system']['webgui']['webguifixedmenu'] = $_POST['webguifixedmenu'];
+	} else {
+		unset($config['system']['webgui']['webguifixedmenu']);
+	}
+	
 	if ($_POST['hostname']) {
 		if (!is_hostname($_POST['hostname'])) {
 			$input_errors[] = gettext("The hostname can only contain the characters A-Z, 0-9 and '-'. It may not start or end with '-'.");
@@ -194,10 +203,6 @@ if ($_POST) {
 		}
 	}
 
-	$t = (int)$_POST['timeupdateinterval'];
-	if (($t < 0) || (($t > 0) && ($t < 6)) || ($t > 1440)) {
-		$input_errors[] = gettext("The time update interval must be either 0 (disabled) or between 6 and 1440.");
-	}
 	# it's easy to have a little too much whitespace in the field, clean it up for the user before processing.
 	$_POST['timeservers'] = preg_replace('/[[:blank:]]+/', ' ', $_POST['timeservers']);
 	$_POST['timeservers'] = trim($_POST['timeservers']);
@@ -212,7 +217,6 @@ if ($_POST) {
 		update_if_changed("domain", $config['system']['domain'], $_POST['domain']);
 		update_if_changed("timezone", $config['system']['timezone'], $_POST['timezone']);
 		update_if_changed("NTP servers", $config['system']['timeservers'], strtolower($_POST['timeservers']));
-		update_if_changed("NTP update interval", $config['system']['time-update-interval'], $_POST['timeupdateinterval']);
 
 		if ($_POST['language'] && $_POST['language'] != $config['system']['language']) {
 			$config['system']['language'] = $_POST['language'];
@@ -328,13 +332,13 @@ include("head.inc");
 
 if ($input_errors)
 	print_input_errors($input_errors);
+
 if ($savemsg)
-	print_info_box($savemsg);
+	print_info_box($savemsg, success);
 ?>
 <div id="container">
 <?php
 
-require_once('classes/Form.class.php');
 $form = new Form;
 $section = new Form_Section('System');
 $section->addInput(new Form_Input(
@@ -448,6 +452,39 @@ $section->addInput(new Form_Select(
 	$pconfig['language'],
 	get_locale_list()
 ))->setHelp('Choose a language for the webConfigurator');
+
+$form->add($section);
+
+$csslist = array();
+$css = glob("bootstrap/css/*.css");
+foreach ($css as $file) {
+	$file = basename($file);
+	if(substr($file, 0, 9) !== 'bootstrap') {
+		$csslist[$file] = pathinfo($file, PATHINFO_FILENAME);
+	}
+}
+
+asort($csslist);
+
+if (!isset($pconfig['webguicss']) || !isset($csslist[$pconfig['webguicss']])) {
+	$pconfig['webguicss'] = "pfSense.css";
+}
+
+$section = new Form_Section('Web configurator');
+
+$section->addInput(new Form_Select(
+	'webguicss',
+	'Theme',
+	$pconfig['webguicss'],
+	$csslist
+))->setHelp("Choose an alternative css file (if installed) to change the appearance of the Web configurator. css files are located in /usr/local/www/bootstrap/css");
+
+$section->addInput(new Form_Select(
+	'webguifixedmenu',
+	'Menu',
+	$pconfig['webguifixedmenu'],
+	["" => "Scrolls with page", "fixed" => "Fixed (Remains visible at top of page)"]
+));
 
 $form->add($section);
 

@@ -236,7 +236,8 @@ events.push(function(){
 			for(i=0; i<len; i++) {
 				if(From.eq(i).is(':selected')) {
 					option = From.eq(i).val();
-					To.append(new Option(option, option));
+					value  = From.eq(i).text();
+					To.append(new Option(value, option));
 					From.eq(i).remove();
 				}
 			}
@@ -321,8 +322,6 @@ events.push(function(){
 <?php
 if ($input_errors)
 	print_input_errors($input_errors);
-
-require_once('classes/Form.class.php');
 
 $form = new Form(new Form_Button(
 	'Submit',

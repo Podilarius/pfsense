@@ -132,8 +132,6 @@ display_top_tabs($tab_array);
 // Start of tab content
 $current_statecount=`pfctl -si | grep "current entries" | awk '{ print $3 }'`;
 
-require_once('classes/Form.class.php');
-
 $form = new Form(false);
 
 $section = new Form_Section('State filter');
@@ -209,11 +207,12 @@ print $form;
 			<td><?= $state ?></td>
 
 			<td>
-				<a class="btn icon icon-remove" data-entry="<?=$srcip?>|<?=$dstip?>"
+				<a class="btn fa fa-times" data-entry="<?=$srcip?>|<?=$dstip?>"
 					title="<?=sprintf(gettext('Remove all state entries from %s to %s'), $srcip, $dstip);?>"></a>
 			</td>
 		</tr>
-<?php $row++; } ?>
+<?php $row++; } 
+?>
 	</tbody>
 </table>
 <?php

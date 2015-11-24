@@ -92,8 +92,7 @@ $pconfig['apinger_debug'] = isset($config['system']['apinger_debug']);
 $pconfig['use_mfs_tmpvar'] = isset($config['system']['use_mfs_tmpvar']);
 $pconfig['use_mfs_tmp_size'] = $config['system']['use_mfs_tmp_size'];
 $pconfig['use_mfs_var_size'] = $config['system']['use_mfs_var_size'];
-$pconfig['pkg_nochecksig'] = isset($config['system']['pkg_nochecksig']);
-$pconfig['host_uuid'] = !isset($config['system']['host_uuid']);
+$pconfig['do_not_send_host_uuid'] = isset($config['system']['do_not_send_host_uuid']);
 
 $pconfig['powerd_ac_mode'] = "hadp";
 if (!empty($config['system']['powerd_ac_mode'])) {
@@ -216,10 +215,10 @@ if ($_POST) {
 			unset($config['system']['pkg_nochecksig']);
 		}
 
-		if ($_POST['host_uuid'] == "yes") {
-			unset($config['system']['host_uuid']);
+		if ($_POST['do_not_send_host_uuid'] == "yes") {
+			$config['system']['do_not_send_host_uuid'] = true;
 		} else {
-			$config['system']['host_uuid'] = true;
+			unset($config['system']['do_not_send_host_uuid']);
 		}
 
 		if ($_POST['powerd_enable'] == "yes") {
@@ -321,8 +320,9 @@ include("head.inc");
 
 if ($input_errors)
 	print_input_errors($input_errors);
+
 if ($savemsg)
-	print_info_box($savemsg);
+	print_info_box($savemsg, success);
 
 $tab_array = array();
 $tab_array[] = array(gettext("Admin Access"), false, "system_advanced_admin.php");
@@ -333,9 +333,6 @@ $tab_array[] = array(gettext("System Tunables"), false, "system_advanced_sysctl.
 $tab_array[] = array(gettext("Notifications"), false, "system_advanced_notifications.php");
 display_top_tabs($tab_array);
 
-?><div id="container"><?php
-
-require_once('classes/Form.class.php');
 $form = new Form;
 $section = new Form_Section('Proxy support');
 
@@ -582,17 +579,35 @@ $section->addInput(new Form_Input(
 	'frequent the backup, the more writes will happen to your media.');
 
 $form->add($section);
-$section = new Form_Section('Package settings');
+
+if ($g['platform'] == "pfSense") {
+	$section = new Form_Section('Hardware settings');
+
+	$opts = array(0.5,  1, 2,  3,  4,  5,  7.5,  10,  15,  20,  30,  60);
+	$vals = array(  6, 12, 24, 36, 48, 60,  90, 120, 180, 240, 241, 242);
+
+	$section->addINput(new Form_Select(
+		'harddiskstandby',
+		'Hard disk standby time',
+		$pconfig['harddiskstandby'],
+		['' => gettext("Always on")] + array_combine($opts, $vals)
+	))->setHelp("Puts the hard disk into standby mode when the selected number of minutes has elapsed since the last access." . "<br />" .
+				"<strong> Do not set this for CF cards.</strong>");
+
+	$form->add($section);
+}
+
+$section = new Form_Section('Installation Feedback');
 
 $section->addInput(new Form_Checkbox(
-	'pkg_nochecksig',
-	'Package signature',
-	'Disable check package signature',
-	$pconfig['pkg_nochecksig']
-))->setHelp('Enable this option to allow pfSense to install any package without '.
-	'checking its signature.');
+	'do_not_send_host_uuid',
+	'Host UUID',
+	'Do NOT send HOST UUID with user agent',
+	$pconfig['do_not_send_host_uuid']
+))->setHelp('Enable this option to not send HOST UUID to pfSense as part of User-Agent header.');
 
 $form->add($section);
+
 print $form;
 
 include("foot.inc");

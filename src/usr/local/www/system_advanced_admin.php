@@ -150,23 +150,34 @@ if ($_POST) {
 		if (update_if_changed("webgui protocol", $config['system']['webgui']['protocol'], $_POST['webguiproto'])) {
 			$restart_webgui = true;
 		}
+
 		if (update_if_changed("webgui port", $config['system']['webgui']['port'], $_POST['webguiport'])) {
 			$restart_webgui = true;
 		}
+
 		if (update_if_changed("webgui certificate", $config['system']['webgui']['ssl-certref'], $_POST['ssl-certref'])) {
 			$restart_webgui = true;
 		}
+
 		if (update_if_changed("webgui max processes", $config['system']['webgui']['max_procs'], $_POST['max_procs'])) {
 			$restart_webgui = true;
 		}
 
+		// Restart the webgui only if this actually changed
 		if ($_POST['webgui-redirect'] == "yes") {
+			if ($config['system']['webgui']['disablehttpredirect'] != true) {
+				$restart_webgui = true;
+			}
+
 			$config['system']['webgui']['disablehttpredirect'] = true;
-			$restart_webgui = true;
 		} else {
+			if ($config['system']['webgui']['disablehttpredirect'] == true) {
+				$restart_webgui = true;
+			}
+
 			unset($config['system']['webgui']['disablehttpredirect']);
-			$restart_webgui = true;
 		}
+
 		if ($_POST['webgui-login-messages'] == "yes") {
 			$config['system']['webgui']['quietlogin'] = true;
 		} else {
@@ -326,7 +337,6 @@ display_top_tabs($tab_array);
 
 ?><div id="container"><?php
 
-require_once('classes/Form.class.php');
 $form = new Form;
 $section = new Form_Section('WebConfigurator');
 $group = new Form_Group('Protocol');
@@ -469,17 +479,6 @@ $section->addInput(new Form_Checkbox(
 ))->setHelp('When this is unchecked, the browser tab shows the host name followed '.
 	'by the current page. Check this box to display the current page followed by the '.
 	'host name.');
-
-$csslist = glob("/Bootstrap/css/*.css");
-unset($csslist['bootstrap.min.css'];
-$csslist = array_combine($csslist, $csslist);
-
-$section->addInput(new Form_Select(
-	'webguicss',
-	'Web configurator style sheet',
-	$csslist,
-	$pconfig['webguicss']
-));
 
 $form->add($section);
 $section = new Form_Section('Secure Shell');

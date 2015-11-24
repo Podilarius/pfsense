@@ -81,12 +81,9 @@ if (!is_array($config['ipsec']['phase2'])) {
 $a_phase1 = &$config['ipsec']['phase1'];
 $a_phase2 = &$config['ipsec']['phase2'];
 
-$pconfig['enable'] = isset($config['ipsec']['enable']);
-
 if ($_POST) {
 
 	if ($_POST['apply']) {
-		$retval = 0;
 		$retval = vpn_ipsec_configure();
 		/* reload the filter in the background */
 		filter_configure();
@@ -96,14 +93,6 @@ if ($_POST) {
 				clear_subsystem_dirty('ipsec');
 			}
 		}
-	} else if ($_POST['submit'] == 'Save') {
-		$pconfig = $_POST;
-
-		$config['ipsec']['enable'] = $_POST['enable'] ? true : false;
-
-		write_config();
-
-		$retval = vpn_ipsec_configure();
 	} else if (isset($_POST['del'])) {
 		/* delete selected p1 entries */
 		if (is_array($_POST['p1entry']) && count($_POST['p1entry'])) {
@@ -281,15 +270,12 @@ display_top_tabs($tab_array);
 		print_info_box($savemsg, 'success');
 	}
 
-	if ($pconfig['enable'] && is_subsystem_dirty('ipsec')) {
+	if (is_subsystem_dirty('ipsec')) {
 		print_info_box_np(gettext("The IPsec tunnel configuration has been changed") . ".<br />" . gettext("You must apply the changes in order for them to take effect."));
 	}
 ?>
 
 <form name="mainform" method="post">
-	<input name="enable" type="checkbox" id="enable" value="yes" <?php if ($pconfig['enable']) echo "checked=\"checked\"";?> />&nbsp;&nbsp;<?=gettext("Enable IPsec")?><br /><br />
-	<input name="submit" type="submit" class="btn btn-sm btn-primary" value="<?=gettext("Save"); ?>" /><br /><br />
-
 	<div class="panel panel-default">
 		<div class="panel-heading"><h2 class="panel-title"><?=gettext('IPSec tunnels')?></h2></div>
 		<div class="panel-body table-responsive">
@@ -321,6 +307,7 @@ display_top_tabs($tab_array);
 					<tr id="fr<?=$i?>" onclick="fr_toggle(<?=$i?>)" id="frd<?=$i?>" ondblclick="document.location='vpn_ipsec_phase1.php?p1index=<?=$i?>'" class="<?= $entryStatus ?>">
 						<td>
 							<input type="checkbox" id="frc<?=$i?>" name="p1entry[]" value="<?=$i?>" onclick="fr_bgcolor('<?=$i?>')" />
+							<a	class="fa fa-anchor" id="Xmove_<?=$i?>" title="<?=gettext("Move checked entries to here")?>"></a>
 						</td>
 						<td>
 							<button value="toggle_<?=$i?>" name="toggle_<?=$i?>" title="<?=gettext("click to toggle enabled/disabled status")?>" class="btn btn-xs btn-default" type="submit"><?= ($entryStatus == 'disabled' ? 'enable' : 'disable') ?></button>
@@ -391,7 +378,7 @@ display_top_tabs($tab_array);
 							<?=htmlspecialchars($ph1ent['descr'])?>
 						</td>
 						<td style="cursor: pointer;">
-							<a	class="fa fa-anchor" id="Xmove_<?=$i?>" title="<?=gettext("Move checked entries to here")?>"></a>
+<!--							<a	class="fa fa-anchor" id="Xmove_<?=$i?>" title="<?=gettext("Move checked entries to here")?>"></a> -->
 							<button style="display: none;" class="btn btn-default btn-xs" type="submit" id="move_<?=$i?>" name="move_<?=$i?>" value="move_<?=$i?>"><?=gettext("Move checked entries to here")?></button>
 							<a class="fa fa-pencil" href="vpn_ipsec_phase1.php?p1index=<?=$i?>" title="<?=gettext("Edit phase1 entry"); ?>"></a>
 <?php if (!isset($ph1ent['mobile'])): ?>
@@ -460,6 +447,7 @@ display_top_tabs($tab_array);
 										<tr id="<?=$fr_prefix . $j?>" ondblclick="document.location='vpn_ipsec_phase2.php?p2index=<?=$ph2ent['uniqid']?>'" class="<?= $entryStatus ?>">
 											<td>
 												<input type="checkbox" id="<?=$fr_c?>" name="p2entry[]" value="<?=$ph2index?>" onclick="fr_bgcolor('<?=$j?>', '<?=$fr_prefix?>')" />
+												<button class="fa fa-anchor button-icon" type="submit" name="movep2_<?=$j?>" value="movep2_<?=$j?>" title="<?=gettext("Move checked P2s here")?>"></button>
 											</td>
 											<td>
 												<button value="togglep2_<?=$ph2index?>" name="togglep2_<?=$ph2index?>" title="<?=gettext("click to toggle enabled/disabled status")?>" class="btn btn-xs btn-default" type="submit"><?= ($entryStatus == 'disabled'? 'enable' : 'disable') ?></button>
@@ -507,7 +495,7 @@ display_top_tabs($tab_array);
 ?>
 											</td>
 											<td style="cursor: pointer;">
-												<button class="fa fa-anchor button-icon" type="submit" name="movep2_<?=$j?>" value="movep2_<?=$j?>" title="<?=gettext("Move checked P2s here")?>"></button>
+<!--												<button class="fa fa-anchor button-icon" type="submit" name="movep2_<?=$j?>" value="movep2_<?=$j?>" title="<?=gettext("Move checked P2s here")?>"></button> -->
 												<a class="fa fa-pencil" href="vpn_ipsec_phase2.php?p2index=<?=$ph2ent['uniqid']?>" title="<?=gettext("Edit phase2 entry"); ?>"></a>
 												<a class="fa fa-clone" href="vpn_ipsec_phase2.php?dup=<?=$ph2ent['uniqid']?>" title="<?=gettext("Add a new Phase 2 based on this one"); ?>"></a>
 												<a	class="fa fa-trash no-confirm" id="Xdelp2_<?=$i?>" title="<?=gettext('Delete phase2 entry'); ?>"></a>

@@ -421,7 +421,6 @@ display_top_tabs($tab_array);
 
 ?><div id="container"><?php
 
-require_once('classes/Form.class.php');
 $form = new Form;
 $section = new Form_Section('Firewall Advanced');
 
@@ -753,7 +752,7 @@ events.push(function(){
 	}
 
 	function setOptText(val) {
-		var htext = '<font color="green">';
+		var htext = '<span class="text-success">';
 
 		if(val == 'normal')
 			htext += 'The default optimization algorithm';
@@ -764,7 +763,7 @@ events.push(function(){
 		else if (val == 'conservative')
 			htext += 'Tries to avoid dropping any legitimate idle connections at the expense of increased memory usage and CPU utilization';
 
-		htext += '</font>';
+		htext += '</span>';
 		setHelpText('optimization', htext);
 	}
 

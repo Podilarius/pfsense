@@ -151,7 +151,7 @@ if ($_POST) {
 	$reqfields = array();
 	$reqfieldsn = array();
 	foreach ($pkg['fields']['field'] as $field) {
-		if (($field['type'] == 'input') && isset($field['required'])) {
+		if (isset($field['required'])) {
 			if ($field['fieldname']) {
 				$reqfields[] = $field['fieldname'];
 			}
@@ -348,7 +348,7 @@ function display_row($trc, $value, $fieldname, $type, $rowhelper, $description) 
 			))->setHelp($description);
 			break;
 		case "textarea":
-			$group->add(new Form_TextArea(
+			$group->add(new Form_Textarea(
 				$fieldname . $trc,
 				null,
 				$value
@@ -530,8 +530,6 @@ function parse_package_templates() {
 }
 
 // Start of page display
-require_once('classes/Form.class.php');
-
 if ($input_errors)
 	print_input_errors($input_errors);
 
@@ -690,7 +688,11 @@ foreach ($pkg['fields']['field'] as $pkga) {
 		// Create an input element. The format is slightly different depending on whether we are composing a group,
 		// section, or advanced section. This is true for every element type
 		case "input":
-			if($grouping) {
+			if (($pkga['encoding'] == 'base64') && !$get_from_post && !empty($value)) {
+				$value = base64_decode($value);
+			}
+
+			if ($grouping) {
 				$group->add(new Form_Input(
 					$pkga['fieldname'],
 					$pkga['fielddescr'],
@@ -718,8 +720,12 @@ foreach ($pkg['fields']['field'] as $pkga) {
 			break;
 
 		case "password":
+			if (($pkga['encoding'] == 'base64') && !$get_from_post && !empty($value)) {
+				$value = base64_decode($value);
+			}
+
 			// Create a password element
-			if($grouping) {
+			if ($grouping) {
 				$group->add(new Form_Input(
 					$pkga['fieldname'],
 					$pkga['fielddescr'],
@@ -938,32 +944,28 @@ foreach ($pkg['fields']['field'] as $pkga) {
 				$group->add(new Form_Checkbox(
 					$pkga['fieldname'],
 					$pkga['fielddescr'],
-					'Show log entries in reverse order (newest entries on top)',
+					fixup_string($pkga['description']),
 					($value == "on"),
 					'on'
-				))->setHelp(fixup_string($pkga['description']))
-				  ->setOnclick($onclick)
+				))->setOnclick($onclick)
 				  ->setOnchange($onchange);
 			} else {
 				if (isset($pkga['advancedfield']) && isset($advfield_count)) {
 					$advanced->addInput(new Form_Checkbox(
 						$pkga['fieldname'],
-						$pkga['fielddescr'],
-						'Show log entries in reverse order (newest entries on top)',
+						fixup_string($pkga['description']),
 						($value == "on"),
 						'on'
-					))->setHelp(fixup_string($pkga['description']))
-					  ->setOnclick($onclick)
+					))->setOnclick($onclick)
 					  ->setOnchange($onchange);
 				} else {
 					$section->addInput(new Form_Checkbox(
 						$pkga['fieldname'],
 						$pkga['fielddescr'],
-						'Show log entries in reverse order (newest entries on top)',
+						fixup_string($pkga['description']),
 						($value == "on"),
 						'on'
-					))->setHelp(fixup_string($pkga['description']))
-					  ->setOnclick($onclick)
+					))->setOnclick($onclick)
 					  ->setOnchange($onchange);
 				}
 			}
@@ -985,20 +987,20 @@ foreach ($pkg['fields']['field'] as $pkga) {
 			$wrap =($pkga['wrap'] == "off" ? 'wrap="off" style="white-space:nowrap;"' : '');
 
 			if ($grouping) {
-				$group->add(new Form_TextArea(
+				$group->add(new Form_Textarea(
 					$pkga['fieldname'],
 					$pkga['fielddescr'],
 					$value
 				))->setHelp(fixup_string($pkga['description']));
 			} else {
 				if (isset($pkga['advancedfield']) && isset($advfield_count)) {
-					$advanced->addInput(new Form_TextArea(
+					$advanced->addInput(new Form_Textarea(
 						$pkga['fieldname'],
 						$pkga['fielddescr'],
 						$value
 					))->setHelp(fixup_string($pkga['description']));
 				} else {
-					$section->addInput(new Form_TextArea(
+					$section->addInput(new Form_Textarea(
 						$pkga['fieldname'],
 						$pkga['fielddescr'],
 						$value
@@ -1193,27 +1195,27 @@ foreach ($pkg['fields']['field'] as $pkga) {
 				$group->add(new Form_Checkbox(
 					$pkga['fieldname'],
 					$pkga['fielddescr'],
-					'Show log entries in reverse order (newest entries on top)',
+					fixup_string($pkga['description']),
 					($value == "on"),
 					'on'
-				))->setHelp(fixup_string($pkga['description']))->displayAsRadio();
+				))->displayAsRadio();
 			} else {
 				if (isset($pkga['advancedfield']) && isset($advfield_count)) {
 					$advanced->addInput(new Form_Checkbox(
 						$pkga['fieldname'],
 						$pkga['fielddescr'],
-						'Show log entries in reverse order (newest entries on top)',
+						fixup_string($pkga['description']),
 						($value == "on"),
 						'on'
-					))->setHelp(fixup_string($pkga['description']))->displayAsRadio();
+					))->displayAsRadio();
 				} else {
 					$section->addInput(new Form_Checkbox(
 						$pkga['fieldname'],
 						$pkga['fielddescr'],
-						'Show log entries in reverse order (newest entries on top)',
+						fixup_string($pkga['description']),
 						($value == "on"),
 						'on'
-					))->setHelp(fixup_string($pkga['description']))->displayAsRadio();
+					))->displayAsRadio();
 				}
 			}
 
@@ -1329,6 +1331,11 @@ foreach ($pkg['fields']['field'] as $pkga) {
 						}
 
 						$type = $rowhelper['type'];
+						if ($type == "input" || $type == "password" || $type == "textarea" ) {
+							if (($rowhelper['encoding'] == 'base64') && !$get_from_post && !empty($value)) {
+								$value = base64_decode($value);
+							}
+						}
 						$fieldname = $rowhelper['fieldname'];
 
 						if ($rowhelper['size']) {

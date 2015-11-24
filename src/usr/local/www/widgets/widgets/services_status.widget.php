@@ -65,11 +65,11 @@ require_once("/usr/local/www/widgets/include/services_status.inc");
 
 $services = get_services();
 
-if(isset($_POST['servicestatusfilter'])) {
+if (isset($_POST['servicestatusfilter'])) {
 	$validNames = array();
-	foreach ($services as $service)
+	foreach ($services as $service) {
 		array_push($validNames, $service['name']);
-
+	}
 	$config['widgets']['servicestatusfilter'] = implode(',', array_intersect($validNames, $_POST['servicestatusfilter']));
 	write_config("Saved Service Status Filter via Dashboard");
 	header("Location: /");
@@ -79,9 +79,9 @@ if(isset($_POST['servicestatusfilter'])) {
 <thead>
 	<tr>
 		<th></th>
-		<th>Service</td>
-		<th>Description</td>
-		<th>Action</td>
+		<th>Service</th>
+		<th>Description</th>
+		<th>Action</th>
 	</tr>
 </thead>
 <tbody>
@@ -100,7 +100,7 @@ if (count($services) > 0) {
 		$service_desc = explode(".",$service['description']);
 ?>
 		<tr>
-			<td><i class="icon icon-<?=get_service_status($service)? 'ok' : 'remove'?>-sign"></i></td>
+			<td><i class="fa fa-<?=get_service_status($service)? 'check' : 'times'?>-circle"></i></td>
 			<td><?=$service['name']?></td>
 			<td><?=$service_desc[0]?></td>
 			<td><?=get_service_control_GET_links($service)?></td>

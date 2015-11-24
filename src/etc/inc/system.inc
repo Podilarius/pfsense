@@ -1502,7 +1502,8 @@ function system_get_timezone_list() {
 
 	$file_list = array_merge(
 		glob("/usr/share/zoneinfo/[A-Z]*"),
-		glob("/usr/share/zoneinfo/*/*")
+		glob("/usr/share/zoneinfo/*/*"),
+		glob("/usr/share/zoneinfo/*/*/*")
 	);
 
 	if (empty($file_list)) {
@@ -1752,6 +1753,10 @@ function system_ntp_configure($start_ntpd=true) {
 		if (!empty($config['ntpd']['gps']['refid'])) {
 			$ntpcfg .= ' refid ';
 			$ntpcfg .= $config['ntpd']['gps']['refid'];
+		}
+		if (!empty($config['ntpd']['gps']['stratum'])) {
+			$ntpcfg .= ' stratum ';
+			$ntpcfg .= $config['ntpd']['gps']['stratum'];
 		}
 		$ntpcfg .= "\n";
 	} elseif (is_array($config['ntpd']) && !empty($config['ntpd']['gpsport']) &&

@@ -144,7 +144,7 @@ function vpn_ipsec_configure($restart = false) {
 
 	$syscfg = $config['system'];
 	$ipseccfg = $config['ipsec'];
-	if (!isset($ipseccfg['enable'])) {
+	if (!ipsec_enabled()) {
 		/* try to stop charon */
 		mwexec("/usr/local/sbin/ipsec stop");
 		/* Stop dynamic monitoring */
@@ -232,7 +232,7 @@ function vpn_ipsec_configure($restart = false) {
 		    "{$g['varetc_path']}/ipsec/strongswan.d");
 		conf_mount_ro();
 	}
-	if (file_exists("/usr/local/etc/strongswan.conf") &&
+	if (!file_exists("/usr/local/etc/strongswan.conf") ||
 	    !is_link("/usr/local/etc/strongswan.conf")) {
 		conf_mount_rw();
 		@unlink("/usr/local/etc/strongswan.conf");
@@ -240,7 +240,7 @@ function vpn_ipsec_configure($restart = false) {
 		    "/usr/local/etc/strongswan.conf");
 		conf_mount_ro();
 	}
-	if (file_exists("/usr/local/etc/ipsec.conf") &&
+	if (!file_exists("/usr/local/etc/ipsec.conf") ||
 	    !is_link("/usr/local/etc/ipsec.conf")) {
 		conf_mount_rw();
 		@unlink("/usr/local/etc/ipsec.conf");
@@ -504,7 +504,7 @@ EOD;
 			$radius_server_txt .= <<<EOD
 				{$nice_user_source} {
 					address = {$auth_server['host']}
-					secret = {$auth_server['radius_secret']}
+					secret = "{$auth_server['radius_secret']}"
 					auth_port = {$auth_server['radius_auth_port']}
 					acct_port = {$auth_server['radius_acct_port']}
 				}

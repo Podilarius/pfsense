@@ -99,8 +99,6 @@ $tab_array[] = array(gettext("Test Vouchers"), true, "status_captiveportal_test.
 $tab_array[] = array(gettext("Expire Vouchers"), false, "status_captiveportal_expire.php?zone={$cpzone}");
 display_top_tabs($tab_array);
 
-require_once('classes/Form.class.php');
-
 $form = new Form;
 
 $section = new Form_Section('Test Vouchers');
@@ -128,9 +126,9 @@ if ($_POST) {
 
 		foreach ($test_results as $result) {
 			if (strpos($result, " good ") || strpos($result, " granted ")) {
-				$output .= '<font color="green">' . htmlspecialchars($result) . '</font>' . '<br />';
+				$output .= '<span class="text-success">' . htmlspecialchars($result) . '</span>' . '<br />';
 			} else {
-				$output .= '<font color="red">' . htmlspecialchars($result) . '</font>' . '<br />';
+				$output .= '<span class="text-danger">' . htmlspecialchars($result) . '</span>' . '<br />';
 			}
 		}
 

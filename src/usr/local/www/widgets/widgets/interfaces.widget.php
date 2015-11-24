@@ -68,24 +68,29 @@ $ifdescrs = get_configured_interface_with_descr();
 <?php
 foreach ($ifdescrs as $ifdescr => $ifname):
 	$ifinfo = get_interface_info($ifdescr);
-
-	if ($ifinfo['ppplink']) {
-		$icon = 'icon-headphones';
+	if ($ifinfo['pppoelink'] || $ifinfo['pptplink'] || $ifinfo['l2tplink']) {
+		/* PPP link (non-cell) - looks like a modem */
+		$typeicon = 'hdd-o';
+	} else if ($ifinfo['ppplink']) {
+		/* PPP Link (usually cellular) */
+		$typeicon = 'signal';
 	} else if (is_interface_wireless($ifdescr)) {
-		$icon = 'icon-signal';
+		/* Wi-Fi interface (hostap/client/etc) */
+		$typeicon = 'wifi';
 	} else {
-		$icon = 'icon-cog';
+		/* Wired/other interface. */
+		$typeicon = 'sitemap';
 	}
 
 	$known_status = true;
 
 	// Choose an icon by interface status
 	if ($ifinfo['status'] == "up" || $ifinfo['status'] == "associated") {
-		$icon = 'icon-arrow-up';
+		$icon = 'arrow-up';
 	} elseif ($ifinfo['status'] == "no carrier") {
-		$icon = 'icon-remove';
+		$icon = 'times-circle';
 	} elseif ($ifinfo['status'] == "down") {
-		$icon = 'icon-arrow-up';
+		$icon = 'arrow-up';
 	} else {
 		$known_status = false;
 	}
@@ -93,14 +98,14 @@ foreach ($ifdescrs as $ifdescr => $ifname):
 ?>
 	<tr>
 		<td title="<?=htmlspecialchars($ifinfo['macaddr'])?>">
-			<i class="icon icon-<?=$icon?>"></i>
+			<i class="fa fa-<?=$typeicon?>"></i>
 			<a href="/interfaces.php?if=<?=$ifdescr?>">
 				<?=htmlspecialchars($ifname);?>
 			</a>
 		</td>
 		<td>
 			<?php if ($known_status):?>
-				<i class="icon <?=$icon?>" alt="<?=htmlspecialchars($ifinfo['status'])?>"></i>
+				<i class="fa fa-<?=$icon?>" alt="<?=htmlspecialchars($ifinfo['status'])?>"></i>
 			<?php else: ?>
 				<?=htmlspecialchars($ifinfo['status'])?>
 			<?php endif; ?>
@@ -110,7 +115,7 @@ foreach ($ifdescrs as $ifdescr => $ifname):
 		</td>
 
 		<td<?=($ifinfo['dhcplink'] ? ' title="via dhcp"':'')?>>
-			<?php if (empty($ifinfo['ipaddr'])): ?>
+			<?php if (empty($ifinfo['ipaddr']) && empty($ifinfo['ipaddrv6'])): ?>
 				n/a
 			<?php else: ?>
 				<?=htmlspecialchars($ifinfo['ipaddr'])?><br />
