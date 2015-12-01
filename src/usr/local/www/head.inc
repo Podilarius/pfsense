@@ -86,7 +86,11 @@ if (isset($config['system']['webgui']['webguicss'])) {
 	<link rel="stylesheet" href="font-awesome/css/font-awesome.min.css">
 	<link rel="stylesheet" href="sortable/sortable-theme-bootstrap.css">
 	<title><?=$tabtitle?></title>
-	<script>var events = events || [];</script>
+	<script type="text/javascript">
+	//<![CDATA[
+	var events = events || [];
+	//]]>
+	</script>
 </head>
 
 <?php
@@ -269,10 +273,7 @@ $vpn_menu = msort(array_merge($vpn_menu, return_ext_menu("VPN")), 0);
 
 // Status
 $status_menu = array();
-if (count($config['captiveportal']) > 0) {
-	$status_menu[] = array(gettext("Captive Portal"), "/status_captiveportal.php");
-}
-
+$status_menu[] = array(gettext("Captive Portal"), "/status_captiveportal.php");
 $status_menu[] = array(gettext("CARP (failover)"), "/carp_status.php");
 $status_menu[] = array(gettext("Dashboard"), "/index.php");
 $status_menu[] = array(gettext("Gateways"), "/status_gateways.php");
@@ -376,13 +377,13 @@ if (!$g['disablehelpmenu']) {
 	$help_menu = msort(array_merge($help_menu, return_ext_menu("Help")), 0);
 }
 
-$menuclass = "navbar navbar-static-top navbar-inverse";
+$menuclass = "static";
 
 if (isset($config['system']['webgui']['webguifixedmenu'])) {
-	$menuclass = "navbar navbar-fixed-top navbar-inverse";
+	$menuclass = "fixed";
 }
 ?>
-<nav id="topmenu" class="<?=$menuclass?>">
+<nav id="topmenu" class="navbar navbar-<?=$menuclass?>-top navbar-inverse">
 	<div class="container">
 		<div class="navbar-header">
 			<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#pf-navbar">
@@ -420,19 +421,20 @@ if (isset($config['system']['webgui']['webguifixedmenu'])) {
 				<?php if (are_notices_pending()):?>
 					<?php $notices = get_notices()?>
 					<li class="dropdown">
-						<a href="#" data-toggle="modal" data-target="#notices" role="button" aria-expanded="false"><?=gettext("Notices")?>
-							<span class="badge"><?=count($notices)?></span>
+						<a href="#" data-toggle="modal" data-target="#notices" role="button" aria-expanded="false">
+							<i class="fa fa-bell text-danger" title="<?=gettext("Notices")?>"></i> 
+							<span class="badge bg-danger"><?=count($notices)?></span>
 						</a>
 					</li>
-<?php
-				endif;
-?>
+				<?php
+					endif;
+				?>
 			</ul>
 		</div>
 	</div>
 </nav>
 
-<div class="container">
+<div class="container <?=$menuclass?>">
 	<header class="header">
 
 <?php
@@ -565,7 +567,7 @@ if (are_notices_pending()):?>
 	</div>
 </div>
 
-<script>
+<script type="text/javascript">
 //<![CDATA[
 	events.push(function(){
 	    $('#clearallnotices').click(function() {

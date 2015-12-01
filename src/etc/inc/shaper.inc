@@ -762,7 +762,9 @@ class altq_root_queue {
 		));
 
 		$section->addInput(new Form_StaticText(
+			'name',
 			'Name',
+			'text',
 			$this->GetQname()
 		));
 
@@ -1310,7 +1312,7 @@ class priq_queue {
 
 		$sform = new Form();
 
-		$section = new Form_Section(null);
+		$section = new Form_Section("");
 
 		$section->addInput(new Form_Checkbox(
 			'enabled',
@@ -1320,8 +1322,10 @@ class priq_queue {
 			'on'
 		));
 
-		$section->addInput(new Form_StaticText(
+		$section->addInput(new Form_Input(
+			'name',
 			'Name',
+			'text',
 			$this->GetQname()
 		))->setHelp('Enter the name of the queue here. Do not use spaces and limit the size to 15 characters.');
 
@@ -3755,7 +3759,7 @@ EOD;
 					$form .= "<option value=\"{$bwsidx}\"";
 
 					if ($bw['bwscale'] == $bwsidx) {
-						$form .= " selected=\"selected\"";
+						$form .= " selected";
 					}
 
 					$form .= ">{$bwscale}</option>";
@@ -3769,7 +3773,7 @@ EOD;
 				foreach ($schedules as $schd) {
 					$selected = "";
 					if ($bw['bwsched'] == $schd) {
-						$selected = "selected=\"selected\"";
+						$selected = "selected";
 					}
 
 					$form .= "<option value='{$schd}' {$selected}>{$schd}</option>";

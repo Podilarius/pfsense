@@ -62,8 +62,8 @@
 
 ##|+PRIV
 ##|*IDENT=page-services-dhcpserver
-##|*NAME=Services: DHCP server page
-##|*DESCR=Allow access to the 'Services: DHCP server' page.
+##|*NAME=Services: DHCP Server
+##|*DESCR=Allow access to the 'Services: DHCP Server' page.
 ##|*MATCH=services_dhcp.php*
 ##|-PRIV
 
@@ -1348,7 +1348,7 @@ if (!is_numeric($pool) && !($act == "newpool")) {
 }
 ?>
 
-<script>
+<script type="text/javascript">
 //<![CDATA[
 events.push(function(){
 

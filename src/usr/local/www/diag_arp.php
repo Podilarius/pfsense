@@ -63,7 +63,7 @@
 
 ##|+PRIV
 ##|*IDENT=page-diagnostics-arptable
-##|*NAME=Diagnostics: ARP Table page
+##|*NAME=Diagnostics: ARP Table
 ##|*DESCR=Allow access to the 'Diagnostics: ARP Table' page.
 ##|*MATCH=diag_arp.php*
 ##|-PRIV
@@ -372,7 +372,7 @@ $mac_man = load_mac_manufacturer_table();
 	</table>
 </div>
 
-<script>
+<script type="text/javascript>
 //<![CDATA[
 // Clear the "loading" div once the page has loaded"
 events.push(function(){

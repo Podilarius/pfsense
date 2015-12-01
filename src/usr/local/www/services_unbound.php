@@ -58,8 +58,8 @@
 */
 
 ##|+PRIV
-##|*IDENT=page-services-unbound
-##|*NAME=Services: DNS Resolver page
+##|*IDENT=page-services-dnsresolver
+##|*NAME=Services: DNS Resolver
 ##|*DESCR=Allow access to the 'Services: DNS Resolver' page.
 ##|*MATCH=services_unbound.php*
 ##|-PRIV
@@ -176,6 +176,7 @@ if ($_POST) {
 
 		if (!$input_errors) {
 			$a_unboundcfg['enable'] = isset($pconfig['enable']);
+			$a_unboundcfg['port'] = $pconfig['port'];
 			$a_unboundcfg['dnssec'] = isset($pconfig['dnssec']);
 			$a_unboundcfg['forwarding'] = isset($pconfig['forwarding']);
 			$a_unboundcfg['regdhcp'] = isset($pconfig['regdhcp']);
@@ -272,8 +273,9 @@ $section->addInput(new Form_Checkbox(
 $section->addInput(new Form_Input(
 	'port',
 	'Listen Port',
-	'text',
-	$pconfig['port']
+	'number',
+	$pconfig['port'],
+	['placeholder' => '53']
 ))->setHelp('The port used for responding to DNS queries. It should normally be left blank unless another service needs to bind to TCP/UDP port 53.');
 
 $activeiflist = build_if_list($pconfig['active_interface']);
@@ -358,7 +360,7 @@ $form->add($section);
 print($form);
 ?>
 
-<script>
+<script type="text/javascript">
 //<![CDATA[
 events.push(function(){
 
@@ -423,10 +425,10 @@ foreach ($a_hosts as $hostent):
 ?>
 				<tr>
 					<td>
-						<?=strtolower($hostent['host'])?>
+						<?=$hostent['host']?>
 					</td>
 					<td>
-						<?=strtolower($hostent['domain'])?>
+						<?=$hostent['domain']?>
 					</td>
 					<td>
 						<?=$hostent['ip']?>
@@ -446,10 +448,10 @@ foreach ($a_hosts as $hostent):
 ?>
 				<tr>
 					<td>
-						<?=strtolower($alias['host'])?>
+						<?=$alias['host']?>
 					</td>
 					<td>
-						<?=strtolower($alias['domain'])?>
+						<?=$alias['domain']?>
 					</td>
 					<td>
 						Alias for <?=$hostent['host'] ? $hostent['host'] . '.' . $hostent['domain'] : $hostent['domain']?>
@@ -499,7 +501,7 @@ foreach ($a_domainOverrides as $doment):
 ?>
 				<tr>
 					<td>
-						<?=strtolower($doment['domain'])?>&nbsp;
+						<?=$doment['domain']?>&nbsp;
 					</td>
 					<td>
 						<?=$doment['ip']?>&nbsp;

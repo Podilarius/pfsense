@@ -61,7 +61,7 @@
 
 ##|+PRIV
 ##|*IDENT=page-firewall-nat-portforward
-##|*NAME=Firewall: NAT: Port Forward page
+##|*NAME=Firewall: NAT: Port Forward
 ##|*DESCR=Allow access to the 'Firewall: NAT: Port Forward' page.
 ##|*MATCH=firewall_nat.php*
 ##|-PRIV
@@ -379,24 +379,22 @@ endforeach;
 			<i class="fa fa-trash icon-embed-btn"></i>
 			<?=gettext("Delete"); ?>
 		</button>
-		<button type="submit" id="order-store" name="order-store" class="btn btn-primary btn-sm" disabled="disabled" title="<?=gettext('Save rule order')?>">
+		<button type="submit" id="order-store" name="order-store" class="btn btn-primary btn-sm" disabled title="<?=gettext('Save rule order')?>">
 			<i class="fa fa-save icon-embed-btn"></i>
 			<?=gettext("Save")?>
 		</button>
 	</nav>
 </form>
 
-<script>
+<script type="text/javascript">
+//<![CDATA[
 events.push(function() {
-
-	stripe_table();
 
 	// Make rules sortable
 	$('table tbody.user-entries').sortable({
 		cursor: 'grabbing',
 		update: function(event, ui) {
 			$('#order-store').removeAttr('disabled');
-			stripe_table();
 		}
 	});
 
@@ -405,6 +403,7 @@ events.push(function() {
 	   $('[id^=frc]').prop('checked', true);
 	});
 });
+//]]>
 </script>
 <?php
 

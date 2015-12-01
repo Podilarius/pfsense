@@ -62,7 +62,7 @@
 
 ##|+PRIV
 ##|*IDENT=page-system-generalsetup
-##|*NAME=System: General Setup page
+##|*NAME=System: General Setup
 ##|*DESCR=Allow access to the 'System: General Setup' page.
 ##|*MATCH=system.php*
 ##|-PRIV
@@ -143,7 +143,7 @@ if ($_POST) {
 	} else {
 		unset($config['system']['webgui']['webguicss']);
 	}
-
+	
 	if ($_POST['webguifixedmenu']) {
 		$config['system']['webgui']['webguifixedmenu'] = $_POST['webguifixedmenu'];
 	} else {
@@ -290,10 +290,8 @@ if ($_POST) {
 				// Remove the route. Later calls will add the correct new route if needed.
 				if (is_ipaddrv4($olddnsservers[$dnscounter-1])) {
 					mwexec("/sbin/route delete " . escapeshellarg($olddnsservers[$dnscounter-1]));
-				} else {
-					if (is_ipaddrv6($olddnsservers[$dnscounter-1])) {
-						mwexec("/sbin/route delete -inet6 " . escapeshellarg($olddnsservers[$dnscounter-1]));
-					}
+				} else if (is_ipaddrv6($olddnsservers[$dnscounter-1])) {
+					mwexec("/sbin/route delete -inet6 " . escapeshellarg($olddnsservers[$dnscounter-1]));
 				}
 			}
 		}
@@ -477,14 +475,14 @@ $section->addInput(new Form_Select(
 	'Theme',
 	$pconfig['webguicss'],
 	$csslist
-))->setHelp("Choose an alternative css file (if installed) to change the appearance of the Web configurator. css files are located in /usr/local/www/bootstrap/css");
+))->setHelp("<span class=\"badge bg-danger\" title=\"This feature is in BETA\">BETA</span> Choose an alternative css file (if installed) to change the appearance of the Web configurator. css files are located in /usr/local/www/bootstrap/css");
 
 $section->addInput(new Form_Select(
 	'webguifixedmenu',
 	'Menu',
 	$pconfig['webguifixedmenu'],
 	["" => "Scrolls with page", "fixed" => "Fixed (Remains visible at top of page)"]
-));
+))->setHelp("<span class=\"badge bg-danger\" title=\"This feature is in BETA\">BETA</span>");
 
 $form->add($section);
 

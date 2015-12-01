@@ -56,6 +56,13 @@
 	pfSense_MODULE:	auth
 */
 
+##|+PRIV
+##|*IDENT=page-system-usermanager-settings-ldappicker
+##|*NAME=System: User Manager: Settings: LDAP Picker
+##|*DESCR=Allow access to the 'System: User Manager: Settings: LDAP Picker' page.
+##|*MATCH=system_usermanager_settings_ldapacpicker.php*
+##|-PRIV
+
 require("guiconfig.inc");
 require_once("auth.inc");
 
@@ -99,6 +106,7 @@ if ($_GET) {
 		</STYLE>
 	</head>
 <script type="text/javascript">
+//<![CDATA[
 function post_choices() {
 
 	var ous = <?php echo count($ous); ?>;
@@ -115,6 +123,7 @@ function post_choices() {
 	window.close();
 -->
 }
+//]]>
 </script>
 
 <body link="#0000CC" vlink="#0000CC" alink="#0000CC" >
@@ -133,7 +142,7 @@ function post_choices() {
 	if (is_array($ous)) {
 		foreach ($ous as $ou) {
 			if (in_array($ou, $authcfg['ldap_authcn'])) {
-				$CHECKED=" CHECKED";
+				$CHECKED=" checked";
 			} else {
 				$CHECKED="";
 			}

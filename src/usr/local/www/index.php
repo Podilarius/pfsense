@@ -62,7 +62,7 @@
 
 ##|+PRIV
 ##|*IDENT=page-system-login/logout
-##|*NAME=System: Login / Logout page / Dashboard
+##|*NAME=System: Login / Logout / Dashboard
 ##|*DESCR=Allow access to the 'System: Login / Logout' page and Dashboard.
 ##|*MATCH=index.php*
 ##|-PRIV
@@ -398,7 +398,8 @@ foreach ($widgets as $widgetname => $widgetconfig)
 <?php endforeach; ?>
 </div>
 
-<script>
+<script type="text/javascript">
+//<![CDATA[
 function updateWidgets(newWidget)
 {
 	var sequence = '';
@@ -482,6 +483,7 @@ events.push(function() {
 	});
 
 });
+//]]>
 </script>
 <?php
 //build list of javascript include files

@@ -180,12 +180,7 @@ EOF;
 		} else {
 			foreach ($active_interfaces as $ubif) {
 				if (is_ipaddr($ubif)) {
-					if (is_linklocal($ubif)) {
-						// until redmine #4062 is fixed, then remove this
-						continue;
-					} else {
-						$bindints .= "interface: $ubif\n";
-					}
+					$bindints .= "interface: $ubif\n";
 				} else {
 					$intip = get_interface_ip($ubif);
 					if (is_ipaddrv4($intip)) {
@@ -193,9 +188,7 @@ EOF;
 					}
 					$intip = get_interface_ipv6($ubif);
 					if (is_ipaddrv6($intip)) {
-						if (!is_linklocal($intip)) {  // skipping link local for the moment to not break people's configs: https://redmine.pfsense.org/issues/4062
-							$bindints .= "interface: $intip\n";
-						}
+						$bindints .= "interface: $intip\n";
 					}
 				}
 			}

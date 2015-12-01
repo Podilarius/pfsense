@@ -61,7 +61,7 @@
 
 ##|+PRIV
 ##|*IDENT=page-firewall-rules
-##|*NAME=Firewall: Rules page
+##|*NAME=Firewall: Rules
 ##|*DESCR=Allow access to the 'Firewall: Rules' page.
 ##|*MATCH=firewall_rules.php*
 ##|-PRIV
@@ -243,6 +243,21 @@ if (isset($_POST['del_x'])) {
 	}
 }
 
+$tab_array = array(array(gettext("Floating"), ("FloatingRules" == $if), "firewall_rules.php?if=FloatingRules"));
+
+foreach ($iflist as $ifent => $ifname)
+	$tab_array[] = array($ifname, ($ifent == $if), "firewall_rules.php?if={$ifent}");
+
+foreach ($tab_array as $dtab) {
+	if($dtab[1]) {
+		$bctab = $dtab[0];
+		break;
+	}
+}
+
+$pgtitle = array(gettext("Firewall"), gettext("Rules"), $bctab);
+$shortcut_section = "firewall";
+
 include("head.inc");
 $nrules = 0;
 
@@ -252,10 +267,7 @@ if ($savemsg)
 if (is_subsystem_dirty('filter'))
 	print_info_box_np(gettext("The firewall rule configuration has been changed.") . "<br />" . gettext("You must apply the changes in order for them to take effect."), "apply", "", true);
 
-$tab_array = array(array(gettext("Floating"), ("FloatingRules" == $if), "firewall_rules.php?if=FloatingRules"));
 
-foreach ($iflist as $ifent => $ifname)
-	$tab_array[] = array($ifname, ($ifent == $if), "firewall_rules.php?if={$ifent}");
 
 display_top_tabs($tab_array);
 
@@ -264,7 +276,7 @@ display_top_tabs($tab_array);
 	<div class="panel panel-default">
 		<div class="panel-heading"><?=gettext("Rules (Drag to change order)")?></div>
 		<div id="mainarea" class="table-responsive panel-body">
-			<table name="ruletable" class="table table-hover table-condensed">
+			<table name="ruletable" class="table table-hover table-striped table-condensed">
 				<thead>
 					<tr>
 						<th><!-- checkbox --></th>
@@ -366,7 +378,7 @@ for ($i = 0; isset($a_filter[$i]); $i++):
 			$iconfn = "times";
 			$title_text = gettext("traffic is blocked");
 		} else if ($filterent['type'] == "reject") {
-			$iconfn = "fire";
+			$iconfn = "hand-stop-o";
 			$title_text = gettext("traffic is rejected");
 		} else if ($filterent['type'] == "match") {
 			$iconfn = "filter";
@@ -667,7 +679,7 @@ for ($i = 0; isset($a_filter[$i]); $i++):
 			<i class="fa fa-trash icon-embed-btn"></i>
 			<?=gettext("Delete"); ?>
 		</button>
-		<button type="submit" id="order-store" name="order-store" class="btn btn-sm btn-primary" value="store changes" disabled="disabled" title="<?=gettext('Save rule order')?>">
+		<button type="submit" id="order-store" name="order-store" class="btn btn-sm btn-primary" value="store changes" disabled title="<?=gettext('Save rule order')?>">
 			<i class="fa fa-save icon-embed-btn"></i>
 			<?=gettext("Save")?>
 		</button>
@@ -682,7 +694,7 @@ for ($i = 0; isset($a_filter[$i]); $i++):
 			<dt><i class="fa fa-check"></i></dt>		<dd><?=gettext("Pass");?></dd>
 			<dt><i class="fa fa-filter"></i></dt>	<dd><?=gettext("Match");?></dd>
 			<dt><i class="fa fa-times"></i></dt>	<dd><?=gettext("Block");?></dd>
-			<dt><i class="fa fa-fire"></i></dt>		<dd><?=gettext("Reject");?></dd>
+			<dt><i class="fa fa-hand-stop-o"></i></dt>		<dd><?=gettext("Reject");?></dd>
 			<dt><i class="fa fa-tasks"></i></dt>	<dd> <?=gettext("Log");?></dd>
 			<dt><i class="fa fa-cog"></i></dt>		<dd> <?=gettext("Advanced filter");?></dd>
 		</dl>
@@ -704,17 +716,15 @@ for ($i = 0; isset($a_filter[$i]); $i++):
 	</div>
 </div>
 
-<script>
+<script type="text/javascript">
+//<![CDATA[
 events.push(function() {
-
-	stripe_table();
 
 	// Make rules sortable
 	$('table tbody.user-entries').sortable({
 		cursor: 'grabbing',
 		update: function(event, ui) {
 			$('#order-store').removeAttr('disabled');
-			stripe_table();
 		}
 	});
 
@@ -723,6 +733,7 @@ events.push(function() {
 	   $('[id^=frc]').prop('checked', true);
 	});
 });
+//]]>
 </script>
 
 <?php include("foot.inc");?>

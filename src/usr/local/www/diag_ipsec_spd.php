@@ -63,7 +63,7 @@
 
 ##|+PRIV
 ##|*IDENT=page-status-ipsec-spd
-##|*NAME=Status: IPsec: SPD page
+##|*NAME=Status: IPsec: SPD
 ##|*DESCR=Allow access to the 'Status: IPsec: SPD' page.
 ##|*MATCH=diag_ipsec_spd.php*
 ##|-PRIV
@@ -85,7 +85,6 @@ $tab_array[0] = array(gettext("Overview"), false, "diag_ipsec.php");
 $tab_array[1] = array(gettext("Leases"), false, "diag_ipsec_leases.php");
 $tab_array[2] = array(gettext("SAD"), false, "diag_ipsec_sad.php");
 $tab_array[3] = array(gettext("SPD"), true, "diag_ipsec_spd.php");
-$tab_array[4] = array(gettext("Logs"), false, "diag_logs.php?logfile=ipsec");
 display_top_tabs($tab_array);
 
 if (count($spd)) {
