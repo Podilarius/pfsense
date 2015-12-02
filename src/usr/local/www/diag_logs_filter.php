@@ -205,12 +205,9 @@ if ($filterfieldsarray['interface'] == "All")
 	$interface = "";
 
 if (!isset($config['syslog']['rawfilter'])) { // Advanced log filter form
-	$form = new Form(new Form_Button(
-		'filterlogentries_submit',
-		'Filter'
-	));
+	$form = new Form(false);
 
-	$section = new Form_Section('Advanced Log Filter');
+	$section = new Form_Section('Advanced Log Filter', 'adv-filter-panel', true);
 
 	$group = new Form_Group('');
 
@@ -299,6 +296,11 @@ if (!isset($config['syslog']['rawfilter'])) { // Advanced log filter form
 		'text',
 		$filterfieldsarray['tcpflags']
 	))->setHelp('Protocol Flags');
+
+	$group->add(new Form_Button(
+		'filterlogentries_submit',
+		'Apply Filter'
+	));
 }
 else { // Simple log filter form
 	$form = new Form(new Form_Button(
@@ -512,21 +514,14 @@ print_info_box('<a href="https://doc.pfsense.org/index.php/What_are_TCP_Flags%3F
 <!-- AJAXY STUFF -->
 <script type="text/javascript">
 //<![CDATA[
-	function outputrule(req) {
-		alert(req.content);
-	}
-//]]>
-</script>
-
-<?php include("foot.inc");
-?>
-<script type="text/javascript">
-//<![CDATA[
+function outputrule(req) {
+	alert(req.content);
+}
 
 function resolve_with_ajax(ip_to_resolve) {
 	var url = "/diag_logs_filter.php";
 
-	jQuery.ajax(
+	$.ajax(
 		url,
 		{
 			method: 'post',
@@ -540,7 +535,7 @@ function resolve_with_ajax(ip_to_resolve) {
 }
 
 function resolve_ip_callback(transport) {
-	var response = jQuery.parseJSON(transport.responseText);
+	var response = $.parseJSON(transport.responseText);
 	var resolve_class = htmlspecialchars(response.resolve_ip.replace(/[.:]/g, '-'));
 	var resolve_text = '<small><br />' + htmlspecialchars(response.resolve_text) + '<\/small>';
 
@@ -591,6 +586,10 @@ if (typeof getURL == 'undefined') {
 
 events.push(function(){
     $('.fa').tooltip();
+
 });
 //]]>
 </script>
+
+<?php include("foot.inc");
+?>

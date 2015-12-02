@@ -77,6 +77,11 @@ if (isset($config['system']['webgui']['webguicss'])) {
 	}
 }
 
+// set default colmns to two if unset
+if(!isset($config['system']['webgui']['dashboardcolumns'])) {
+	$config['system']['webgui']['dashboardcolumns'] = 2;
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -382,7 +387,14 @@ $menuclass = "static";
 if (isset($config['system']['webgui']['webguifixedmenu'])) {
 	$menuclass = "fixed";
 }
+
+$numColumns = $config['system']['webgui']['dashboardcolumns'];
+
+if (($pagename === "index.php") && ($numColumns > 2)) {
+	$columnsContainer = 'style="width: ' . 585*$numColumns . 'px"';
+}
 ?>
+<body id="<?=$numColumns?>">
 <nav id="topmenu" class="navbar navbar-<?=$menuclass?>-top navbar-inverse">
 	<div class="container">
 		<div class="navbar-header">
@@ -434,7 +446,7 @@ if (isset($config['system']['webgui']['webguifixedmenu'])) {
 	</div>
 </nav>
 
-<div class="container <?=$menuclass?>">
+<div class="container <?=$menuclass?>" <?=$columnsContainer?>>
 	<header class="header">
 
 <?php
@@ -514,7 +526,7 @@ if ($config['remote_managed_pages']['item']) {
 if (are_notices_pending()):?>
 
 <div id="notices" class="modal fade" role="dialog">
-	<div class="mopdal-dialog">
+	<div class="modal-dialog">
 		<div class="modal-content">
 			<div class="modal-header">
 				<button type="button" class="close" data-dismiss="modal" aria-label="Close">

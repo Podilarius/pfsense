@@ -65,6 +65,8 @@ require("guiconfig.inc");
 require_once("openvpn.inc");
 require_once("pkg-utils.inc");
 
+global $openvpn_topologies;
+
 if (!is_array($config['openvpn']['openvpn-server'])) {
 	$config['openvpn']['openvpn-server'] = array();
 }
@@ -201,7 +203,7 @@ if ($_GET['act'] == "edit") {
 
 		$pconfig['dynamic_ip'] = $a_server[$id]['dynamic_ip'];
 		$pconfig['pool_enable'] = $a_server[$id]['pool_enable'];
-		$pconfig['topology_subnet'] = $a_server[$id]['topology_subnet'];
+		$pconfig['topology'] = $a_server[$id]['topology'];
 
 		$pconfig['serverbridge_dhcp'] = $a_server[$id]['serverbridge_dhcp'];
 		$pconfig['serverbridge_interface'] = $a_server[$id]['serverbridge_interface'];
@@ -411,6 +413,10 @@ if ($_POST) {
 		$input_errors[] = gettext("The field 'Concurrent connections' must be numeric.");
 	}
 
+	if (!array_key_exists($pconfig['topology'], $openvpn_topologies)) {
+		$input_errors[] = gettext("The field 'Topology' contains an invalid selection");
+	}
+
 	/* If we are not in shared key mode, then we need the CA/Cert. */
 	if ($pconfig['mode'] != "p2p_shared_key") {
 		$reqdfields = explode(" ", "caref certref");
@@ -509,7 +515,7 @@ if ($_POST) {
 
 		$server['dynamic_ip'] = $pconfig['dynamic_ip'];
 		$server['pool_enable'] = $pconfig['pool_enable'];
-		$server['topology_subnet'] = $pconfig['topology_subnet'];
+		$server['topology'] = $pconfig['topology'];
 
 		$server['serverbridge_dhcp'] = $pconfig['serverbridge_dhcp'];
 		$server['serverbridge_interface'] = $pconfig['serverbridge_interface'];
@@ -965,14 +971,14 @@ if($act=="new" || $act=="edit") :
 		$pconfig['pool_enable']
 	));
 
-	$section->addInput(new Form_Checkbox(
-		'topology_subnet',
+	$section->addInput(new Form_Select(
+		'topology',
 		'Topology',
-		'Allocate only one IP per client (topology subnet), rather than an isolated subnet per client (topology net30).',
-		$pconfig['topology_subnet']
-	))->setHelp('Relevant when supplying a virtual adapter IP address to clients when using tun mode on IPv4.").' . '<br />' .
-				'Some clients may require this even for IPv6, such as OpenVPN Connect (iOS/Android). ' .
-				'Others may break if it is present, such as older versions of OpenVPN or clients such as Yealink phones.');
+		$pconfig['topology'],
+		$openvpn_topologies
+	))->setHelp('Specifies the method used to supply a virtual adapter IP address to clients when using tun mode on IPv4.").' . '<br />' .
+				'Some clients may require this be set to "subnet" even for IPv6, such as OpenVPN Connect (iOS/Android). ' .
+				'Older versions of OpenVPN (before 2.0.9) or clients such as Yealink phones may require "net30".');
 
 	$section->addInput(new Form_Checkbox(
 		'dns_domain_enable',
@@ -1241,6 +1247,7 @@ events.push(function(){
 				hideInput('strictusercn', true);
 				hideCheckbox('autokey_enable', true);
 				hideInput('shared_key', false);
+				hideInput('topology', false);
 				break;
 			case "server_tls_user":
 				hideInput('tls', false);
@@ -1250,6 +1257,7 @@ events.push(function(){
 				hideInput('strictusercn', false);
 				hideCheckbox('autokey_enable', true);
 				hideInput('shared_key', true);
+				hideInput('topology', false);
 				break;
 			case "p2p_shared_key":
 				hideInput('tls', true);
@@ -1264,6 +1272,7 @@ events.push(function(){
 				hideInput('strictusercn', true);
 				hideCheckbox('autokey_enable', true);
 				hideInput('shared_key', false);
+				hideInput('topology', true);
 				break;
 		}
 
@@ -1413,11 +1422,16 @@ events.push(function(){
 		mvalue = $('#mode').val();
 
 		switch(mvalue) {
-			case "p2p_tls":
 			case "p2p_shared_key":
+				sharedkey = true;
+				p2p = true;
+				break;
+			case "p2p_tls":
+				sharedkey = false;
 				p2p = true;
 				break;
 			default:
+				sharedkey = false;
 				p2p = false;
 				break;
 		}
@@ -1432,7 +1446,15 @@ events.push(function(){
 				hideInput('serverbridge_interface', true);
 				hideInput('serverbridge_dhcp_start', true);
 				hideInput('serverbridge_dhcp_end', true);
-				hideInput('topology_subnet', false);
+				if (sharedkey) {
+					hideInput('local_network', true);
+					hideInput('local_networkv6', true);
+					hideInput('topology', true);
+				} else {
+					hideInput('local_network', false);
+					hideInput('local_networkv6', false);
+					hideInput('topology', false);
+				}
 				break;
 
 			case "tap":
@@ -1445,7 +1467,7 @@ events.push(function(){
 					hideInput('serverbridge_interface', false);
 					hideInput('serverbridge_dhcp_start', false);
 					hideInput('serverbridge_dhcp_end', false);
-					hideInput('topology_subnet', false);
+					hideInput('topology', true);
 
 					if( $('#serverbridge_dhcp').prop('checked')) {
 						disableInput('serverbridge_interface', false);
@@ -1457,7 +1479,7 @@ events.push(function(){
 						disableInput('serverbridge_dhcp_end', true);
 					}
 				} else {
-					hideInput('topology_subnet', true);
+					hideInput('topology', true);
 					disableInput('serverbridge_dhcp', true);
 					disableInput('serverbridge_interface', true);
 					disableInput('serverbridge_dhcp_start', true);

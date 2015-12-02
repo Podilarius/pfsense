@@ -119,6 +119,13 @@ $openvpn_compression_modes = array(
 	'adaptive' => gettext("Enabled with Adaptive Compression"),
 	'yes' => gettext("Enabled without Adaptive Compression"));
 
+global $openvpn_topologies;
+$openvpn_topologies = array(
+	'subnet' => gettext("Subnet -- One IP address per client in a common subnet"),
+	'net30' => gettext("net30 -- Isolated /30 network per client")
+//	'p2p => gettext("Peer to Peer -- One IP address per client peer-to-peer style. Does not work on Windows.")
+);
+
 function openvpn_build_mode_list() {
 	global $openvpn_server_modes;
 
@@ -1006,8 +1013,11 @@ function openvpn_reconfigure($mode, $settings) {
 		$conf .= "float\n";
 	}
 
-	if ($settings['topology_subnet']) {
-		$conf .= "topology subnet\n";
+	if (in_array($settings['mode'], $openvpn_tls_server_modes)) {
+		if (empty($settings['topology'])) {
+			$settings['topology'] = "subnet";
+		}
+		$conf .= "topology {$settings['topology']}\n";
 	}
 
 	// New client features
@@ -1139,23 +1149,13 @@ function openvpn_delete($mode, & $settings) {
 	@array_map('unlink', glob("{$g['varetc_path']}/openvpn/{$mode_id}.*"));
 }
 
-function openvpn_cleanup_csc($common_name) {
-	global $g, $config;
-	if (empty($common_name)) {
-		return;
-	}
-	/* TODO: Make this check the server and not use a glob */
-	unlink_if_exists("{$g['varetc_path']}/openvpn-csc/*/" . basename($common_name));
-	return;
-}
-
 function openvpn_resync_csc(& $settings) {
 	global $g, $config, $openvpn_tls_server_modes;
 
 	$csc_base_path = "{$g['varetc_path']}/openvpn-csc";
 
 	if (isset($settings['disable'])) {
-		openvpn_cleanup_csc($settings['common_name']);
+		openvpn_delete_csc($settings);
 		return;
 	}
 	openvpn_create_dirs();
@@ -1209,7 +1209,7 @@ function openvpn_resync_csc(& $settings) {
 					$csc_path = "{$csc_base_path}/server{$serversettings['vpnid']}/" . basename($settings['common_name']);
 					$csc_conf = $conf;
 
-					if (!empty($serversettings['tunnel_network'])) {
+					if (!empty($serversettings['tunnel_network']) && !empty($settings['tunnel_network'])) {
 						list($ip, $mask) = explode('/', $settings['tunnel_network']);
 						if (($serversettings['dev_mode'] == 'tap') || ($serversettings['topology'] == "subnet")) {
 							$csc_conf .= "ifconfig-push {$ip} " . gen_subnet_mask($mask) . "\n";
