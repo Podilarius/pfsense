@@ -531,7 +531,7 @@ if ($_POST) {
 }
 
 function build_srctype_list() {
-	global $pconfig, $ifdisp;
+	global $pconfig, $ifdisp, $config;
 
 	$list = array('any' => 'Any', 'single' => 'Single host or alias', 'network' => 'Network');
 
@@ -551,6 +551,26 @@ function build_srctype_list() {
 	}
 
 	return($list);
+}
+
+function srctype_selected() {
+	global $pconfig, $config;
+
+	$selected = "";
+
+	$sel = is_specialnet($pconfig['src']);
+	if (!$sel) {
+		if ($pconfig['srcmask'] == 32) {
+			$selected = 'single';
+		} else {
+			$selected = 'network';
+		}
+	} else {
+		$selected = $pconfig['src'];
+	}
+
+
+	return($selected);
 }
 
 function build_dsttype_list() {
@@ -599,33 +619,26 @@ function build_dsttype_list() {
 }
 
 function dsttype_selected() {
-	global $pconfig;
+	global $pconfig, $config;
 
-	$sel = is_specialnet($pconfig['dst']);
+	$selected = "";
 
-	if (!$sel) {
-		if ($pconfig['dstmask'] == 32)
-			return('single');
-
-		return('network');
+	if (is_array($config['virtualip']['vip'])) {
+		$selected = $pconfig['dst'];
+	} else {
+		$sel = is_specialnet($pconfig['dst']);
+		if (!$sel) {
+			if ($pconfig['dstmask'] == 32) {
+				$selected = 'single';
+			} else {
+				$selected = 'network';
+			}
+		} else {
+			$selected = $pconfig['dst'];
+		}
 	}
 
-	return($pconfig['dst']);
-}
-
-function srctype_selected() {
-	global $pconfig;
-
-	$sel = is_specialnet($pconfig['src']);
-
-	if (!$sel) {
-		if ($pconfig['srcmask'] == 32)
-			return('single');
-
-		return('network');
-	}
-
-	return($pconfig['src']);
+	return($selected);
 }
 
 $closehead = false;
@@ -693,7 +706,20 @@ $section->addInput(new Form_Select(
 	array_combine(explode(" ", strtolower($protocols)), explode(" ", $protocols))
 ))->setHelp('Choose which protocol this rule should match. In most cases "TCP" is specified.');
 
+$btnsrcadv = new Form_Button(
+	'srcadv',
+	'Advanced'
+);
+
+$btnsrcadv->removeClass('btn-primary')->addClass('btn-default');
+
+$section->addInput(new Form_StaticText(
+	'Source',
+	$btnsrcadv
+));
+
 $group = new Form_Group('Source');
+$group->addClass('srcadv');
 
 $group->add(new Form_Checkbox(
 	'srcnot',
@@ -1172,6 +1198,12 @@ events.push(function(){
 		}
 	}
 
+	function hideSource(hide) {
+		hideClass('srcadv', hide);
+		hideClass('srcportrange', hide || !portsenabled);
+		hideInput('srcadv', !hide);
+	}
+
 	// ---------- "onclick" functions ---------------------------------------------------------------------------------
 	$('#srcbeginport').on('change', function() {
 		src_rep_change();
@@ -1219,14 +1251,19 @@ events.push(function(){
 		typesel_change();
 	});
 
+    $("#srcadv").click(function() {
+        hideSource(false);
+    });
 	// ---------- On initial page load --------------------------------------------------------------------------------
 
+	$("#srcadv").prop('type' ,'button');
 	ext_change();
 	dst_change($('#interface').val(),'<?=htmlspecialchars($pconfig['interface'])?>','<?=htmlspecialchars($pconfig['dst'])?>');
 	iface_old = $('#interface').val();
 	typesel_change();
 	proto_change();
 	nordr_change();
+	hideSource(true);
 
 	// --------- Autocomplete -----------------------------------------------------------------------------------------
 	var addressarray = <?= json_encode(get_alias_list(array("host", "network", "openvpn", "urltable"))) ?>;

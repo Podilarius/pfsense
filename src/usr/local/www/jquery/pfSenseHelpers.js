@@ -288,8 +288,7 @@ function add_row() {
 	var lastRepeatableGroup = $('.repeatable:last');
 
 	// Clone it
-	var newGroup = lastRepeatableGroup.clone(true);
-
+	var newGroup = lastRepeatableGroup.clone();
 	// Increment the suffix number for each input element in the new group
 	$(newGroup).find('input').each(function() {
 		$(this).prop("id", bumpStringInt(this.id));
@@ -332,9 +331,16 @@ function add_row() {
 
 	checkLastRow();
 
-	$('[id^=address]').autocomplete({
-		source: addressarray
-	});
+	// Autocomplete
+	if ( typeof addressarray !== 'undefined') {
+		$('[id^=address]').each(function() {
+			if(this.id.substring(0, 8) != "address_") {
+				$(this).autocomplete({
+					source: addressarray
+				});
+			}
+		});
+	}
 }
 
 // These are action buttons, not submit buttons
