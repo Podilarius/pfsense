@@ -26,6 +26,10 @@
 	ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 	POSSIBILITY OF SUCH DAMAGE.
 */
+define(COLLAPSIBLE, 0x08);
+define(SEC_CLOSED, 0x04);
+define(SEC_OPEN, 0x00);
+
 class Form_Section extends Form_Element
 {
 	protected $_tagName = 'div';
@@ -37,15 +41,15 @@ class Form_Section extends Form_Element
 	);
 	protected $_title;
 	protected $_groups = array();
-	protected $_collapsable;
+	protected $_collapsible;
 
-	public function __construct($title, $id = "", $collapsable = false)
+	public function __construct($title, $id = "", $collapsible = 0)
 	{
 		if (!empty($id)) {
 			$this->_attributes['id'] = $id;
 		}
 		$this->_title = $title;
-		$this->_collapsable = $collapsable;
+		$this->_collapsible = $collapsible;
 	}
 
 	public function add(Form_Group $group)
@@ -75,13 +79,18 @@ class Form_Section extends Form_Element
 		$hdricon = "";
 		$bodyclass = '<div class="panel-body">';
 
-		if ($this->_collapsable) {
+		if ($this->_collapsible & COLLAPSIBLE) {
 			$hdricon = '<span class="widget-heading-icon">' .
 				'<a data-toggle="collapse" href="#' . $this->_attributes['id'] . ' .panel-body">' .
 					'<i class="fa fa-plus-circle"></i>' .
 				'</a>' .
 			'</span>';
-			$bodyclass = '<div class="panel-body collapse in">';
+			$bodyclass = '<div class="panel-body collapse ';
+			if (($this->_collapsible & SEC_CLOSED)) {
+				$bodyclass .= 'out">';
+			} else {
+				$bodyclass .= 'in">';
+			}
 		}
 
 		return <<<EOT

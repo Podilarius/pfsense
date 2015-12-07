@@ -574,10 +574,10 @@ function build_dsttype_list() {
 
 	if (is_array($config['virtualip']['vip'])) {
 		foreach ($config['virtualip']['vip'] as $sn) {
-			if (isset($sn['noexpand']))
-				continue;
-
 			if ($sn['mode'] == "proxyarp" && $sn['type'] == "network") {
+				if (isset($sn['noexpand'])) {
+					continue;
+				}
 				$start = ip2long32(gen_subnet($sn['subnet'], $sn['subnet_bits']));
 				$end = ip2long32(gen_subnet_max($sn['subnet'], $sn['subnet_bits']));
 				$len = $end - $start;
@@ -588,6 +588,8 @@ function build_dsttype_list() {
 					$list[$snip] = $snip . ' (' . $sn['descr'] . ')';
 				}
 
+				$list[$sn['subnet']] = $sn['subnet'] . ' (' . $sn['descr'] . ')';
+			} else {
 				$list[$sn['subnet']] = $sn['subnet'] . ' (' . $sn['descr'] . ')';
 			}
 		}
@@ -933,14 +935,14 @@ if ($has_created_time || $has_updated_time) {
 	if ($has_created_time) {
 		$section->addInput(new Form_StaticText(
 			'Created',
-			date(gettext("n/j/y H:i:s"), $a_nat[$id]['created']['time']) . gettext("by") . $a_nat[$id]['created']['username']
+			date(gettext("n/j/y H:i:s"), $a_nat[$id]['created']['time']) . gettext(" by ") . $a_nat[$id]['created']['username']
 		));
 	}
 
 	if ($has_updated_time) {
 		$section->addInput(new Form_StaticText(
 			'Updated',
-			date(gettext("n/j/y H:i:s"), $a_nat[$id]['updated']['time']) . gettext("by") . $a_nat[$id]['updated']['username']
+			date(gettext("n/j/y H:i:s"), $a_nat[$id]['updated']['time']) . gettext(" by ") . $a_nat[$id]['updated']['username']
 		));
 	}
 

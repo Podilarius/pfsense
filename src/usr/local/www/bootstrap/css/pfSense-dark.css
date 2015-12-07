@@ -2,7 +2,7 @@
 
 body {
     background-color: #212121;
-    color: #e0e0e0;
+    color: #ffffff;
 }
 
 body.no-menu {
@@ -303,6 +303,10 @@ a.list-group-item .list-group-item-heading, .list-group-item .list-group-item-he
 .icon-success
 {
     color: #5CB85C;
+}
+
+.icon-warning {
+    color: #FDD835;
 }
 
 .icon-primary

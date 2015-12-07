@@ -1,5 +1,6 @@
 @import url("/bootstrap/css/bootstrap.min.css");
 @import url("/bootstrap/glyphicons/glyphicons-halflings.css");
+@import url("/bootstrap/fonts/roboto.css");
 
 html {
     position: relative;
@@ -9,6 +10,7 @@ html {
 body {
     margin-bottom: 80px;
     background-color: #F5F5F5;
+    font-family: 'Roboto', sans-serif;
 }
 
 body.no-menu #jumbotron {
@@ -426,6 +428,18 @@ footer a {
     background-color: #B71C1C;
 }
 
+.progress-bar.progress-bar-success {
+    background-color: #5cb85c;
+}
+
+.progress-bar.progress-bar-warning {
+    background-color: #f0ad4e;
+}
+
+.progress-bar.progress-bar-danger {
+    background-color: #B71C1C;
+}
+
 .panel-body.collapse.in {
     overflow-x: auto;
 }
@@ -449,6 +463,14 @@ footer a {
 .icon-primary
 {
     color: #337AB7;
+}
+
+.icon-warning {
+    color: #FDD835;
+}
+
+.text-warning {
+    color: #F57F17;
 }
 
 .btn-success {
@@ -548,7 +570,7 @@ textarea
     -o-tab-size: 4;
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 1199px) {
     .nav>li>a {
         padding: 14px 9px 10px 9px;
     }

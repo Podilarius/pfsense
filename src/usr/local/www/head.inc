@@ -88,8 +88,8 @@ if(!isset($config['system']['webgui']['dashboardcolumns'])) {
 <head>
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="<?=$cssfile?>" />
-	<link rel="stylesheet" href="font-awesome/css/font-awesome.min.css">
-	<link rel="stylesheet" href="sortable/sortable-theme-bootstrap.css">
+	<link rel="stylesheet" href="/font-awesome/css/font-awesome.min.css">
+	<link rel="stylesheet" href="/sortable/sortable-theme-bootstrap.css">
 	<title><?=$tabtitle?></title>
 	<script type="text/javascript">
 	//<![CDATA[
@@ -391,7 +391,7 @@ if (isset($config['system']['webgui']['webguifixedmenu'])) {
 $numColumns = $config['system']['webgui']['dashboardcolumns'];
 
 if (($pagename === "index.php") && ($numColumns > 2)) {
-	$columnsContainer = 'style="width: ' . 585*$numColumns . 'px"';
+	$columnsContainer = 'style="max-width: ' . 585*$numColumns . 'px;width: 100%"';
 }
 ?>
 <body id="<?=$numColumns?>">

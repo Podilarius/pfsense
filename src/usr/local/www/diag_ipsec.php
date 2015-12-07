@@ -128,7 +128,7 @@ display_top_tabs($tab_array);
 ?>
 
 <div class="panel panel-default">
-	<div class="panel-heading">IPSec status</div>
+	<div class="panel-heading">IPsec status</div>
 	<div class="panel-body table responsive">
 		<table class="table table-striped table-condensed table-hover sortable-theme-bootstrap" data-sortable>
 			<thead>
@@ -287,9 +287,6 @@ if (is_array($status)) {
 						<a href="diag_ipsec.php?act=ikedisconnect&amp;ikeid=<?=$con_id; ?>" class="btn btn-xs btn-danger" data-toggle="tooltip" title="Disconnect VPN">
 							<?=gettext("Disconnect")?>
 						</a><br />
-						<a href="diag_ipsec.php?act=ikedisconnect&amp;ikeid=<?=$con_id; ?>&amp;ikesaid=<?=$ikesa['uniqueid']; ?>" class="btn btn-xs btn-warning" data-toggle="tooltip" title="Disconnect VPN connection">
-							<?=gettext("Disconnect")?>
-						</a>
 <?php
 		}
 ?>

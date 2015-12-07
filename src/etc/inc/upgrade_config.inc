@@ -3841,6 +3841,7 @@ function upgrade_118_to_119() {
 }
 
 function upgrade_119_to_120() {
+	require_once("ipsec.inc");
 	global $config, $ipsec_log_cats;
 
 	if (!is_array($config['ipsec'])) {
@@ -4113,6 +4114,9 @@ function upgrade_128_to_129() {
 	foreach ($config['sysctl']['item'] as $idx => $sysctl) {
 		if ($sysctl['tunable'] == "net.inet.ip.fastforwarding") {
 			unset($config['sysctl']['item'][$idx]);
+		}
+		if ($sysctl['tunable'] == "net.inet.ipsec.debug") {
+			$config['sysctl']['item'][$idx]['value'] = "0";
 		}
 	}
 

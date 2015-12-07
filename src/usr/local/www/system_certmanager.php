@@ -953,24 +953,33 @@ print $form;
 
 } else if ($act == "csr" || (($_POST['save'] == gettext("Update")) && $input_errors)) {
 	$form = new Form(new Form_Button(
-		'submit',
+		'save',
 		'Update'
 	));
 
 	$section = new Form_Section("Complete signing request for " . $pconfig['descr']);
+
+	$section->addInput(new Form_Input(
+		'descr',
+		'Descriptive name',
+		'text',
+		$pconfig['descr']
+	));
 
 	$section->addInput(new Form_Textarea(
 		'csr',
 		'Signing request data',
 		$pconfig['csr']
 	))->setReadonly()
+	  ->setWidth(7)
 	  ->setHelp('Copy the certificate signing data from here and forward it to your certificate authority for signing.');
 
 	$section->addInput(new Form_Textarea(
 		'cert',
 		'Final certificate data',
 		$pconfig['cert']
-	))->setHelp('Paste the certificate received from your certificate authority here.');
+	))->setWidth(7)
+	  ->setHelp('Paste the certificate received from your certificate authority here.');
 
 	 if (isset($id) && $a_cert[$id]) {
 		 $section->addInput(new Form_Input(
