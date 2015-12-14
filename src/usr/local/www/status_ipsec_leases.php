@@ -1,12 +1,9 @@
 <?php
 /*
-	halt.php
+	status_ipsec_leases.php
 */
 /* ====================================================================
  *  Copyright (c)  2004-2015  Electric Sheep Fencing, LLC. All rights reserved.
- *
- *  Some or all of this file is based on the m0n0wall project which is
- *  Copyright (c)  2004 Manuel Kasper (BSD 2 clause)
  *
  *  Redistribution and use in source and binary forms, with or without modification,
  *  are permitted provided that the following conditions are met:
@@ -55,69 +52,112 @@
  *  ====================================================================
  *
  */
+
 /*
-	pfSense_MODULE: header
+	pfSense_BUILDER_BINARIES:	/usr/local/sbin/ipsec
+	pfSense_MODULE: ipsec
 */
 
 ##|+PRIV
-##|*IDENT=page-diagnostics-haltsystem
-##|*NAME=Diagnostics: Halt system
-##|*DESCR=Allow access to the 'Diagnostics: Halt system' page.
-##|*MATCH=halt.php*
+##|*IDENT=page-status-ipsec-leases
+##|*NAME=Status: IPsec: Leases
+##|*DESCR=Allow access to the 'Status: IPsec: Leases' page.
+##|*MATCH=status_ipsec_leases.php*
 ##|-PRIV
 
-// Set DEBUG to true to prevent the system_halt() function from being called
-define("DEBUG", false);
+define(DEBUG, true); // Force dummy data for testing. Setting up a pFSense box to get real data is far too hard!
 
 require("guiconfig.inc");
-require("functions.inc");
-require("captiveportal.inc");
+require("ipsec.inc");
 
-if ($_POST['save'] == 'No') {
-	header("Location: index.php");
-	exit;
-}
+$pgtitle = array(gettext("Status"), gettext("IPsec"), gettext("Leases"));
+$shortcut_section = "ipsec";
+include("head.inc");
 
-$pgtitle = array(gettext("Diagnostics"), gettext("Halt system"));
-include('head.inc');
+$mobile = ipsec_dump_mobile();
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+$tab_array = array();
+$tab_array[] = array(gettext("Overview"), false, "status_ipsec.php");
+$tab_array[] = array(gettext("Leases"), true, "status_ipsec_leases.php");
+$tab_array[] = array(gettext("SAD"), false, "status_ipsec_sad.php");
+$tab_array[] = array(gettext("SPD"), false, "status_ipsec_spd.php");
+display_top_tabs($tab_array);
+
+if (isset($mobile['pool']) && is_array($mobile['pool'])) {
 ?>
-	<meta http-equiv="refresh" content="70;url=/">
-	<div class="alert alert-success" role="alert">
-		<?=gettext("The system is halting now. This may take one minute or so.")?>
-	</div>
+	<div class="table-responsive">
+		<table class="table table-striped table-condensed table-hover sortable-theme-bootstrap" data-sortable>
+			<thead>
+				<tr>
+					<th><?=gettext("Pool")?></th>
+					<th><?=gettext("Usage")?></th>
+					<th><?=gettext("Online")?></th>
+					<th><?=gettext("ID")?></th>
+					<th><?=gettext("Host")?></th>
+					<th><?=gettext("Status")?></th>
+				</tr>
+			</thead>
+			<tbody>
+<?php
+			foreach ($mobile['pool'] as $pool) {
+				// The first row of each pool includes the pool information
+?>
+				<tr>
+					<td>
+						<?=$pool['name']?>
+					</td>
+					<td>
+						<?=$pool['usage']?>
+					</td>
+					<td>
+						<?=$pool['online']?>
+					</td>
 
 <?php
-	if (DEBUG) {
-	   print("Not actually halting (DEBUG is set true)<br>");
-	}
-	else {
-		print('<pre>');
-		system_halt();
-		print('</pre>');
-	}
-} else {
+				$leaserow = true;
+				if (is_array($pool['lease']) && count($pool['lease']) > 0) {
+					foreach ($pool['lease'] as $lease) {
+						if (!$leaserow) {
+							// On subsequent rows the first three columns are blank
 ?>
+				<tr>
+					<td></td>
+					<td></td>
+					<td></td>
+<?php
+						}
+						$leaserow = false;
+?>
+					<td>
+						<?=htmlspecialchars($lease['id'])?>
+					</td>
+					<td>
+						<?=htmlspecialchars($lease['host'])?>
+					</td>
+					<td>
+						<?=htmlspecialchars($lease['status'])?>
+					</td>
+				</tr>
+<?php
 
-<div class="panel panel-default">
-	<div class="panel-heading">
-		<h2 class="panel-title">Are you sure you want to halt the system?</h2>
+					}
+				}
+				else {
+?>
+					<td colspan="3" class="warning"><?=gettext('No leases from this pool yet.')?></td>
+				</tr>
+<?php
+				}
+			}
+?>
+			</tbody>
+		</table>
 	</div>
-	<div class="panel-body">
-		<div class="content">
-			<p>Click "Halt" to halt the system immediately, or "No" to go to the system dashboard. (There will be a brief delay before the dashboard appears.)</p>
-			<form action="halt.php" method="post">
-				<input type="submit" class="btn btn-danger pull-center" name="save" value="Halt">
-				<a href="/" class="btn btn-default">No</a>
-			</form>
-		</div>
-	</div>
-</div>
-
-
-
 <?php
 }
+else
+	print_info_box(gettext('No IPsec pools.'));
+
+print_info_box(gettext('You can configure your IPsec subsystem by clicking ') . '<a href="vpn_ipsec.php">' . gettext("here.") . '</a>');
 
 include("foot.inc");

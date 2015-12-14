@@ -1,9 +1,12 @@
 <?php
 /*
-	diag_ipsec_leases.php
+	status_ipsec_spd.php
 */
 /* ====================================================================
  *  Copyright (c)  2004-2015  Electric Sheep Fencing, LLC. All rights reserved.
+ *
+ *  Some or all of this file is based on the m0n0wall project which is
+ *  Copyright (c)  2004 Manuel Kasper (BSD 2 clause)
  *
  *  Redistribution and use in source and binary forms, with or without modification,
  *  are permitted provided that the following conditions are met:
@@ -54,109 +57,86 @@
  */
 
 /*
-	pfSense_BUILDER_BINARIES:	/usr/local/sbin/ipsec
+	pfSense_BUILDER_BINARIES:	/sbin/setkey
 	pfSense_MODULE: ipsec
 */
 
 ##|+PRIV
-##|*IDENT=page-status-ipsec-leases
-##|*NAME=Status: IPsec: Leases
-##|*DESCR=Allow access to the 'Status: IPsec: Leases' page.
-##|*MATCH=diag_ipsec_leases.php*
+##|*IDENT=page-status-ipsec-spd
+##|*NAME=Status: IPsec: SPD
+##|*DESCR=Allow access to the 'Status: IPsec: SPD' page.
+##|*MATCH=status_ipsec_spd.php*
 ##|-PRIV
 
-define(DEBUG, true); // Force dummy data for testing. Setting up a pFSense box to get real data is far too hard!
+define(RIGHTARROW, '&#x25ba;');
+define(LEFTARROW,  '&#x25c0;');
 
 require("guiconfig.inc");
 require("ipsec.inc");
 
-$pgtitle = array(gettext("Status"), gettext("IPsec"), gettext("Leases"));
+$pgtitle = array(gettext("Status"), gettext("IPsec"), gettext("SPD"));
 $shortcut_section = "ipsec";
 include("head.inc");
 
-$mobile = ipsec_dump_mobile();
+$spd = ipsec_dump_spd();
 
 $tab_array = array();
-$tab_array[] = array(gettext("Overview"), false, "diag_ipsec.php");
-$tab_array[] = array(gettext("Leases"), true, "diag_ipsec_leases.php");
-$tab_array[] = array(gettext("SAD"), false, "diag_ipsec_sad.php");
-$tab_array[] = array(gettext("SPD"), false, "diag_ipsec_spd.php");
+$tab_array[0] = array(gettext("Overview"), false, "status_ipsec.php");
+$tab_array[1] = array(gettext("Leases"), false, "status_ipsec_leases.php");
+$tab_array[2] = array(gettext("SAD"), false, "status_ipsec_sad.php");
+$tab_array[3] = array(gettext("SPD"), true, "status_ipsec_spd.php");
 display_top_tabs($tab_array);
 
-if (isset($mobile['pool']) && is_array($mobile['pool'])) {
+if (count($spd)) {
 ?>
 	<div class="table-responsive">
 		<table class="table table-striped table-condensed table-hover sortable-theme-bootstrap" data-sortable>
 			<thead>
 				<tr>
-					<th><?=gettext("Pool")?></th>
-					<th><?=gettext("Usage")?></th>
-					<th><?=gettext("Online")?></th>
-					<th><?=gettext("ID")?></th>
-					<th><?=gettext("Host")?></th>
-					<th><?=gettext("Status")?></th>
+					<th><?= gettext("Source"); ?></th>
+					<th><?= gettext("Destination"); ?></th>
+					<th><?= gettext("Direction"); ?></th>
+					<th><?= gettext("Protocol"); ?></th>
+					<th><?= gettext("Tunnel endpoints"); ?></th>
 				</tr>
 			</thead>
+
 			<tbody>
 <?php
-			foreach ($mobile['pool'] as $pool) {
-				// The first row of each pool includes the pool information
+		foreach ($spd as $sp) {
+			if ($sp['dir'] == 'in')
+				$dirstr = LEFTARROW . ' Inbound';
+			else
+				$dirstr = RIGHTARROW . ' Outbound';
 ?>
 				<tr>
 					<td>
-						<?=$pool['name']?>
+						<?=htmlspecialchars($sp['srcid'])?>
 					</td>
 					<td>
-						<?=$pool['usage']?>
+						<?=htmlspecialchars($sp['dstid'])?>
 					</td>
 					<td>
-						<?=$pool['online']?>
-					</td>
-
-<?php
-				$leaserow = true;
-				if (is_array($pool['lease']) && count($pool['lease']) > 0) {
-					foreach ($pool['lease'] as $lease) {
-						if (!$leaserow) {
-							// On subsequent rows the first three columns are blank
-?>
-				<tr>
-					<td></td>
-					<td></td>
-					<td></td>
-<?php
-						}
-						$leaserow = false;
-?>
-					<td>
-						<?=htmlspecialchars($lease['id'])?>
+						<?=$dirstr ?>
 					</td>
 					<td>
-						<?=htmlspecialchars($lease['host'])?>
+						<?=htmlspecialchars(strtoupper($sp['proto']))?>
 					</td>
 					<td>
-						<?=htmlspecialchars($lease['status'])?>
+						<?=htmlspecialchars($sp['src'])?> -&gt; <?=htmlspecialchars($sp['dst'])?>
 					</td>
 				</tr>
 <?php
-
-					}
-				}
-				else {
-?>
-					<td colspan="3" class="warning"><?=gettext('No leases from this pool yet.')?></td>
-				</tr>
-<?php
-				}
-			}
+		}
 ?>
 			</tbody>
 		</table>
 	</div>
 <?php
+	 } // e-o-if (count($spd))
+else {
+	print_info_box(gettext('No IPsec security policies configured.'));
 }
-else
-	print_info_box(gettext('No IPsec pools.'));
 
 print_info_box(gettext('You can configure your IPsec subsystem by clicking ') . '<a href="vpn_ipsec.php">' . gettext("here.") . '</a>');
 

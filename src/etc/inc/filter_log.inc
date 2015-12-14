@@ -159,7 +159,13 @@ function conv_log_filter($logfile, $nentries, $tail = 50, $filtertext = "", $fil
 		}
 	}
 	/* Since the lines are in reverse order, flip them around if needed based on the user's preference */
-	return isset($config['syslog']['reverse']) ? $filterlog : array_reverse($filterlog);
+	# First get the "General Logging Options" (global) chronological order setting.  Then apply specific log override if set.
+	$reverse = isset($config['syslog']['reverse']);
+	$specific_log = basename($logfile, '.log') . '_settings';
+	if ($config['syslog'][$specific_log]['cronorder'] == 'forward') $reverse = false;
+	if ($config['syslog'][$specific_log]['cronorder'] == 'reverse') $reverse = true;
+
+	return ($reverse) ? $filterlog : array_reverse($filterlog);
 }
 
 function escape_filter_regex($filtertext) {
@@ -567,12 +573,12 @@ function handle_ajax($nentries, $tail = 50) {
 				}
 
 				if ($log_row['act'] == "block") {
-					$icon_act = "fa-times icon-danger";
+					$icon_act = "fa-times text-danger";
 				} else {
-					$icon_act = "fa-check icon-success";
+					$icon_act = "fa-check text-success";
 				}
 
-				$btn = '<i class="fa ' . $icon_act . ' icon-pointer" title="' . $log_row['act'] . '/' . $log_row['tracker'] . '" onclick="javascript:getURL(\'diag_logs_filter.php?getrulenum=' . $log_row['rulenum'] . ',' . $log_row['tracker'] . ',' . $log_row['act'] . '\', outputrule);"></i>';
+				$btn = '<i class="fa ' . $icon_act . ' icon-pointer" title="' . $log_row['act'] . '/' . $log_row['tracker'] . '" onclick="javascript:getURL(\'status_logs_filter.php?getrulenum=' . $log_row['rulenum'] . ',' . $log_row['tracker'] . ',' . $log_row['act'] . '\', outputrule);"></i>';
 				$new_rules .= "{$btn}||{$log_row['time']}||{$log_row['interface']}||{$log_row['srcip']}||{$log_row['srcport']}||{$log_row['dstip']}||{$log_row['dstport']}||{$log_row['proto']}||{$log_row['version']}||" . time() . "||\n";
 			}
 		}

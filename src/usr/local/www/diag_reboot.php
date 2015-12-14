@@ -1,6 +1,6 @@
 <?php
 /*
-	reboot.php
+	diag_reboot.php
 */
 /* ====================================================================
  *	Copyright (c)  2004-2015  Electric Sheep Fencing, LLC. All rights reserved.
@@ -60,7 +60,7 @@
 ##|*IDENT=page-diagnostics-rebootsystem
 ##|*NAME=Diagnostics: Reboot System
 ##|*DESCR=Allow access to the 'Diagnostics: Reboot System' page.
-##|*MATCH=reboot.php*
+##|*MATCH=diag_reboot.php*
 ##|-PRIV
 
 // Set DEBUG to true to prevent the system_reboot() function from being called
@@ -73,15 +73,14 @@ require("captiveportal.inc");
 $guitimeout = 90;	// Seconds to wait before reloading the page after reboot
 $guiretry = 20;		// Seconds to try again if $guitimeout was not long enough
 
-$pgtitle = array(gettext("Diagnostics"),gettext("Reboot System"));
+$pgtitle = array(gettext("Diagnostics"), gettext("Reboot System"));
 include("head.inc");
 
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-	if(DEBUG) {
+	if (DEBUG) {
 	   print_info_box("Not actually rebooting (DEBUG is set true)", success);
-	}
-	else {
+	} else {
 		print('<div><pre>');
 		system_reboot();
 		print('</pre></div>');
@@ -93,7 +92,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 <script type="text/javascript">
 //<![CDATA[
-events.push(function(){
+events.push(function() {
 
 	var timeoutmsg = '<h4>Rebooting<br />Page will automatically reload in ';
 	var time = 0;
@@ -109,8 +108,8 @@ events.push(function(){
 	}
 
 	function startCountdown() {
-		setInterval(function(){
-			if(time > 0) {
+		setInterval(function() {
+			if (time > 0) {
 				$('#countdown').html(timeoutmsg + time + ' seconds.</h4>');
 				time--;
 			} else {
@@ -137,7 +136,7 @@ events.push(function(){
 	<div class="panel-body">
 		<div class="content">
 			<p>Click "Reboot" to reboot the system immediately, or "No" to go to the system dashboard without rebooting. (There will be a brief delay before the dashboard appears.)</p>
-			<form action="reboot.php" method="post">
+			<form action="diag_reboot.php" method="post">
 				<input type="submit" class="btn btn-danger pull-center" name="Submit" value="Reboot">
 				<a href="/" class="btn btn-default">No</a>
 			</form>

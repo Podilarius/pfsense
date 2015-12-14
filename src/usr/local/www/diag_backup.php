@@ -608,16 +608,18 @@ function build_area_list($showall) {
 $pgtitle = array(gettext("Diagnostics"), gettext("Backup/Restore"));
 include("head.inc");
 
-if ($input_errors)
+if ($input_errors) {
 	print_input_errors($input_errors);
+}
 
-if ($savemsg)
+if ($savemsg) {
 	print_info_box($savemsg, 'success');
+}
 
 if (is_subsystem_dirty('restore')):
 ?>
 	<br/>
-	<form action="reboot.php" method="post">
+	<form action="diag_reboot.php" method="post">
 		<input name="Submit" type="hidden" value="Yes" />
 		<?=print_info_box(gettext("The firewall configuration has been changed.") . "<br />" . gettext("The firewall is now rebooting."))?>
 		<br />
@@ -772,7 +774,7 @@ print($form);
 ?>
 <script type="text/javascript">
 //<![CDATA[
-events.push(function(){
+events.push(function() {
 
 	// ------- Show/hide sections based on checkbox settings --------------------------------------
 
@@ -801,7 +803,7 @@ events.push(function(){
 		hidePasswords();
 	});
 
-	$('#conffile').change(function (){
+	$('#conffile').change(function () {
 		$('.restore').prop('disabled', false);
     });
 	// ---------- On initial page load ------------------------------------------------------------

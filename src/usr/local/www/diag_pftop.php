@@ -1,6 +1,6 @@
 <?php
 /*
-	diag_system_pftop.php
+	diag_pftop.php
 */
 /* ====================================================================
  *  Copyright (c)  2004-2015  Electric Sheep Fencing, LLC. All rights reserved.
@@ -61,7 +61,7 @@
 ##|*IDENT=page-diagnostics-system-pftop
 ##|*NAME=Diagnostics: pfTop
 ##|*DESCR=Allows access to the 'Diagnostics: pfTop' page
-##|*MATCH=diag_system_pftop.php*
+##|*MATCH=diag_pftop.php*
 ##|-PRIV
 
 require("guiconfig.inc");
@@ -115,8 +115,9 @@ if ($_REQUEST['sorttype'] && in_array($_REQUEST['sorttype'], $sorttypes) &&
 	$numstate = "100";
 }
 
-if ($input_errors)
+if ($input_errors) {
 	print_input_errors($input_errors);
+}
 
 $form = new Form(false);
 $form->addGlobal(new Form_Input(
@@ -175,7 +176,7 @@ print $form;
 //<![CDATA[
 	function getpftopactivity() {
 		$.ajax(
-			'/diag_system_pftop.php',
+			'/diag_pftop.php',
 			{
 				method: 'post',
 				data: $(document.forms[0]).serialize(),
@@ -187,7 +188,7 @@ print $form;
 		);
 	}
 
-	events.push(function(){
+	events.push(function() {
 		setInterval('getpftopactivity()', 2500);
 		getpftopactivity();
 	});
@@ -204,12 +205,13 @@ print $form;
 
 <script type="text/javascript">
 //<![CDATA[
-events.push(function(){
-	$('#viewtype').on('change', function(){
-		if (['queue', 'label', 'rules'].indexOf($(this).val()) > -1)
+events.push(function() {
+	$('#viewtype').on('change', function() {
+		if (['queue', 'label', 'rules'].indexOf($(this).val()) > -1) {
 			$("#sorttype, #sorttypediv, #statesdiv, #states").parents('.form-group').hide();
-		else
+		} else {
 			$("#sorttype, #sorttypediv, #statesdiv, #states").parents('.form-group').show();
+		}
 	});
 });
 //]]>

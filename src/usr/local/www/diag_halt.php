@@ -1,6 +1,6 @@
 <?php
 /*
-	diag_ipsec_sad.php
+	diag_halt.php
 */
 /* ====================================================================
  *  Copyright (c)  2004-2015  Electric Sheep Fencing, LLC. All rights reserved.
@@ -55,105 +55,68 @@
  *  ====================================================================
  *
  */
-
 /*
-	pfSense_BUILDER_BINARIES:	/sbin/setkey
-	pfSense_MODULE: ipsec
+	pfSense_MODULE: header
 */
 
 ##|+PRIV
-##|*IDENT=page-status-ipsec-sad
-##|*NAME=Status: IPsec: SAD
-##|*DESCR=Allow access to the 'Status: IPsec: SAD' page.
-##|*MATCH=diag_ipsec_sad.php*
+##|*IDENT=page-diagnostics-haltsystem
+##|*NAME=Diagnostics: Halt system
+##|*DESCR=Allow access to the 'Diagnostics: Halt system' page.
+##|*MATCH=diag_halt.php*
 ##|-PRIV
 
+// Set DEBUG to true to prevent the system_halt() function from being called
+define("DEBUG", false);
+
 require("guiconfig.inc");
-require("ipsec.inc");
+require("functions.inc");
+require("captiveportal.inc");
 
-$pgtitle = array(gettext("Status"), gettext("IPsec"), gettext("SAD"));
-$shortcut_section = "ipsec";
-include("head.inc");
-
-$sad = ipsec_dump_sad();
-
-/* delete any SA? */
-if ($_GET['act'] == "del") {
-	$fd = @popen("/sbin/setkey -c > /dev/null 2>&1", "w");
-	if ($fd) {
-		fwrite($fd, "delete {$_GET['src']} {$_GET['dst']} {$_GET['proto']} {$_GET['spi']} ;\n");
-		pclose($fd);
-		sleep(1);
-	}
+if ($_POST['save'] == 'No') {
+	header("Location: index.php");
+	exit;
 }
 
-$tab_array = array();
-$tab_array[] = array(gettext("Overview"), false, "diag_ipsec.php");
-$tab_array[] = array(gettext("Leases"), false, "diag_ipsec_leases.php");
-$tab_array[] = array(gettext("SAD"), true, "diag_ipsec_sad.php");
-$tab_array[] = array(gettext("SPD"), false, "diag_ipsec_spd.php");
-display_top_tabs($tab_array);
+$pgtitle = array(gettext("Diagnostics"), gettext("Halt system"));
+include('head.inc');
 
-if (count($sad)) {
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 ?>
-	<div table-responsive>
-		<table class="table table-striped table-hover table-condensed">
-			<thead>
-				<tr>
-					<th><?=gettext("Source")?></th>
-					<th><?=gettext("Destination")?></th>
-					<th><?=gettext("Protocol")?></th>
-					<th><?=gettext("SPI")?></th>
-					<th><?=gettext("Enc. alg.")?></th>
-					<th><?=gettext("Auth. alg.")?></th>
-					<th><?=gettext("Data")?></th>
-					<th></th>
-				</tr>
-			</thead>
-			<tbody>
-			<?php foreach ($sad as $sa) { ?>
-			<tr>
-				<td>
-					<?=htmlspecialchars($sa['src'])?>
-				</td>
-				<td>
-					<?=htmlspecialchars($sa['dst'])?>
-				</td>
-				<td>
-					<?=htmlspecialchars(strtoupper($sa['proto']))?>
-				</td>
-				<td>
-					<?=htmlspecialchars($sa['spi'])?>
-				</td>
-				<td>
-					<?=htmlspecialchars($sa['ealgo'])?>
-				</td>
-				<td>
-					<?=htmlspecialchars($sa['aalgo'])?>
-				</td>
-				<td>
-					<?=htmlspecialchars($sa['data'])?></td>
-				<td>
-					<?php
-						$args = "src=" . rawurlencode($sa['src']);
-						$args .= "&amp;dst=" . rawurlencode($sa['dst']);
-						$args .= "&amp;proto=" . rawurlencode($sa['proto']);
-						$args .= "&amp;spi=" . rawurlencode("0x" . $sa['spi']);
-					?>
-					<a class="btn btn-xs btn-danger" href="diag_ipsec_sad.php?act=del&amp;<?=$args?>">Delete</a>
-				</td>
-			</tr>
-
-			<?php
-			} ?>
-			</tbody>
-		</table>
+	<meta http-equiv="refresh" content="70;url=/">
+	<div class="alert alert-success" role="alert">
+		<?=gettext("The system is halting now. This may take one minute or so.")?>
 	</div>
-<?php
-		}
-else
-	print_info_box(gettext('No IPsec security associations.'));
 
-print_info_box(gettext('You can configure your IPsec subsystem by clicking ') . '<a href="vpn_ipsec.php">' . gettext("here.") . '</a>');
+<?php
+	if (DEBUG) {
+	   print("Not actually halting (DEBUG is set true)<br>");
+	} else {
+		print('<pre>');
+		system_halt();
+		print('</pre>');
+	}
+} else {
+?>
+
+<div class="panel panel-default">
+	<div class="panel-heading">
+		<h2 class="panel-title">Are you sure you want to halt the system?</h2>
+	</div>
+	<div class="panel-body">
+		<div class="content">
+			<p>Click "Halt" to halt the system immediately, or "No" to go to the system dashboard. (There will be a brief delay before the dashboard appears.)</p>
+			<form action="diag_halt.php" method="post">
+				<input type="submit" class="btn btn-danger pull-center" name="save" value="Halt">
+				<a href="/" class="btn btn-default">No</a>
+			</form>
+		</div>
+	</div>
+</div>
+
+
+
+<?php
+}
 
 include("foot.inc");

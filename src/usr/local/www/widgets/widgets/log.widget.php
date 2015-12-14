@@ -150,13 +150,13 @@ if (isset($_POST['lastsawtime'])) {
 		}
 
 		if ($filterent['act'] == "block") {
-			$iconfn = "times icon-danger";
+			$iconfn = "times text-danger";
 		} else if ($filterent['act'] == "reject") {
-			$iconfn = "hand-stop-o icon-warning";
+			$iconfn = "hand-stop-o text-warning";
 		} else if ($filterent['act'] == "match") {
 			$iconfn = "filter";
 		} else {
-			$iconfn = "check icon-success";
+			$iconfn = "check text-success";
 		}
 
 		$rule = find_rule_by_number($filterent['rulenum'], $filterent['tracker'], $filterent['act']);
@@ -166,7 +166,7 @@ if (isset($_POST['lastsawtime'])) {
 		$dstIP = str_replace(':', ':<wbr>', $dstIP);
 ?>
 		<tr>
-			<td><a href="#" onclick="javascript:getURL('diag_logs_filter.php?getrulenum=<?php echo "{$filterent['rulenum']},{$filterent['tracker']},{$filterent['act']}"; ?>', outputrule);"
+			<td><a href="#" onclick="javascript:getURL('status_logs_filter.php?getrulenum=<?php echo "{$filterent['rulenum']},{$filterent['tracker']},{$filterent['act']}"; ?>', outputrule);"
 			role="button" data-toggle="popover" data-trigger="hover"
 				data-title="Rule that triggered this action"
 				data-content="<?=htmlspecialchars($rule)?>"> <i

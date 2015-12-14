@@ -1912,8 +1912,13 @@ poudriere_init() {
 
 	# Check if zfs rootfs exists
 	if ! zfs list ${ZFS_TANK}${ZFS_ROOT} >/dev/null 2>&1; then
-		echo ">>> ERROR: ZFS filesystem ${ZFS_TANK}${ZFS_ROOT} not found, please create it and try again..." | tee -a ${LOGFILE}
-		print_error_pfS
+		echo -n ">>> Creating ZFS filesystem ${ZFS_TANK}${ZFS_ROOT}... "
+		if zfs create -o atime=off -o mountpoint=${ZFS_ROOT} ${ZFS_TANK}${ZFS_ROOT} >/dev/null 2>&1; then
+			echo "Done!"
+		else
+			echo "Failed!"
+			print_error_pfS
+		fi
 	fi
 
 	# Make sure poudriere is installed
@@ -1939,7 +1944,6 @@ BASEFS=/usr/local/poudriere
 USE_PORTLINT=no
 USE_TMPFS=yes
 NOLINUX=yes
-DISTFILES_CACHE=/usr/ports/distfiles
 CHECK_CHANGED_OPTIONS=yes
 CHECK_CHANGED_DEPS=yes
 ATOMIC_PACKAGE_REPOSITORY=yes
