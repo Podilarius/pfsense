@@ -35,11 +35,6 @@
 	via returned RADIUS attributes. This page has been modified to delete any
 	added rules which may have been created by other per-user code (index.php, etc).
 	These changes are (c) 2004 Keycom PLC.
-
-	pfSense_BUILDER_BINARIES:	/sbin/ipfw	/sbin/route
-	pfSense_BUILDER_BINARIES:	/usr/local/sbin/lighttpd	/usr/local/bin/minicron /sbin/pfctl
-	pfSense_BUILDER_BINARIES:	/bin/hostname	/bin/cp
-	pfSense_MODULE: captiveportal
 */
 
 /* include all configuration functions */
@@ -1523,7 +1518,11 @@ function captiveportal_write_elements() {
 	if (is_array($cpcfg['element'])) {
 		conf_mount_rw();
 		foreach ($cpcfg['element'] as $data) {
-			if (!@file_put_contents("{$g['captiveportal_element_path']}/{$data['name']}", base64_decode($data['content']))) {
+			/* Do not attempt to decode or write out empty files. */
+			if (empty($data['content']) || empty(base64_decode($data['content']))) {
+				unlink_if_exists("{$g['captiveportal_element_path']}/{$data['name']}");
+				touch("{$g['captiveportal_element_path']}/{$data['name']}");
+			} elseif (!@file_put_contents("{$g['captiveportal_element_path']}/{$data['name']}", base64_decode($data['content']))) {
 				printf(gettext("Error: cannot open '%s' in captiveportal_write_elements()%s"), $data['name'], "\n");
 				return 1;
 			}

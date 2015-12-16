@@ -55,10 +55,6 @@
  *	====================================================================
  *
  */
-/*
-	pfSense_BUILDER_BINARIES:	/sbin/ifconfig
-	pfSense_MODULE: interfaces
-*/
 
 ##|+PRIV
 ##|*IDENT=page-system-login/logout
@@ -138,8 +134,7 @@ foreach ($phpincludefiles as $includename) {
 }
 
 ##build list of widgets
-foreach (glob("/usr/local/www/widgets/widgets/*.widget.php") as $file)
-{
+foreach (glob("/usr/local/www/widgets/widgets/*.widget.php") as $file) {
 	$name = basename($file, '.widget.php');
 	// Get the widget title that should be in a var defined in the widget's inc file.
 	$widgettitle = ${$name . '_title'};
@@ -253,8 +248,9 @@ if ($fd) {
 		}
 	}
 	fclose($fd);
-	if (!isset($hwcrypto) && get_single_sysctl("dev.aesni.0.%desc"))
+	if (!isset($hwcrypto) && get_single_sysctl("dev.aesni.0.%desc")) {
 		$hwcrypto = get_single_sysctl("dev.aesni.0.%desc");
+	}
 }
 
 ##build widget saved list information
@@ -262,14 +258,14 @@ if ($config['widgets'] && $config['widgets']['sequence'] != "") {
 	$pconfig['sequence'] = $config['widgets']['sequence'];
 	$widgetsfromconfig = array();
 
-	foreach (explode(',', $pconfig['sequence']) as $line)
-	{
+	foreach (explode(',', $pconfig['sequence']) as $line) {
 		list($file, $col, $display) = explode(':', $line);
 
 		// be backwards compatible
 		$offset = strpos($file, '-container');
-		if (false !== $offset)
+		if (false !== $offset) {
 			$file = substr($file, 0, $offset);
+		}
 
 		// Get the widget title that should be in a var defined in the widget's inc file.
 		$widgettitle = ${$file . '_title'};
@@ -312,19 +308,19 @@ pfSense_handle_custom_code("/usr/local/pkg/dashboard/pre_dashboard");
 <div class="panel panel-default" id="widget-available">
 	<div class="panel-heading"><?=gettext("Available Widgets"); ?>
 		<span class="widget-heading-icon">
-			<a data-toggle="collapse" href="#widget-available .panel-body" name="widgets-available">
+			<a data-toggle="collapse" href="#widget-available_panel-body" id="widgets-available">
 				<i class="fa fa-plus-circle"></i>
 			</a>
 		</span>
 	</div>
-	<div class="panel-body collapse out">
+	<div id="widget-available_panel-body" class="panel-body collapse out">
 		<div class="content">
 			<div class="row">
 <?php
 foreach ($widgets as $widgetname => $widgetconfig):
 	if ($widgetconfig['display'] == 'none'):
 ?>
-		<div class="col-sm-3"><a href="#" name="btnadd-<?=$widgetname?>"><i class="fa fa-plus"></i> <?=$widgetconfig['name']?></a></div>
+		<div class="col-sm-3"><a href="#" id="btnadd-<?=$widgetname?>"><i class="fa fa-plus"></i> <?=$widgetconfig['name']?></a></div>
 	<?php endif; ?>
 <?php endforeach; ?>
 			</div>
@@ -355,7 +351,7 @@ foreach ($widgets as $widgetname => $widgetconfig):
 </div>
 
 <div class="hidden" id="widgetSequence">
-	<form action="/" method="post" id="widgetSequence" name="widgetForm">
+	<form action="/" method="post" id="widgetSequence_Form" name="widgetForm">
 		<input type="hidden" name="sequence" value="" />
 
 		<button type="submit" id="btnstore" class="btn btn-primary">Store widget configuration</button>
@@ -364,17 +360,18 @@ foreach ($widgets as $widgetname => $widgetconfig):
 
 <?php
 $widgetColumns = array();
-foreach ($widgets as $widgetname => $widgetconfig)
-{
-	if ($widgetconfig['display'] == 'none')
+foreach ($widgets as $widgetname => $widgetconfig) {
+	if ($widgetconfig['display'] == 'none') {
 		continue;
+	}
 
 	if (!file_exists('/usr/local/www/widgets/widgets/'. $widgetname.'.widget.php')) {
 		continue;
 	}
 
-	if (!isset($widgetColumns[ $widgetconfig['col'] ]))
+	if (!isset($widgetColumns[ $widgetconfig['col'] ])) {
 		$widgetColumns[ $widgetconfig['col'] ] = array();
+	}
 
 	$widgetColumns[ $widgetconfig['col'] ][ $widgetname ] = $widgetconfig;
 }
@@ -403,10 +400,10 @@ foreach ($widgets as $widgetname => $widgetconfig)
 			<div class="panel-heading">
 				<?=$wtitle?>
 				<span class="widget-heading-icon">
-					<a data-toggle="collapse" href="#widget-<?=$widgetname?> .panel-footer" class="config hidden">
+					<a data-toggle="collapse" href="#widget-<?=$widgetname?>_panel-footer" class="config hidden">
 						<i class="fa fa-wrench"></i>
 					</a>
-					<a data-toggle="collapse" href="#widget-<?=$widgetname?> .panel-body">
+					<a data-toggle="collapse" href="#widget-<?=$widgetname?>_panel-body">
 						<!--  actual icon is determined in css based on state of body -->
 						<i class="fa fa-plus-circle"></i>
 					</a>
@@ -415,7 +412,7 @@ foreach ($widgets as $widgetname => $widgetconfig)
 					</a>
 				</span>
 			</div>
-			<div class="panel-body collapse<?=($widgetconfig['display']=='close' ? '' : ' in')?>">
+			<div id="widget-<?=$widgetname?>_panel-body" class="panel-body collapse<?=($widgetconfig['display'] == 'close' ? '' : ' in')?>">
 				<?php include('/usr/local/www/widgets/widgets/'. $widgetname.'.widget.php'); ?>
 			</div>
 		</div>
@@ -425,7 +422,7 @@ foreach ($widgets as $widgetname => $widgetconfig)
 	</div>
 <?php endforeach; ?>
 <?php
-	for($n = 1; $n <= ($numColumns - $columnCounter); $n++) {
+	for ($n = 1; $n <= ($numColumns - $columnCounter); $n++) {
 		echo '<div class="col-md-' . $columnWidth . '" id="widgets-col' . ($n + $columnCounter) . '"></div>';
 	}
 ?>
@@ -433,30 +430,30 @@ foreach ($widgets as $widgetname => $widgetconfig)
 
 <script type="text/javascript">
 //<![CDATA[
-function updateWidgets(newWidget)
-{
+function updateWidgets(newWidget) {
 	var sequence = '';
 
-	$('.container .col-md-<?=$columnWidth?>').each(function(idx, col){
-		$('.panel', col).each(function(idx, widget){
+	$('.container .col-md-<?=$columnWidth?>').each(function(idx, col) {
+		$('.panel', col).each(function(idx, widget) {
 			var isOpen = $('.panel-body', widget).hasClass('in');
 
 			sequence += widget.id.split('-')[1] +':'+ col.id.split('-')[1] +':'+ (isOpen ? 'open' : 'close') +',';
 		});
 	});
 
-	if (typeof newWidget !== 'undefined')
+	if (typeof newWidget !== 'undefined') {
 		sequence += newWidget + ':' + 'col2:open';
+	}
 
 	$('#widgetSequence').removeClass('hidden');
-	$('input[name=sequence]', $('#widgetSequence')).val(sequence);
+	$('input[name=sequence]', $('#widgetSequence_Form')).val(sequence);
 }
 
 events.push(function() {
 
 	// Make panels destroyable
-	$('.container .panel-heading a[data-toggle="close"]').each(function (idx, el){
-		$(el).on('click', function(e){
+	$('.container .panel-heading a[data-toggle="close"]').each(function (idx, el) {
+		$(el).on('click', function(e) {
 			$(el).parents('.panel').remove();
 			updateWidgets();
 		})
@@ -471,9 +468,9 @@ events.push(function() {
 	});
 
 	// On clicking a widget to install . .
-	$('[name^=btnadd-]').click(function(event) {
+	$('[id^=btnadd-]').click(function(event) {
 		// Add the widget name to the list of displayed widgets
-		updateWidgets(this.name.replace('btnadd-', ''));
+		updateWidgets(this.id.replace('btnadd-', ''));
 
 		// We don't want to see the "Store" button because we are doing that automatically
 		$('#btnstore').hide();
@@ -487,7 +484,8 @@ events.push(function() {
 </script>
 <?php
 //build list of javascript include files
-foreach (glob('widgets/javascript/*.js') as $file)
+foreach (glob('widgets/javascript/*.js') as $file) {
 	echo '<script src="'.$file.'"></script>';
+}
 
 include("foot.inc");

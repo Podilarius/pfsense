@@ -55,9 +55,6 @@
  *	====================================================================
  *
  */
-/*
-	pfSense_MODULE: snmp
-*/
 
 ##|+PRIV
 ##|*IDENT=page-services-snmp
@@ -354,13 +351,6 @@ $group->add(new Form_MultiCheckbox(
 	$pconfig['regex']
 ));
 
-$group->add(new Form_MultiCheckbox(
-	'junk',
-	null,
-	null,
-	$pconfig['regex']
-))->displayAsRadio();
-
 $section->add($group);
 $form->add($section);
 
@@ -409,6 +399,7 @@ events.push(function(){
 		}
 	});
 
+	$('[name=btntoggleall]').hide();
 });
 //]]>
 </script>

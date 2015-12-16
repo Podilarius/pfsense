@@ -53,9 +53,6 @@
  *	====================================================================
  *
  */
-/*
-	pfSense_MODULE:	openvpn
-*/
 
 ##|+PRIV
 ##|*IDENT=page-status-openvpn
@@ -73,8 +70,8 @@ require_once("shortcuts.inc");
 require_once("service-utils.inc");
 
 /* Handle AJAX */
-if($_GET['action']) {
-	if($_GET['action'] == "kill") {
+if ($_GET['action']) {
+	if ($_GET['action'] == "kill") {
 		$port  = $_GET['port'];
 		$remipp  = $_GET['remipp'];
 		if (!empty($port) and !empty($remipp)) {
@@ -152,7 +149,7 @@ include("head.inc"); ?>
 
 	function killComplete(req) {
 		var values = req.responseText.split("|");
-		if(values[3] != "0") {
+		if (values[3] != "0") {
 			alert('<?=gettext("An error occurred.");?>' + ' (' + values[3] + ')');
 			return;
 		}
@@ -211,7 +208,7 @@ include("head.inc"); ?>
 				</tbody>
 				<tfoot>
 					<tr>
-						<td>
+						<td colspan="2">
 							<table>
 								<tr>
 									<td>
@@ -221,6 +218,8 @@ include("head.inc"); ?>
 									</td>
 								</tr>
 							</table>
+						</td>
+						<td colspan="5">
 						</td>
 					</tr>
 				</tfoot>
@@ -234,7 +233,7 @@ include("head.inc"); ?>
 	<input type="button" onClick="show_routes('tabroute-<?= $i ?>','shroutebut-<?= $i ?>')" value="<?php echo gettext("Show Routing Table"); ?>" /> - <?= gettext("Display OpenVPN's internal routing table for this server.") ?>
 		<br /><br />
 </div>
-<div class="panel panel-default">
+<div class="panel panel-default" id="tabroute-<?=$i?>" style="display: none;">
 		<div class="panel-heading"><h2 class="panel-title"><?=htmlspecialchars($server['name']);?> <?=gettext("Routing Table"); ?></h2></div>
 		<div class="panel-body table-responsive">
 			<table class="table table-striped table-hover table-condensed sortable-theme-bootstrap" data-sortable>
@@ -263,7 +262,7 @@ include("head.inc"); ?>
 				</tbody>
 				<tfoot>
 					<tr>
-						<td><?= gettext("An IP address followed by C indicates a host currently connected through the VPN.") ?></td>
+						<td colspan="4"><?= gettext("An IP address followed by C indicates a host currently connected through the VPN.") ?></td>
 					</tr>
 				</tfoot>
 			</table>
@@ -289,6 +288,7 @@ include("head.inc"); ?>
 				<thead>
 					<tr>
 						<th><?=gettext("Name"); ?></th>
+						<th><?=gettext("Status"); ?></th>
 						<th><?=gettext("Connected Since"); ?></th>
 						<th><?=gettext("Virtual Addr"); ?></th>
 						<th><?=gettext("Remote Host"); ?></th>
@@ -384,7 +384,7 @@ include("head.inc"); ?>
 				</tbody>
 			</table>
 		</div>
-</div>
+	</div>
 
 <?php
 }
@@ -398,15 +398,17 @@ if ((empty($clients)) && (empty($servers)) && (empty($sk_servers))) {
 }
 ?>
 </form>
+
 <?php include("foot.inc"); ?>
+
 <script type="text/javascript">
 //<![CDATA[
+
 function show_routes(id, buttonid) {
 	document.getElementById(buttonid).innerHTML='';
 	aodiv = document.getElementById(id);
 	aodiv.style.display = "block";
 }
+
 //]]>
 </script>
-</body>
-</html>

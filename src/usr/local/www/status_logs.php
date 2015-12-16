@@ -56,10 +56,6 @@
  *
  */
 
-/*
-	pfSense_MODULE:	system
-*/
-
 ##|+PRIV
 ##|*IDENT=page-diagnostics-logs-system
 ##|*NAME=Status: Logs: System
@@ -243,11 +239,9 @@ if ($save_settings) {
 # Formatted/Raw Display
 if ($config['syslog'][$specific_log]['format'] == 'formatted') {
 	$rawfilter = false;
-}
-else if ($config['syslog'][$specific_log]['format'] == 'raw') {
+} else if ($config['syslog'][$specific_log]['format'] == 'raw') {
 	$rawfilter = true;
-}	
-else {	# Use the general logging options setting (global).
+} else {	# Use the general logging options setting (global).
 	$rawfilter = isset($config['syslog']['rawfilter']);
 }
 
@@ -309,13 +303,11 @@ if (in_array($logfile, array('system', 'gateways', 'routing', 'resolver', 'wirel
 	display_top_tabs($tab_array, false, 'nav nav-tabs');
 }
 
-define(SEC_OPEN, 0x00);
-define(SEC_CLOSED, 0x04);
-
-if ($filter_active)
+if ($filter_active) {
 	$filter_state = SEC_OPEN;
-else
+} else {
 	$filter_state = SEC_CLOSED;
+}
 
 if (!$rawfilter) { // Advanced log filter form
 	$form = new Form(false);
@@ -370,8 +362,7 @@ if (!$rawfilter) { // Advanced log filter form
 		null,
 		'fa-filter'
 	);
-}
-else { // Simple log filter form
+} else { // Simple log filter form
 	$form = new Form(false);
 
 	$section = new Form_Section('Log Filter', 'basic-filter-panel', COLLAPSIBLE|$filter_state);
@@ -415,20 +406,22 @@ print $form;
 
 // Now the forms are complete we can draw the log table and its controls
 if (!$rawfilter) {
-	if ($filterlogentries_submit)
+	if ($filterlogentries_submit) {
 		$filterlog = conv_log_filter($system_logfile, $nentries, $nentries + 100, $filterfieldsarray);
-	else
+	} else {
 		$filterlog = conv_log_filter($system_logfile, $nentries, $nentries + 100, $filtertext);
+	}
 ?>
 
 <div class="panel panel-default">
 	<div class="panel-heading">
 		<h2 class="panel-title">
 <?php
-	if ((!$filtertext) && (!$filterfieldsarray))
+	if ((!$filtertext) && (!$filterfieldsarray)) {
 		printf(gettext("Last %d %s log entries."), count($filterlog), gettext($allowed_logs[$logfile]["name"]));
-	else
+	} else {
 		printf(gettext("%d matched %s log entries."), count($filterlog), gettext($allowed_logs[$logfile]["name"]));
+	}
 
 	printf(" (" . gettext("Maximum %d") . ")", $nentries);
 ?>
@@ -438,7 +431,7 @@ if (!$rawfilter) {
 	   <div class="table-responsive">
 		<table class="table table-striped table-hover table-condensed sortable-theme-bootstrap" data-sortable>
 			<thead>
-				<tr>
+				<tr style="white-space:nowrap;">
 					<th><?=gettext("Time")?></th>
 					<th><?=gettext("Process")?></th>
 					<th><?=gettext("PID")?></th>
@@ -449,14 +442,14 @@ if (!$rawfilter) {
 <?php
 	foreach ($filterlog as $filterent) {
 ?>
-				<tr>
-					<td style="white-space:nowrap;">
+				<tr style="white-space:nowrap;">
+					<td>
 						<?=htmlspecialchars($filterent['time'])?>
 					</td>
-					<td style="white-space:nowrap;">
+					<td>
 						<?=htmlspecialchars($filterent['process'])?>
 					</td>
-					<td style="white-space:nowrap;">
+					<td>
 						<?=htmlspecialchars($filterent['pid'])?>
 					</td>
 					<td style="word-wrap:break-word; word-break:break-all; white-space:normal">
@@ -469,44 +462,46 @@ if (!$rawfilter) {
 			</tbody>
 		</table>
 <?php
-	if (count($filterlog) == 0)
+	if (count($filterlog) == 0) {
 		print_info_box(gettext('No logs to display'));
+	}
 ?>
 		</div>
 	</div>
 </div>
 <?php
-}
-else
-{
+} else {
 ?>
 <div class="panel panel-default">
 	<div class="panel-heading"><h2 class="panel-title"><?=gettext("Last ")?><?=$nentries?> <?=gettext($allowed_logs[$logfile]["name"])?><?=gettext(" log entries")?></h2></div>
 	<div class="table table-responsive">
-		<table class="table table-striped table-hover">
+		<table class="table table-striped table-hover table-condensed sortable-theme-bootstrap" data-sortable>
 			<thead>
-				<tr>
+				<tr style="white-space:nowrap;">
 					<th><?=gettext("Time")?></th>
 					<th style="width:100%"><?=gettext("Message")?></th>
 				</tr>
 			</thead>
 			<tbody>
 <?php
-	if (($logfile == 'resolver') || ($logfile == 'system'))
+	if (($logfile == 'resolver') || ($logfile == 'system')) {
 		$inverse = array("ppp");
-	else
+	} else {
 		$inverse = null;
+	}
 
-	if ($filtertext)
+	if ($filtertext) {
 		$rows = dump_clog($system_logfile, $nentries, true, array("$filtertext"), $inverse);
-	else
+	} else {
 		$rows = dump_clog($system_logfile, $nentries, true, array(), $inverse);
+	}
 ?>
 			</tbody>
 		</table>
 <?php
-	if ($rows == 0)
+	if ($rows == 0) {
 		print_info_box(gettext('No logs to display'));
+	}
 ?>
 	</div>
 </div>
@@ -522,10 +517,11 @@ if ($input_errors) {
 	$manage_log_active = true;
 }
 
-if ($manage_log_active)
+if ($manage_log_active) {
 	$manage_log_state = SEC_OPEN;
-else
+} else {
 	$manage_log_state = SEC_CLOSED;
+}
 
 $form = new Form(false);
 
