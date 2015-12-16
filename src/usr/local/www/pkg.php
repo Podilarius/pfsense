@@ -214,9 +214,8 @@ events.push(function() {
 	<?php
 		if ($pkg['adddeleteeditpagefields']['movable']) {
 	?>
-			jQuery(document).ready(function() {
-				jQuery('#mainarea table tbody').sortable({
-					items: 'tr.sortable',
+				$('#mainarea table tbody').sortable({
+				items: 'tr.sortable',
 					cursor: 'move',
 					distance: 10,
 					opacity: 0.8,
@@ -227,24 +226,25 @@ events.push(function() {
 					return ui;
 					},
 				});
-			});
+
+
 			function save_changes_to_xml(xml) {
-				var ids=jQuery('#mainarea table tbody').sortable('serialize', {key:"ids[]"});
+				var ids = $('#mainarea table tbody').sortable('serialize', {key:"ids[]"});
 				var strloading="<?=gettext('Saving changes...')?>";
 				if (confirm("<?=gettext("Do you really want to save changes?")?>")) {
-					jQuery.ajax({
+					$.ajax({
 						type: 'get',
 						cache: false,
 						url: "<?=$_SERVER['SCRIPT_NAME']?>",
 						data: {xml:'<?=$xml?>', act:'update', ids: ids},
 						beforeSend: function() {
-							jQuery('#savemsg').empty().html(strloading);
+							$('#savemsg').empty().html(strloading);
 						},
 						error: function(data) {
-							jQuery('#savemsg').empty().html('Error:' + data);
+							$('#savemsg').empty().html('Error:' + data);
 						},
 						success: function(data) {
-							jQuery('#savemsg').empty().html(data);
+							$('#savemsg').empty().html(data);
 						}
 					});
 				}
@@ -317,8 +317,9 @@ if ($savemsg) {
 		}
 	}
 ?>
-
-			<table class="table table-striped table-hover table-condensed">
+		<div id="mainarea" class="panel panel-default">
+			<table id="mainarea" class="table table-striped table-hover table-condensed">
+				<thead>
 <?php
 	/* Handle filtering bar A-Z */
 	$include_filtering_inputbox = false;
@@ -373,6 +374,7 @@ if ($savemsg) {
 	}
 ?>
 				<tr>
+
 <?php
 	if ($display_maximum_rows) {
 		$totalpages = ceil(round((count($evaledvar) / $display_maximum_rows), 9));
@@ -392,7 +394,7 @@ if ($savemsg) {
 				$tmppp++;
 			}
 		}
-		echo "<tr><td colspan='" . count($pkg['adddeleteeditpagefields']['columnitem']) . "'>";
+		echo "<tr><th colspan='" . count($pkg['adddeleteeditpagefields']['columnitem']) . "'>";
 		echo "<table width='100%' summary=''>";
 		echo "<tr>";
 		echo "<td align='left'>Displaying page $page of $totalpages</b></td>";
@@ -408,17 +410,20 @@ if ($savemsg) {
 		}
 		echo "</select></td></tr>";
 		echo "</table>";
-		echo "</td></tr>";
+		echo "</th></tr>";
 	}
+	
 	$cols = 0;
 	if ($pkg['adddeleteeditpagefields']['columnitem'] != "") {
 		foreach ($pkg['adddeleteeditpagefields']['columnitem'] as $column) {
-			echo "<td class=\"listhdrr\">" . $column['fielddescr'] . "</td>";
+			echo "<th class=\"listhdrr\">" . $column['fielddescr'] . "</th>";
 			$cols++;
 		}
 	}
 ?>
 				</tr>
+				</thead>
+				<tbody>
 <?php
 	$i = 0;
 	$pagination_counter = 0;
@@ -528,10 +533,11 @@ if ($savemsg) {
 			#Show custom description to delete button if defined
 			$delete_msg=($pkg['adddeleteeditpagefields']['deletetext']?$pkg['adddeleteeditpagefields']['deletetext']:"Delete this item");
 ?>
-								<td><a class="btn btn-xs btn-danger" href="pkg.php?xml=<?=$xml?>&amp;act=del&amp;id=<?=$i?>"><?=gettext("Delete")?></a></td>
+								<td>&nbsp;<a class="btn btn-xs btn-danger" href="pkg.php?xml=<?=$xml?>&amp;act=del&amp;id=<?=$i?>"><?=gettext("Delete")?></a></td>
 							</tr>
-						</table>
-					</td>
+						</tbody>
+					</table>
+				</td>
 <?php
 			echo "</tr>\n"; // Pairs with an echo tr some way above
 			// Handle pagination and display_maximum_rows
@@ -582,7 +588,7 @@ if ($savemsg) {
 	#Show custom description to add button if defined
 	$add_msg=($pkg['adddeleteeditpagefields']['addtext']?$pkg['adddeleteeditpagefields']['addtext']:"Add a new item");
 ?>
-								<td><a href="pkg_edit.php?xml=<?=$xml?>&amp;id=<?=$i?>" class="btn btn-xs btn-success"><?=gettext('Add')?></a></td>
+								<td><a href="pkg_edit.php?xml=<?=$xml?>&amp;id=<?=$i?>" class="btn btn-sm btn-success"><?=gettext('Add')?></a></td>
 <?php
 	#Show description button and info if defined
 	if ($pkg['adddeleteeditpagefields']['description']) {
@@ -602,13 +608,15 @@ if ($savemsg) {
 	#Show save button only when movable is defined
 	if ($pkg['adddeleteeditpagefields']['movable']) {
 ?>
-				<tr>
-					<td><input class="btn btn-primary" type="button" value="Save" name="Submit" onclick="save_changes_to_xml('<?=$xml?>')" /></td>
-				</tr>
+
+
+
 <?php
 	}
 ?>
 			</table>
+			</div>
+		<input class="btn btn-primary" type="button" value="Save" name="Submit" onclick="save_changes_to_xml('<?=$xml?>')" />
 
 </form>
 <?php
