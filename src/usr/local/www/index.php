@@ -263,8 +263,9 @@ if ($config['widgets'] && $config['widgets']['sequence'] != "") {
 
 		// be backwards compatible
 		$offset = strpos($file, '-container');
-		if (false !== $offset)
+		if (false !== $offset) {
 			$file = substr($file, 0, $offset);
+		}
 
 		// Get the widget title that should be in a var defined in the widget's inc file.
 		$widgettitle = ${$file . '_title'};
@@ -307,19 +308,19 @@ pfSense_handle_custom_code("/usr/local/pkg/dashboard/pre_dashboard");
 <div class="panel panel-default" id="widget-available">
 	<div class="panel-heading"><?=gettext("Available Widgets"); ?>
 		<span class="widget-heading-icon">
-			<a data-toggle="collapse" href="#widget-available .panel-body" name="widgets-available">
+			<a data-toggle="collapse" href="#widget-available_panel-body" id="widgets-available">
 				<i class="fa fa-plus-circle"></i>
 			</a>
 		</span>
 	</div>
-	<div class="panel-body collapse out">
+	<div id="widget-available_panel-body" class="panel-body collapse out">
 		<div class="content">
 			<div class="row">
 <?php
 foreach ($widgets as $widgetname => $widgetconfig):
 	if ($widgetconfig['display'] == 'none'):
 ?>
-		<div class="col-sm-3"><a href="#" name="btnadd-<?=$widgetname?>"><i class="fa fa-plus"></i> <?=$widgetconfig['name']?></a></div>
+		<div class="col-sm-3"><a href="#" id="btnadd-<?=$widgetname?>"><i class="fa fa-plus"></i> <?=$widgetconfig['name']?></a></div>
 	<?php endif; ?>
 <?php endforeach; ?>
 			</div>
@@ -350,7 +351,7 @@ foreach ($widgets as $widgetname => $widgetconfig):
 </div>
 
 <div class="hidden" id="widgetSequence">
-	<form action="/" method="post" id="widgetSequence" name="widgetForm">
+	<form action="/" method="post" id="widgetSequence_form" name="widgetForm">
 		<input type="hidden" name="sequence" value="" />
 
 		<button type="submit" id="btnstore" class="btn btn-primary">Store widget configuration</button>
@@ -377,54 +378,55 @@ foreach ($widgets as $widgetname => $widgetconfig) {
 ?>
 
 <div class="row">
-	<?php
-	$columnWidth = 12 / $numColumns;
-	$columnCounter = 0;
-	?>
-<?php foreach ($widgetColumns as $column => $columnWidgets):?>
-	<div class="col-md-<?=$columnWidth?>" id="widgets-<?=$column?>">
-<?php foreach ($columnWidgets as $widgetname => $widgetconfig):
-
-		// Compose the widget title and include the title link if available
-		$widgetlink = ${$widgetname . '_title_link'};
-
-		if ((strlen($widgetlink) > 0)) {
-			$wtitle = '<a href="' . $widgetlink . '"> ' . $widgetconfig['name'] . '</a>';
-		} else {
-			$wtitle = $widgetconfig['name'];
-		}
-
-?>
-		<div class="panel panel-default" id="widget-<?=$widgetname?>">
-			<div class="panel-heading">
-				<?=$wtitle?>
-				<span class="widget-heading-icon">
-					<a data-toggle="collapse" href="#widget-<?=$widgetname?> .panel-footer" class="config hidden">
-						<i class="fa fa-wrench"></i>
-					</a>
-					<a data-toggle="collapse" href="#widget-<?=$widgetname?> .panel-body">
-						<!--  actual icon is determined in css based on state of body -->
-						<i class="fa fa-plus-circle"></i>
-					</a>
-					<a data-toggle="close" href="#widget-<?=$widgetname?>">
-						<i class="fa fa-times-circle"></i>
-					</a>
-				</span>
-			</div>
-			<div class="panel-body collapse<?=($widgetconfig['display']=='close' ? '' : ' in')?>">
-				<?php include('/usr/local/www/widgets/widgets/'. $widgetname.'.widget.php'); ?>
-			</div>
-		</div>
-<?php endforeach;
-	  $columnCounter++;
-?>
-	</div>
-<?php endforeach; ?>
 <?php
-	for ($n = 1; $n <= ($numColumns - $columnCounter); $n++) {
-		echo '<div class="col-md-' . $columnWidth . '" id="widgets-col' . ($n + $columnCounter) . '"></div>';
+	$columnWidth = 12 / $numColumns;
+
+	for ($currentColumnNumber = 1; $currentColumnNumber <= $numColumns; $currentColumnNumber++) {
+		echo '<div class="col-md-' . $columnWidth . '" id="widgets-col' . $currentColumnNumber . '">';
+
+		//if col$currentColumnNumber exists
+		if (isset($widgetColumns['col'.$currentColumnNumber])) {
+			$columnWidgets = $widgetColumns['col'.$currentColumnNumber];
+
+			foreach ($columnWidgets as $widgetname => $widgetconfig) {
+				// Compose the widget title and include the title link if available
+				$widgetlink = ${$widgetname . '_title_link'};
+
+				if ((strlen($widgetlink) > 0)) {
+					$wtitle = '<a href="' . $widgetlink . '"> ' . $widgetconfig['name'] . '</a>';
+				} else {
+					$wtitle = $widgetconfig['name'];
+				}
+				?>
+					<div class="panel panel-default" id="widget-<?=$widgetname?>">
+					<div class="panel-heading">
+						<?=$wtitle?>
+						<span class="widget-heading-icon">
+							<a data-toggle="collapse" href="#widget-<?=$widgetname?>_panel-footer" class="config hidden">
+								<i class="fa fa-wrench"></i>
+							</a>
+							<a data-toggle="collapse" href="#widget-<?=$widgetname?>_panel-body">
+								<!--  actual icon is determined in css based on state of body -->
+								<i class="fa fa-plus-circle"></i>
+							</a>
+							<a data-toggle="close" href="#widget-<?=$widgetname?>">
+								<i class="fa fa-times-circle"></i>
+							</a>
+						</span>
+					</div>
+					<div id="widget-<?=$widgetname?>_panel-body" class="panel-body collapse<?=($widgetconfig['display'] == 'close' ? '' : ' in')?>">
+						<?php include('/usr/local/www/widgets/widgets/'. $widgetname.'.widget.php'); ?>
+					</div>
+				</div>
+				<?php
+			}
+		} else {
+			echo '<div class="col-md-' . $columnWidth . '" id="widgets-col' . $currentColumnNumber . '"></div>';
+		}
+		echo "</div>";
 	}
 ?>
+
 </div>
 
 <script type="text/javascript">
@@ -436,7 +438,7 @@ function updateWidgets(newWidget) {
 		$('.panel', col).each(function(idx, widget) {
 			var isOpen = $('.panel-body', widget).hasClass('in');
 
-			sequence += widget.id.split('-')[1] +':'+ col.id.split('-')[1] +':'+ (isOpen ? 'open' : 'close') +',';
+			sequence += widget.id.split('-')[1] + ':' + col.id.split('-')[1] + ':' + (isOpen ? 'open' : 'close') + ',';
 		});
 	});
 
@@ -445,7 +447,7 @@ function updateWidgets(newWidget) {
 	}
 
 	$('#widgetSequence').removeClass('hidden');
-	$('input[name=sequence]', $('#widgetSequence')).val(sequence);
+	$('input[name=sequence]', $('#widgetSequence_form')).val(sequence);
 }
 
 events.push(function() {
@@ -467,9 +469,9 @@ events.push(function() {
 	});
 
 	// On clicking a widget to install . .
-	$('[name^=btnadd-]').click(function(event) {
+	$('[id^=btnadd-]').click(function(event) {
 		// Add the widget name to the list of displayed widgets
-		updateWidgets(this.name.replace('btnadd-', ''));
+		updateWidgets(this.id.replace('btnadd-', ''));
 
 		// We don't want to see the "Store" button because we are doing that automatically
 		$('#btnstore').hide();

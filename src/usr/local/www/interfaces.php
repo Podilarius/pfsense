@@ -2041,10 +2041,10 @@ $section->addInput(new Form_Input(
 			'Some ISPs may require certain options be or not be requested.');
 
 $section->addInput(new Form_Input(
-	'adv_dhcp_require_options',
+	'adv_dhcp_required_options',
 	'Require options',
 	'text',
-	$pconfig['adv_dhcp_require_options']
+	$pconfig['adv_dhcp_required_options']
 ))->sethelp('The values in this field are DHCP options required by the client when requesting a DHCP lease.	 [option [, ...]]');
 
 $section->addInput(new Form_Input(
@@ -3556,6 +3556,8 @@ events.push(function() {
 	var sv = "<?=htmlspecialchars($pconfig['adv_dhcp_pt_values']);?>";
 	if (sv == "") {
 		$("input[name=adv_dhcp_pt_values][value='SavedCfg']").prop('checked', true);
+	} else {
+		$("input[name=adv_dhcp_pt_values][value="+sv+"]").prop('checked', true);
 	}
 
 	// Set preset from value
@@ -3616,7 +3618,7 @@ events.push(function() {
 	});
 
 	// On click . .
-	$('[id=adv_dhcp_pt_values]').click(function () {
+	$('[name=adv_dhcp_pt_values]').click(function () {
 	   setPresets($('input[name=adv_dhcp_pt_values]:checked').val());
 	});
 
