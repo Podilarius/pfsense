@@ -85,6 +85,16 @@ class Form_Input extends Form_Element
 		return $this->_attributes['id'];
 	}
 
+	public function get_Type()
+	{
+		return $this->_attributes['type'];
+	}
+
+	public function gettagName()
+	{
+		return $this->_tagName;
+	}
+
 	public function setHelp($help, array $params = array())
 	{
 		$this->_help = $help;
@@ -108,6 +118,13 @@ class Form_Input extends Form_Element
 		$this->_columnWidth = (int)$size;
 
 		$this->column->addClass('col-sm-'. $this->_columnWidth);
+
+		return $this;
+	}
+
+	public function setCols($size)
+	{
+		$this->_attributes['cols'] = $size;
 
 		return $this;
 	}
