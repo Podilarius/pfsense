@@ -1060,7 +1060,7 @@ events.push(function() {
 		} else {
 			disableInput('srcbeginport', false);
 			disableInput('srcendport', false);
-			disableInput('localbeginport_cust', false);
+//			disableInput('localbeginport_cust', false);
 			if (dstenabled) {
 				disableInput('dstbeginport', false);
 				disableInput('dstendport', false);

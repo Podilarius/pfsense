@@ -140,7 +140,7 @@ if ($_GET) {
 					header("Location: firewall_shaper_vinterface.php");
 					exit;
 				}
-				$output_form .= $queue->build_form();
+				$sform= $queue->build_form();
 			} else {
 				$input_errors[] = sprintf(gettext("No queue with name %s was found!"), $qname);
 				$output_form .= $dn_default_shaper_msg;
@@ -455,7 +455,10 @@ if ($dfltmsg) {
 	}
 
 	// Print the form
-	print($sform);
+	if($sform) {
+		$sform->setAction("firewall_shaper_vinterface.php");
+		print($sform);
+	}
 
 }
 ?>
@@ -475,8 +478,8 @@ events.push(function() {
     }
 
 	function change_masks() {
-		disableInput('maskbits', ($('#scheduler').val() == 'none'));
-		disableInput('maskbitsv6', ($('#scheduler').val() == 'none'));
+		disableInput('maskbits', ($('#mask').val() == 'none'));
+		disableInput('maskbitsv6', ($('#mask').val() == 'none'));
 	}
 
 	// ---------- On initial page load ------------------------------------------------------------
@@ -485,7 +488,7 @@ events.push(function() {
 
 	// ---------- Click checkbox handlers ---------------------------------------------------------
 
-    $('#scheduler').on('change', function() {
+    $('#mask').on('change', function() {
         change_masks();
     });
 });

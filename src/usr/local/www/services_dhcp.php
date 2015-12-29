@@ -950,7 +950,7 @@ if (!is_numeric($pool) && !($act == "newpool")) {
 		'Static ARP',
 		'Enable Static ARP entries',
 		$pconfig['staticarp']
-	))->setHelp('This option persists even if DHCP server is disabled. Only the machines listed below will be able to communicate with the firewall on this NIC.');
+	))->setHelp('This option persists even if DHCP server is disabled. Only the machines listed below will be able to communicate with the firewall on this interface.');
 
 	$section->addInput(new Form_Checkbox(
 		'dhcpleaseinlocaltime',
@@ -990,7 +990,7 @@ $section->addInput(new Form_Checkbox(
 $section->addInput(new Form_Input(
 	'ddnsdomain',
 	'DDNS Domain',
-	'number',
+	'text',
 	$pconfig['ddnsdomain']
 ))->setHelp('Leave blank to disable dynamic DNS registration.' . '<br />' .
 			'Enter the dynamic DNS domain which will be used to register client names in the DNS server.');
