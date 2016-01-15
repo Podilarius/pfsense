@@ -1,39 +1,57 @@
 <?php
-/*
-	interfaces.inc
-	Copyright (C) 2004-2008 Scott Ullrich
-	Copyright (C) 2008-2009 Ermal Luçi
-	All rights reserved.
-
-	function interfaces_wireless_configure is
-	Copyright (C) 2005 Espen Johansen
-	All rights reserved.
-
-	originally part of m0n0wall (http://m0n0.ch/wall)
-	Copyright (C) 2003-2004 Manuel Kasper <mk@neon1.net>.
-	All rights reserved.
-
-	Redistribution and use in source and binary forms, with or without
-	modification, are permitted provided that the following conditions are met:
-
-	1. Redistributions of source code must retain the above copyright notices,
-	   this list of conditions and the following disclaimer.
-
-	2. Redistributions in binary form must reproduce the above copyright
-	   notices, this list of conditions and the following disclaimer in the
-	   documentation and/or other materials provided with the distribution.
-
-	THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES,
-	INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
-	AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-	AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY,
-	OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-	SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-	INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-	CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-	ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-	POSSIBILITY OF SUCH DAMAGE.
-*/
+/* ====================================================================
+ *  Copyright (c)  2004-2015  Electric Sheep Fencing, LLC. All rights reserved.
+ *
+ *  Some or all of this file is based on the m0n0wall project which is
+ *  Copyright (c)  2004 Manuel Kasper (BSD 2 clause)
+ *
+ *  Redistribution and use in source and binary forms, with or without modification,
+ *  are permitted provided that the following conditions are met:
+ *
+ *  1. Redistributions of source code must retain the above copyright notice,
+ *      this list of conditions and the following disclaimer.
+ *
+ *  2. Redistributions in binary form must reproduce the above copyright
+ *      notice, this list of conditions and the following disclaimer in
+ *      the documentation and/or other materials provided with the
+ *      distribution.
+ *
+ *  3. All advertising materials mentioning features or use of this software
+ *      must display the following acknowledgment:
+ *      "This product includes software developed by the pfSense Project
+ *       for use in the pfSense software distribution. (http://www.pfsense.org/).
+ *
+ *  4. The names "pfSense" and "pfSense Project" must not be used to
+ *       endorse or promote products derived from this software without
+ *       prior written permission. For written permission, please contact
+ *       coreteam@pfsense.org.
+ *
+ *  5. Products derived from this software may not be called "pfSense"
+ *      nor may "pfSense" appear in their names without prior written
+ *      permission of the Electric Sheep Fencing, LLC.
+ *
+ *  6. Redistributions of any form whatsoever must retain the following
+ *      acknowledgment:
+ *
+ *  "This product includes software developed by the pfSense Project
+ *  for use in the pfSense software distribution (http://www.pfsense.org/).
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE pfSense PROJECT ``AS IS'' AND ANY
+ *  EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ *  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ *  PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE pfSense PROJECT OR
+ *  ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ *  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ *  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ *  HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ *  STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+ *  OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ *  ====================================================================
+ *
+ */
 
 /* include all configuration functions */
 require_once("globals.inc");
@@ -719,18 +737,15 @@ function interface_lagg_configure($lagg) {
 
 	/* Check if MTU was defined for this lagg interface */
 	$lagg_mtu = interface_find_child_cfgmtu($laggif);
-	if ($lagg_mtu == 0) {
-		/* Calculate smaller mtu and enforce it */
-		$smallermtu = 0;
-		foreach ($members as $member) {
-			$mtu = get_interface_mtu($member);
-			if ($smallermtu == 0 && !empty($mtu)) {
-				$smallermtu = $mtu;
-			} else if (!empty($mtu) && $mtu < $smallermtu) {
-				$smallermtu = $mtu;
+	if ($lagg_mtu == 0 &&
+	    is_array($config['interfaces'])) {
+		foreach ($config['interfaces'] as $tmpinterface) {
+			if ($tmpinterface['if'] == $lagg['laggif'] &&
+			    !empty($tmpinterface['mtu'])) {
+				$lagg_mtu = $tmpinterface['mtu'];
+				break;
 			}
 		}
-		$lagg_mtu = $smallermtu;
 	}
 
 	/* Just in case anything is not working well */
@@ -3064,21 +3079,20 @@ function interface_vlan_adapt_mtu($vlanifs, $mtu) {
 	foreach ($vlanifs as $vlan) {
 		$assignedport = convert_real_interface_to_friendly_interface_name($vlan['vlanif']);
 		$pppoe_mtu = interface_mtu_wanted_for_pppoe($vlan['vlanif']);
-		if (!empty($assignedport)) {
-			if (!empty($config['interfaces'][$assignedport]['mtu'])) {
-				pfSense_interface_mtu($vlan['vlanif'], $config['interfaces'][$assignedport]['mtu']);
-			} else if ($pppoe_mtu != 0) {
-				pfSense_interface_mtu($vlan['vlanif'], $pppoe_mtu);
-			} else {
-				if (get_interface_mtu($vlan['vlanif']) != (($mtu > 1500) ? 1500 : $mtu)) {
-					pfSense_interface_mtu($vlan['vlanif'], (($mtu > 1500) ? 1500 : $mtu));
-				}
-			}
+		$if_mtu = 0;
+		if (!empty($assignedport) &&
+		    !empty($config['interfaces'][$assignedport]['mtu'])) {
+			$if_mtu = $config['interfaces'][$assignedport]['mtu'];
 		} else {
-			if ($pppoe_mtu != 0) {
-				pfSense_interface_mtu($vlan['vlanif'], $pppoe_mtu);
-			} else if (get_interface_mtu($vlan['vlanif']) != (($mtu > 1500) ? 1500 : $mtu)) {
-				pfSense_interface_mtu($vlan['vlanif'], (($mtu > 1500) ? 1500 : $mtu));
+			$if_mtu = ($pppoe_mtu != 0 ? $pppoe_mtu : $mtu);
+		}
+
+		if (get_interface_mtu($vlan['vlanif']) != $if_mtu) {
+			/* LAGG interface must be destroyed and re-created to change MTU */
+			if (substr($vlan['if'], 0, 4) == 'lagg') {
+				interface_vlan_configure($vlan);
+			} else {
+				pfSense_interface_mtu($vlan['vlanif'], $if_mtu);
 			}
 		}
 	}
@@ -3089,36 +3103,44 @@ function interface_mtu_wanted_for_pppoe($realif) {
 
 	$mtu = 0;
 
-	if (is_array($config['ppps']) && is_array($config['ppps']['ppp'])) {
-		foreach ($config['ppps']['ppp'] as $ppp) {
-			if ($ppp['type'] == "pppoe") {
-				$ports = explode(',',$ppp['ports']);
-				$mtu_wanted = 1500;
-				foreach ($ports as $pid => $port) {
-					if (get_real_interface($port) == $realif) {
-						// use the MTU configured on the interface ...
-						if (is_array($config['interfaces'])) {
-							foreach ($config['interfaces'] as $interface) {
-								if ($interface['if'] != $ppp['if']) {
-									continue;
-								}
-								if (!empty($interface['mtu'])) {
-									$mtu_wanted = intval($interface['mtu']) + 8;
-								}
-							}
-						}
-						// ... unless there is an MTU configured on the port in question
-						if (!empty($ppp['mtu'])) {
-							$mtus = explode(',',$ppp['mtu']);
-							if (!empty($mtus[$pid])) {
-								$mtu_wanted = intval($mtus[$pid]) + 8;
-							}
-						}
-						if ($mtu_wanted > $mtu) {
-							$mtu = $mtu_wanted;
-						}
+	if (!is_array($config['ppps']) || !is_array($config['ppps']['ppp'])) {
+		return $mtu;
+	}
+
+	foreach ($config['ppps']['ppp'] as $ppp) {
+		if ($ppp['type'] != "pppoe") {
+			continue;
+		}
+
+		$ports = explode(',', $ppp['ports']);
+		$mtu_wanted = 1500;
+		foreach ($ports as $pid => $port) {
+			if (get_real_interface($port) != $realif) {
+				continue;
+			}
+
+			if (!empty($ppp['mtu'])) {
+				$mtus = explode(',', $ppp['mtu']);
+			} else {
+				$mtus = array();
+			}
+			// there is an MTU configured on the port in question
+			if (!empty($mtus[$pid])) {
+				$mtu_wanted = intval($mtus[$pid]) + 8;
+			// or use the MTU configured on the interface ...
+			} elseif (is_array($config['interfaces'])) {
+				foreach ($config['interfaces'] as $interface) {
+					if ($interface['if'] == $ppp['if'] &&
+					    !empty($interface['mtu'])) {
+						$mtu_wanted = intval($interface['mtu']) + 8;
+						break;
 					}
 				}
+			}
+			unset($mtus);
+
+			if ($mtu_wanted > $mtu) {
+				$mtu = $mtu_wanted;
 			}
 		}
 	}
@@ -3288,14 +3310,25 @@ function interface_configure($interface = "wan", $reloadall = false, $linkupeven
 			if ($wancfg['mtu'] > $parentmtu) {
 				log_error("There is a conflict on MTU between parent {$mtuhwif} and VLAN({$mtuif})");
 			}
-		} else {
-			$parentmtu = 0;
 		}
 
-		$parentmtu = interface_vlan_mtu_configured($mtuhwif, $parentmtu);
+		$parentmtu = interface_vlan_mtu_configured($mtuhwif, $wantedmtu);
 
 		if (get_interface_mtu($mtuhwif) != $parentmtu) {
-			pfSense_interface_mtu($mtuhwif, $parentmtu);
+			/* LAGG interface must be destroyed and re-created to change MTU */
+			if (substr($mtuhwif, 0, 4) == 'lagg') {
+				if (isset($config['laggs']['lagg']) &&
+				    is_array($config['laggs']['lagg'])) {
+					foreach ($config['laggs']['lagg'] as $lagg) {
+						if ($lagg['laggif'] == $mtuhwif) {
+							interface_lagg_configure($lagg);
+							break;
+						}
+					}
+				}
+			} else {
+				pfSense_interface_mtu($mtuhwif, $parentmtu);
+			}
 		}
 
 		/* All vlans need to use the same mtu value as their parent. */
@@ -5047,8 +5080,8 @@ function interface_find_child_cfgmtu($realiface) {
 		}
 	}
 	if (is_array($gifs)) {
-		foreach ($gifs as $vlan) {
-			$ifass = convert_real_interface_to_friendly_interface_name($vlan['gifif']);
+		foreach ($gifs as $gif) {
+			$ifass = convert_real_interface_to_friendly_interface_name($gif['gifif']);
 			if (empty($ifass)) {
 				continue;
 			}
@@ -5060,8 +5093,8 @@ function interface_find_child_cfgmtu($realiface) {
 		}
 	}
 	if (is_array($gres)) {
-		foreach ($gres as $vlan) {
-			$ifass = convert_real_interface_to_friendly_interface_name($vlan['greif']);
+		foreach ($gres as $gre) {
+			$ifass = convert_real_interface_to_friendly_interface_name($gre['greif']);
 			if (empty($ifass)) {
 				continue;
 			}
@@ -5563,7 +5596,9 @@ function interface_has_gateway($friendly) {
 				}
 				$tunnelif = substr($ifname['if'], 0, 3);
 				if ($tunnelif == "gif" || $tunnelif == "gre") {
-					return true;
+					if (find_interface_ip($ifname['if'])) {
+						return true;
+					}
 				}
 				if (!empty($ifname['gateway'])) {
 					return true;
@@ -5594,7 +5629,9 @@ function interface_has_gatewayv6($friendly) {
 				}
 				$tunnelif = substr($ifname['if'], 0, 3);
 				if ($tunnelif == "gif" || $tunnelif == "gre") {
-					return true;
+					if (find_interface_ipv6($ifname['if'])) {
+						return true;
+					}
 				}
 				if (!empty($ifname['gatewayv6'])) {
 					return true;

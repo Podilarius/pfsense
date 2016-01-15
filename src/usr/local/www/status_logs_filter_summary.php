@@ -102,7 +102,7 @@ $pgtitle = array(gettext("Status"), gettext("System logs"), gettext($allowed_log
 include("head.inc");
 
 if (!$input_errors && $savemsg) {
-	print_info_box($savemsg);
+	print_info_box($savemsg, 'success');
 	$manage_log_active = false;
 }
 
@@ -153,11 +153,14 @@ foreach ($filterlog as $fe) {
 	}
 }
 
-
 print("<br />");
-$infomsg = sprintf('This is a summary of the last %1$s lines of the firewall log (Max %2$s).', $gotlines, $lines);
-print_info_box($infomsg, info);
+$infomsg = sprintf(gettext('This is a summary of the last %1$s lines of the firewall log (Max %2$s).'), $gotlines, $lines);
 ?>
+<div>
+	<div class="infoblock blockopen">
+		<?=print_info_box($infomsg, 'info', false);?>
+	</div>
+</div>
 
 <script src="d3pie/d3pie.min.js"></script>
 <script src="d3pie/d3.min.js"></script>

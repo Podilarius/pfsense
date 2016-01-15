@@ -103,6 +103,7 @@ if (isset($_GET['dup'])) {
 }
 
 if (isset($id) && $a_1to1[$id]) {
+	$pconfig['nobinat'] = isset($a_1to1[$id]['nobinat']);
 	$pconfig['disabled'] = isset($a_1to1[$id]['disabled']);
 
 	address_to_pconfig($a_1to1[$id]['source'], $pconfig['src'],
@@ -146,8 +147,13 @@ if ($_POST) {
 	}
 
 	/* input validation */
-	$reqdfields = explode(" ", "interface external");
-	$reqdfieldsn = array(gettext("Interface"), gettext("External subnet"));
+	if (isset($_POST['nobinat'])) {
+		$reqdfields = explode(" ", "interface");
+		$reqdfieldsn = array(gettext("Interface"));
+	} else {
+		$reqdfields = explode(" ", "interface external");
+		$reqdfieldsn = array(gettext("Interface"), gettext("External subnet"));
+	}
 
 	if ($_POST['srctype'] == "single" || $_POST['srctype'] == "network") {
 		$reqdfields[] = "src";
@@ -236,6 +242,7 @@ if ($_POST) {
 	if (!$input_errors) {
 		$natent = array();
 
+		$natent['nobinat'] = isset($_POST['nobinat']) ? true:false;
 		$natent['disabled'] = isset($_POST['disabled']) ? true:false;
 		$natent['external'] = $_POST['external'];
 		$natent['descr'] = $_POST['descr'];
@@ -366,7 +373,7 @@ function dsttype_selected() {
 
 	$sel = is_specialnet($pconfig['dst']);
 
-	if (empty($pconfig['dst'] || $pconfig['dst'] == "any")) {
+	if (empty($pconfig['dst']) || $pconfig['dst'] == "any") {
 		return('any');
 	}
 
@@ -393,10 +400,17 @@ $form = new Form(new Form_Button(
 $section = new Form_Section('Edit NAT 1 to 1 entry');
 
 $section->addInput(new Form_Checkbox(
-	'nordr',
-	'No RDR (NOT)',
+	'nobinat',
+	'Negate',
+	'This rule will be excluded from the NAT',
+	$pconfig['nobinat']
+))->setHelp('Use this to exclude addresses from a rule that follows this one');
+
+$section->addInput(new Form_Checkbox(
+	'disabled',
+	'No BINAT (NOT)',
 	'Disable redirection for traffic matching this rule',
-	$pconfig['nordr']
+	$pconfig['disabled']
 ))->setHelp('This option is rarely needed, don\'t use this unless you know what you\'re doing.');
 
 $iflist = get_configured_interface_with_descr(false, true);

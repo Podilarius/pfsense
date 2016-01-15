@@ -312,6 +312,7 @@ foreach ($config['interfaces'] as $ifname => $ifarr) {
 			$slease['start'] = "";
 			$slease['end'] = "";
 			$slease['hostname'] = htmlentities($static['hostname']);
+			$slease['descr'] = htmlentities($static['descr']);
 			$slease['act'] = "static";
 			$slease['online'] = in_array(strtolower($slease['mac']), $arpdata_mac) ? 'online' : 'offline';
 			$slease['staticmap_array_index'] = $staticmap_array_index;
@@ -342,7 +343,7 @@ if (count($pools) > 0) {
 			</tr>
 		</thead>
 		<tbody>
-<? foreach ($pools as $data):?>
+<?php foreach ($pools as $data):?>
 			<tr>
 				<td><?=$data['name']?></td>
 				<td><?=$data['mystate']?></td>
@@ -350,7 +351,7 @@ if (count($pools) > 0) {
 				<td><?=$data['peerstate']?></td>
 				<td><?=adjust_gmt($data['peerdate'])?></td>
 			</tr>
-<? endforeach?>
+<?php endforeach; ?>
 		</tbody>
 		</table>
 	</div>
@@ -373,6 +374,7 @@ if (count($pools) > 0) {
 					<th><?=gettext("End")?></th>
 					<th><?=gettext("Online")?></th>
 					<th><?=gettext("Lease Type")?></th>
+					<th><?=gettext("Actions")?></th>
 				</tr>
 			</thead>
 			<tbody>
@@ -393,15 +395,13 @@ foreach ($leases as $data):
 		$icon = 'fa-times-circle-o';
 	}
 
-	$lip = ip2ulong($data['ip']);
-
 	if ($data['act'] != "static") {
 		$dlsc=0;
 		foreach ($config['dhcpd'] as $dhcpif => $dhcpifconf) {
 			if (!is_array($dhcpifconf['range'])) {
 				continue;
 			}
-			if (($lip >= ip2ulong($dhcpifconf['range']['from'])) && ($lip <= ip2ulong($dhcpifconf['range']['to']))) {
+			if (is_inrange_v4($data['ip'], $dhcpifconf['range']['from'], $dhcpifconf['range']['to'])) {
 				$data['if'] = $dhcpif;
 				$dhcp_leases_subnet_counter[$dlsc]['dhcpif'] = $dhcpif;
 				$dhcp_leases_subnet_counter[$dlsc]['from'] = $dhcpifconf['range']['from'];
@@ -423,36 +423,35 @@ foreach ($leases as $data):
 					<td>
 						<?=$mac?>
 
-						<? if (isset($mac_man[$mac_hi])):?>
+						<?php if (isset($mac_man[$mac_hi])):?>
 							(<?=$mac_man[$mac_hi]?>)
-						<?endif?>
+						<?php endif; ?>
 					</td>
 					<td><?=htmlentities($data['hostname'])?></td>
-<? if ($data['type'] != "static"):?>
+<?php if ($data['type'] != "static"):?>
 					<td><?=adjust_gmt($data['start'])?></td>
 					<td><?=adjust_gmt($data['end'])?></td>
-<? else: ?>
-					<td>n/a</td>
-					<td>n/a</td>
-<? endif; ?>
+<?php else: ?>
+					<td colspan="2"><?=htmlentities($data['descr'])?></td>
+<?php endif; ?>
 					<td><?=$data['online']?></td>
 					<td><?=$data['act']?></td>
 					<td>
-<? if ($data['type'] == "dynamic"): ?>
+<?php if ($data['type'] == "dynamic"): ?>
 						<a class="fa fa-plus-square-o"	title="<?=gettext("Add static mapping")?>"	href="services_dhcp_edit.php?if=<?=$data['if']?>&amp;mac=<?=$data['mac']?>&amp;hostname=<?=htmlspecialchars($data['hostname'])?>"></a>
-<? else: ?>
+<?php else: ?>
 						<a class="fa fa-pencil"	title="<?=gettext('Edit static mapping')?>"	href="services_dhcp_edit.php?if=<?=$data['if']?>&amp;id=<?=$data['staticmap_array_index']?>"></a>
-<? endif; ?>
+<?php endif; ?>
 						<a class="fa fa-plus-square" title="<?=gettext("Add WOL mapping")?>" href="services_wol_edit.php?if=<?=$data['if']?>&amp;mac=<?=$data['mac']?>&amp;descr=<?=htmlentities($data['hostname'])?>"></a>
-<? if ($data['online'] != "online"):?>
+<?php if ($data['online'] != "online"):?>
 						<a class="fa fa-power-off" title="<?=gettext("Send WOL packet")?>" href="services_wol.php?if=<?=$data['if']?>&amp;mac=<?=$data['mac']?>"></a>
-<? endif; ?>
+<?php endif; ?>
 
-<? if ($data['type'] == "dynamic" && $data['online'] != "online"):?>
+<?php if ($data['type'] == "dynamic" && $data['online'] != "online"):?>
 						<a class="fa fa-trash" title="<?=gettext('Delete lease')?>"	href="status_dhcp_leases.php?deleteip=<?=$data['ip']?>&amp;all=<?=intval($_GET['all'])?>"></a>
-<? endif?>
+<?php endif; ?>
 					</td>
-<? endforeach; ?>
+<?php endforeach; ?>
 				</tr>
 			</tbody>
 		</table>
@@ -472,14 +471,14 @@ foreach ($leases as $data):
 				</tr>
 			</thead>
 			<tbody>
-<? foreach ($dhcp_leases_subnet_counter as $listcounters):?>
+<?php foreach ($dhcp_leases_subnet_counter as $listcounters):?>
 				<tr>
 					<td><?=$iflist[$listcounters['dhcpif']]?></td>
 					<td><?=$listcounters['from']?></td>
 					<td><?=$listcounters['to']?></td>
 					<td><?=$listcounters['count']?></td>
 				</tr>
-<? endforeach; ?>
+<?php endforeach; ?>
 			</tbody>
 		</table>
 	</div>

@@ -147,8 +147,12 @@ _exit() {
 	local _rc=${1:-"0"}
 
 	# If EVENT_PIPE is defined, GUI is calling
-	[ -n "${progress_socket}" ] \
-		&& _echo "__RC=${_rc}"
+	if [ -n "${progress_socket}" ]; then
+		local _need_reboot_str=""
+		[ -n "${need_reboot}" ] \
+			&& _need_reboot_str=" __REBOOT_AFTER=${reboot_after}"
+		_echo "__RC=${_rc}${_need_reboot_str}"
+	fi
 
 	exit ${_rc}
 }
@@ -244,25 +248,10 @@ pkg_update() {
 
 	local _force=""
 	if [ "${1}" = "force" ]; then
-		local _force=1
+		_force=" -f"
 	fi
 
-	if [ -z "${_force}" -a -f ${last_update_file} ]; then
-		local _last_update=$(head -n 1 ${last_update_file})
-		# Verify if content contains only numbers
-		if echo "${_last_update}" | grep -E -q '^[0-9]+$'; then
-			local _now=$(date +%s)
-			# Only run update hourly, and if last update is in the future
-			[ ${_now} -gt ${_last_update} -a $((${_now} - ${_last_update})) -le $((60 * 60)) ] \
-				&& unset _run_update
-		fi
-	fi
-
-	[ -z "${_run_update}" ] \
-		&& return 0
-
-	_exec "pkg ${pkg_chroot} update" "Updating repositories" mute
-	date +%s > ${last_update_file}
+	_exec "pkg ${pkg_chroot} update${_force}" "Updating repositories metadata"
 }
 
 pkg_upgrade() {
@@ -609,8 +598,6 @@ pkg_install() {
 		_exit 1
 	fi
 
-	pkg_update
-
 	if is_pkg_installed ${_pkg_name}; then
 		local _cversion=$(compare_pkg_version ${_pkg_name})
 
@@ -663,24 +650,24 @@ pkg_reinstall_all() {
 }
 
 do_reboot() {
-	_echo "Upgrade is complete.  Rebooting in 10 seconds."
-	echo "Upgrade is complete.  Rebooting in 10 seconds." | wall
-	/etc/rc.notify_message -e -g -m "Upgrade is complete.  Rebooting in 10 seconds."
 	if [ -z "${dont_reboot}" ]; then
-		(sleep 10 && /etc/rc.reboot) &
+		_echo "Upgrade is complete.  Rebooting in ${reboot_after} seconds."
+		echo "Upgrade is complete.  Rebooting in ${reboot_after} seconds." | wall
+		/etc/rc.notify_message -e -g -m "Upgrade is complete.  Rebooting in ${reboot_after} seconds."
+		(sleep ${reboot_after} && /etc/rc.reboot) &
+	else
+		_echo "Upgrade is complete."
+		echo "Upgrade is complete." | wall
+		/etc/rc.notify_message -e -g -m "Upgrade is complete."
 	fi
 }
 
 pid_file="/var/run/$(basename $0).pid"
-last_update_file="/var/run/$(basename $0)-last-update"
 logfile="/cf/conf/upgrade_log.txt"
 stdout='/dev/null'
 
 # pkg should not ask for confirmations
 export ASSUME_ALWAYS_YES=true
-
-# Disable automatic update
-export REPO_AUTOUPDATE=false
 
 export product=$(/usr/local/bin/php -n /usr/local/sbin/read_global_var product_name pfSense)
 export pkg_prefix=$(/usr/local/bin/php -n /usr/local/sbin/read_global_var pkg_prefix pfSense-pkg-)
@@ -707,6 +694,9 @@ export chroot_dir=""
 
 # Save nc_pid to be able to kill it
 export nc_pid=""
+
+# Reboot after 10 seconds
+export reboot_after=10
 
 unset dry_run
 unset dont_reboot

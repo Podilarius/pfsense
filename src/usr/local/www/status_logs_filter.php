@@ -136,7 +136,7 @@ $pgtitle = array(gettext("Status"), gettext("System logs"), gettext($allowed_log
 include("head.inc");
 
 if (!$input_errors && $savemsg) {
-	print_info_box($savemsg);
+	print_info_box($savemsg, 'success');
 	$manage_log_active = false;
 }
 
@@ -183,9 +183,9 @@ if (!$rawfilter) {
 		<table class="table table-striped table-hover table-condensed sortable-theme-bootstrap" data-sortable>
 			<thead>
 				<tr class="text-nowrap">
-					<th><?=gettext("Act")?></th>
+					<th><?=gettext("Action")?></th>
 					<th><?=gettext("Time")?></th>
-					<th><?=gettext("IF")?></th>
+					<th><?=gettext("Interface")?></th>
 <?php
 	if ($config['syslog']['filterdescriptions'] === "1") {
 ?>
@@ -197,7 +197,7 @@ if (!$rawfilter) {
 ?>
 					<th><?=gettext("Source")?></th>
 					<th><?=gettext("Destination")?></th>
-					<th><?=gettext("Proto")?></th>
+					<th><?=gettext("Protocol")?></th>
 				</tr>
 			</thead>
 			<tbody>
@@ -223,7 +223,7 @@ if (!$rawfilter) {
 			$margin_left = '0.4em';
 		}
 ?>
-						<i style="margin-left:<?php echo $margin_left;?>" class="fa <?php echo $icon_act;?> icon-pointer" title="<?php echo $filterent['act'] .'/'. $filterent['tracker'];?>" onclick="javascript:getURL('status_logs_filter.php?getrulenum=<?="{$filterent['rulenum']},{$filterent['tracker']},{$filterent['act']}"; ?>', outputrule);"></i>
+						<i style="margin-left:<?=$margin_left;?>" class="fa <?=$icon_act;?> icon-pointer" title="<?php echo $filterent['act'] .'/'. $filterent['tracker'];?>" onclick="javascript:getURL('status_logs_filter.php?getrulenum=<?="{$filterent['rulenum']},{$filterent['tracker']},{$filterent['act']}"; ?>', outputrule);"></i>
 <?php
 		if ($filterent['count']) {
 			echo $filterent['count'];
@@ -349,14 +349,11 @@ if (!$rawfilter) {
 }
 ?>
 
-<div id="infoblock">
-
+<div class="infoblock">
 <?php
-
 print_info_box('<a href="https://doc.pfsense.org/index.php/What_are_TCP_Flags%3F">' .
 	gettext("TCP Flags") . '</a>: F - FIN, S - SYN, A or . - ACK, R - RST, P - PSH, U - URG, E - ECE, C - CWR' . '<br />' .
-	'<i class="fa fa-minus-square-o icon-primary"></i> = Add to block list., <i class="fa fa-plus-square-o icon-primary"></i> = Pass traffic, <i class="fa fa-info icon-primary"></i> = Resolve');
-
+	'<i class="fa fa-minus-square-o icon-primary"></i> = Add to block list., <i class="fa fa-plus-square-o icon-primary"></i> = Pass traffic, <i class="fa fa-info icon-primary"></i> = Resolve', 'info', false);
 ?>
 </div>
 

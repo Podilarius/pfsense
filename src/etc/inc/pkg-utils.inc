@@ -96,30 +96,7 @@ function pkg_remove_prefix(&$pkg_name) {
 function pkg_update($force = false) {
 	global $g;
 
-	$now = strftime('%s');
-	$last_update_file="{$g['varrun_path']}/{$g['product_name']}-upgrade-last-update";
-	if (!$force) {
-		if (file_exists($last_update_file)) {
-			$last_update = rtrim(file_get_contents($last_update_file), "\n");
-			if (!is_numericint($last_update)) {
-				$last_update = 0;
-			}
-		}
-
-		if ($last_update > 0) {
-			if ($now > $last_update && ($now - $last_update) <= (60 * 60)) {
-				return true;
-			}
-		}
-	}
-
-	$rc = pkg_call("update -f");
-
-	if ($rc) {
-		file_put_contents($last_update_file, $now . "\n");
-	}
-
-	return $rc;
+	return pkg_call("update" . ($force ? " -f" : ""));
 }
 
 /* return an array with necessary environment vars for pkg */
@@ -128,8 +105,7 @@ function pkg_env() {
 
 	$pkg_env_vars = array(
 		"HTTP_USER_AGENT" => $user_agent,
-		"ASSUME_ALWAYS_YES" => "true",
-		"REPO_AUTOUPDATE" => "false"
+		"ASSUME_ALWAYS_YES" => "true"
 	);
 
 	if ($g['platform'] == "nanobsd" ||
@@ -142,7 +118,7 @@ function pkg_env() {
 }
 
 /* Execute a pkg call */
-function pkg_call($params, $mute = false, $readonly = false) {
+function pkg_call($params, $mute = false) {
 	global $g, $config;
 
 	if (empty($params)) {
@@ -159,18 +135,14 @@ function pkg_call($params, $mute = false, $readonly = false) {
 		2 => array("pipe", "w")	 /* stderr */
 	);
 
-	if (!$readonly) {
-		conf_mount_rw();
-	}
+	conf_mount_rw();
 
 	pkg_debug("pkg_call(): {$params}\n");
 	$process = proc_open("/usr/sbin/pkg {$params}", $descriptorspec, $pipes,
 	    '/', pkg_env());
 
 	if (!is_resource($process)) {
-		if (!$readonly) {
-			conf_mount_ro();
-		}
+		conf_mount_ro();
 		return false;
 	}
 
@@ -222,9 +194,7 @@ function pkg_call($params, $mute = false, $readonly = false) {
 	fclose($pipes[2]);
 	proc_close($process);
 
-	if (!$readonly) {
-		conf_mount_ro();
-	}
+	conf_mount_ro();
 
 	if (!isset($rc)) {
 		$rc = $status['exitcode'];
@@ -246,7 +216,7 @@ function pkg_call($params, $mute = false, $readonly = false) {
 }
 
 /* Execute pkg with $params, fill stdout and stderr and return pkg rc */
-function pkg_exec($params, &$stdout, &$stderr, $readonly = false) {
+function pkg_exec($params, &$stdout, &$stderr) {
 	global $g, $config;
 
 	if (empty($params)) {
@@ -263,18 +233,14 @@ function pkg_exec($params, &$stdout, &$stderr, $readonly = false) {
 		2 => array("pipe", "w")	 /* stderr */
 	);
 
-	if (!$readonly) {
-		conf_mount_rw();
-	}
+	conf_mount_rw();
 
 	pkg_debug("pkg_exec(): {$params}\n");
 	$process = proc_open("/usr/sbin/pkg {$params}", $descriptorspec, $pipes,
 	    '/', pkg_env());
 
 	if (!is_resource($process)) {
-		if (!$readonly) {
-			conf_mount_ro();
-		}
+		conf_mount_ro();
 		return -1;
 	}
 
@@ -290,9 +256,7 @@ function pkg_exec($params, &$stdout, &$stderr, $readonly = false) {
 	}
 	fclose($pipes[2]);
 
-	if (!$readonly) {
-		conf_mount_ro();
-	}
+	conf_mount_ro();
 
 	return proc_close($process);
 }
@@ -308,7 +272,7 @@ function pkg_version_compare($v1, $v2) {
 		return '?';
 	}
 
-	$rc = pkg_exec("version -t '{$v1}' '{$v2}'", $stdout, $stderr, true);
+	$rc = pkg_exec("version -t '{$v1}' '{$v2}'", $stdout, $stderr);
 
 	if ($rc != 0) {
 		return '?';
@@ -325,7 +289,7 @@ function is_pkg_installed($pkg_name) {
 		return false;
 	}
 
-	return pkg_call("info -e " . $pkg_name, true, true);
+	return pkg_call("info -e " . $pkg_name, true);
 }
 
 /* Install package, $pkg_name should not contain prefix */
@@ -421,21 +385,7 @@ function get_pkg_info($pkgs = 'all', $info = 'all') {
 		$pkgs = $g['pkg_prefix'];
 	}
 
-	/* Make sure repo metadata is up2date */
-	update_status("\n" .
-	    gettext("Updating package repository metadada...") . "\n");
-
-	if (!pkg_update()) {
-		$input_errors[] = gettext(
-		    "ERROR: An error occurred when updating packages repository. Aborting...")
-		    . "\n";
-		update_status("\n" . gettext(
-		    "ERROR: An error occurred when updating packages repository. Aborting...")
-		    . "\n");
-		return array();
-	}
-
-	$rc = pkg_exec("search -U --raw-format json-compact " . $pkgs, $out, $err, true);
+	$rc = pkg_exec("search --raw-format json-compact " . $pkgs, $out, $err);
 
 	if ($rc != 0) {
 		update_status("\n" . gettext(
@@ -470,7 +420,7 @@ function get_pkg_info($pkgs = 'all', $info = 'all') {
 		if (is_pkg_installed($pkg_info['name'])) {
 			$pkg_info['installed'] = true;
 
-			$rc = pkg_exec("query %v {$pkg_info['name']}", $out, $err, true);
+			$rc = pkg_exec("query %v {$pkg_info['name']}", $out, $err);
 
 			if ($rc != 0) {
 				update_status("\n" . gettext(
@@ -1005,10 +955,6 @@ function package_reinstall_all() {
 			sleep(1);
 		}
 		update_status("\n");
-	} else {
-		if (!pkg_update()) {
-			return false;
-		}
 	}
 
 	$pkg_info = get_pkg_info();

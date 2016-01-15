@@ -300,7 +300,7 @@ print($form);
 
 <form action="firewall_nat_out.php" method="post" name="iform">
 	<div class="panel panel-default">
-		<div class="panel-heading"><?=gettext('Mappings')?></div>
+		<div class="panel-heading"><h2 class="panel-title"><?=gettext('Mappings')?></h2></div>
 		<div class="panel-body table-responsive">
 			<table class="table table-hover table-striped table-condensed">
 				<thead>
@@ -549,7 +549,7 @@ if ($mode == "automatic" || $mode == "hybrid"):
 	unset($FilterIflist, $GatewaysList);
 ?>
 	<div class="panel panel-default">
-		<div class="panel-heading"><?=gettext("Automatic rules:")?></div>
+		<div class="panel-heading"><h2 class="panel-title"><?=gettext("Automatic rules:")?></h2></div>
 		<div class="panel-body table-responsive">
 			<table class="table table-hover table-striped table-condensed">
 				<thead>
@@ -660,7 +660,7 @@ endif;
 	</div>
 </form>
 
-<div id="infoblock">
+<div class="infoblock">
 <?php
 	print_info_box(gettext('If automatic outbound NAT is selected, a mapping is automatically generated for each interface\'s subnet (except WAN-type connections) and the rules ' .
 							'on the "Mappings" section of this page are ignored.' . '<br />' .
@@ -670,7 +670,7 @@ endif;
 							'If disable outbound NAT is selected, no rules will be used.' . '<br />' .
 							'If a target address other than an interface\'s IP address is used, then depending on the way the WAN connection is setup, a ') .
 							'<a href="firewall_virtual_ip.php">' . gettext("Virtual IP") . '</a>' . gettext(" may also be required."),
-				   info);
+				   'info', false);
 ?>
 </div>
 

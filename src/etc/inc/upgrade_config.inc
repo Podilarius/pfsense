@@ -3818,9 +3818,9 @@ function upgrade_117_to_118() {
 function upgrade_118_to_119() {
 	global $config;
 
-        if (!isset($config['ipsec']['phase1'])) {
-                return;
-        }
+	if (!isset($config['ipsec']['phase1'])) {
+		return;
+	}
 
 	// change peerid_type to 'any' for EAP types to retain previous behavior of omitting rightid
 	$a_phase1 =& $config['ipsec']['phase1'];
@@ -4269,4 +4269,49 @@ function upgrade_134_to_135() {
 		$config['syslog']['nolognginx'] = true;
 	}
 }
+
+function upgrade_135_to_136() {
+	global $config;
+
+	if (isset($config['l7shaper'])) {
+		file_notice("L7shaper", "Layer 7 shaping is no longer supported. Its configuration has been removed.");
+		unset($config['l7shaper']);
+		if (is_array($config['filter']['rule'])) {
+			foreach ($config['filter']['rule'] as $idx => $rule) {
+				if (isset($rule['l7container'])) {
+					unset($config['filter']['rule'][$idx]['l7container']);
+				}
+			}
+		}
+	}
+}
+
+function upgrade_136_to_137() {
+	global $config;
+
+	if (is_array($config['dhcpd'])) {
+		foreach ($config['dhcpd'] as &$dhcpd) {
+			if (!is_array($dhcpd['numberoptions']['item'])) {
+				continue;
+			}
+
+			foreach ($dhcpd['numberoptions']['item'] as &$item) {
+				$item['value'] = base64_encode($item['value']);
+			}
+		}
+	}
+
+	if (is_array($config['dhcpdv6'])) {
+		foreach ($config['dhcpdv6'] as &$dhcpdv6) {
+			if (!is_array($dhcpdv6['numberoptions']['item'])) {
+				continue;
+			}
+
+			foreach ($dhcpdv6['numberoptions']['item'] as &$item) {
+				$item['value'] = base64_encode($item['value']);
+			}
+		}
+	}
+}
+
 ?>

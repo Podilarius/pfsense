@@ -170,19 +170,21 @@ if ($_GET) {
 			if (write_config()) {
 				$retval = 0;
 				$retval = filter_configure();
-				$savemsg = get_std_save_message($retval);
 
-			if (stristr($retval, "error") != true) {
-				$savemsg = get_std_save_message($retval);
+				if (stristr($retval, "error") != true) {
+					$savemsg = get_std_save_message($retval);
+					$class = 'success';
+				} else {
+					$savemsg = $retval;
+					$class = 'danger';
+				}
+
 			} else {
-				$savemsg = $retval;
+				$savemsg = gettext("Unable to write config.xml (Access Denied?)");
+				$class = 'danger';
 			}
 
-		} else {
-			$savemsg = gettext("Unable to write config.xml (Access Denied?)");
-		}
-
-		$dfltmsg = true;
+			$dfltmsg = true;
 
 		break;
 	case "add":
@@ -305,12 +307,13 @@ if ($_POST) {
 
 		$retval = 0;
 		$retval = filter_configure();
-		$savemsg = get_std_save_message($retval);
 
 		if (stristr($retval, "error") != true) {
 			$savemsg = get_std_save_message($retval);
+			$class = 'success';
 		} else {
 			$savemsg = $retval;
+			$class = 'danger';
 		}
 
 		/* XXX: TODO Make dummynet pretty graphs */
@@ -401,7 +404,7 @@ if ($input_errors) {
 }
 
 if ($savemsg) {
-	print_info_box($savemsg, 'success');
+	print_info_box($savemsg, $class);
 }
 
 if (is_subsystem_dirty('shaper')) {
@@ -415,7 +418,6 @@ $tab_array[] = array(gettext("Limiter"), true, "firewall_shaper_vinterface.php")
 $tab_array[] = array(gettext("Wizards"), false, "firewall_shaper_wizards.php");
 display_top_tabs($tab_array);
 ?>
-
 <div class="table-responsive">
 	<table class="table">
 		<tbody>
@@ -430,15 +432,15 @@ display_top_tabs($tab_array);
 <?php
 
 if ($dfltmsg) {
-	print_info_box($dn_default_shaper_msg);
+	print_info_box($dn_default_shaper_msg, 'info');
 } else {
 	// Add global buttons
 	if (!$dontshow || $newqueue) {
-		if ($can_add || $addnewaltq) {
+		if ($can_add && ($action != "add")) {
 			if ($queue) {
 				$url = 'firewall_shaper_vinterface.php?pipe=' . $pipe . '&queue=' . $queue->GetQname() . '&action=add';
 			} else {
-				$url = 'firewall_shaper.php?pipe='. $pipe . '&action=add';
+				$url = 'firewall_shaper_vinterface.php?pipe='. $pipe . '&action=add';
 			}
 
 			$sform->addGlobal(new Form_Button(
@@ -448,21 +450,23 @@ if ($dfltmsg) {
 			))->removeClass('btn-default')->addClass('btn-success');
 		}
 
-		if ($queue) {
-			$url = 'firewall_shaper_vinterface.php?pipe='. $pipe . '&queue=' . $queue->GetQname() . '&action=delete';
-		} else {
-			$url = 'firewall_shaper_vinterface.php?pipe='. $pipe . '&action=delete';
-		}
+		if ($action != "add") {
+			if ($queue) {
+				$url = 'firewall_shaper_vinterface.php?pipe='. $pipe . '&queue=' . $queue->GetQname() . '&action=delete';
+			} else {
+				$url = 'firewall_shaper_vinterface.php?pipe='. $pipe . '&action=delete';
+			}
 
-		$sform->addGlobal(new Form_Button(
-			'delete',
-			$queue ? 'Delete this queue':'Delete',
-			$url
-		))->removeClass('btn-default')->addClass('btn-danger');
+			$sform->addGlobal(new Form_Button(
+				'delete',
+				($queue && ($qname != $pipe)) ? 'Delete this queue':'Delete Limiter',
+				$url
+			))->removeClass('btn-default')->addClass('btn-danger');
+		}
 	}
 
 	// Print the form
-	if($sform) {
+	if ($sform) {
 		$sform->setAction("firewall_shaper_vinterface.php");
 		print($sform);
 	}

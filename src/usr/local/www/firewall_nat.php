@@ -188,19 +188,19 @@ display_top_tabs($tab_array);
 
 <form action="firewall_nat.php" method="post" name="iform">
 	<div class="panel panel-default">
-		<div class="panel-heading"><?=gettext('Rules')?></div>
+		<div class="panel-heading"><h2 class="panel-title"><?=gettext('Rules')?></h2></div>
 		<div class="panel-body table-responsive">
 			<table class="table table-striped table-hover table-condensed">
 				<thead>
 					<tr>
 						<th><!-- Checkbox --></th>
 						<th><!-- Rule type --></th>
-						<th><?=gettext("If")?></th>
-						<th><?=gettext("Proto")?></th>
-						<th><?=gettext("Src. addr")?></th>
-						<th><?=gettext("Src. ports")?></th>
-						<th><?=gettext("Dest. addr")?></th>
-						<th><?=gettext("Dest. ports")?></th>
+						<th><?=gettext("Interface")?></th>
+						<th><?=gettext("Protocol")?></th>
+						<th><?=gettext("Source Address")?></th>
+						<th><?=gettext("Source Ports")?></th>
+						<th><?=gettext("Dest. Address")?></th>
+						<th><?=gettext("Dest. Ports")?></th>
 						<th><?=gettext("NAT IP")?></th>
 						<th><?=gettext("NAT Ports")?></th>
 						<th><?=gettext("Description")?></th>

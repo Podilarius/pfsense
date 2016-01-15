@@ -128,7 +128,7 @@ if ($input_errors) {
 }
 
 if ($savemsg) {
-	print_info_box($savemsg);
+	print_info_box($savemsg, 'success');
 }
 
 if (is_subsystem_dirty('loadbalancer')) {
@@ -157,7 +157,7 @@ display_top_tabs($tab_array);
 						<th><?=gettext('Port')?></th>
 						<th><?=gettext('Monitor')?></th>
 						<th><?=gettext('Description')?></th>
-						<th></th>
+						<th><?=gettext('Actions')?></th>
 					</tr>
 				</thead>
 				<tbody>

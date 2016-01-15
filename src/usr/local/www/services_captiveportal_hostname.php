@@ -131,7 +131,7 @@ if ($_GET['act'] == "del" && !empty($cpzone) && isset($cpzoneid)) {
 include("head.inc");
 
 if ($savemsg) {
-	print_info_box($savemsg);
+	print_info_box($savemsg, 'success');
 }
 
 $tab_array = array();
@@ -196,8 +196,8 @@ endif;
 	</a>
 </nav>
 
-<div id="infoblock">
-	<?=print_info_box($notestr)?>
+<div class="infoblock">
+	<?=print_info_box($notestr, 'info', false)?>
 </div>
 
 <?php

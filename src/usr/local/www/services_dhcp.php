@@ -230,7 +230,7 @@ if (isset($_POST['submit'])) {
 			$numbervalue = array();
 			$numbervalue['number'] = htmlspecialchars($_POST["number{$x}"]);
 			$numbervalue['type'] = htmlspecialchars($_POST["itemtype{$x}"]);
-			$numbervalue['value'] = str_replace('&quot;', '"', htmlspecialchars($_POST["value{$x}"]));
+			$numbervalue['value'] = base64_encode($_POST["value{$x}"]);
 			$numberoptions['item'][] = $numbervalue;
 		}
 	}
@@ -938,7 +938,7 @@ if (!is_numeric($pool) && !($act == "newpool")) {
 		'Failover peer IP',
 		$pconfig['failover_peerip']
 	))->setHelp('Leave blank to disable. Enter the interface IP address of the other machine. Machines must be using CARP.' .
-				'Interface\'s advskew determines whether the DHCPd process is Primary or Secondary. Ensure one machine\'s advskew < 20 (and the other is > 20).');
+				'Interface\'s advskew determines whether the DHCPd process is Primary or Secondary. Ensure one machine\'s advskew &lt; 20 (and the other is &gt; 20).');
 }
 
 if (!is_numeric($pool) && !($act == "newpool")) {
@@ -1200,7 +1200,7 @@ $numrows = count($pconfig['numberoptions']['item']) -1;
 foreach ($pconfig['numberoptions']['item'] as $item) {
 	$number = $item['number'];
 	$itemtype = $item['type'];
-	$value = $item['value'];
+	$value = base64_decode($item['value']);
 
 	$group = new Form_Group(($counter == 0) ? 'Option':null);
 	$group->addClass('repeatable');

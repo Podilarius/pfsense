@@ -274,14 +274,14 @@ display_top_tabs($tab_array);
 ?>
 <form method="post">
 	<div class="panel panel-default">
-		<div class="panel-heading"><?=gettext("Rules (Drag to change order)")?></div>
+		<div class="panel-heading"><h2 class="panel-title"><?=gettext("Rules (Drag to change order)")?></h2></div>
 		<div id="mainarea" class="table-responsive panel-body">
 			<table class="table table-hover table-striped table-condensed">
 				<thead>
 					<tr>
 						<th><!-- checkbox --></th>
 						<th><!-- status icons --></th>
-						<th><?=gettext("Proto")?></th>
+						<th><?=gettext("Protocol")?></th>
 						<th><?=gettext("Source")?></th>
 						<th><?=gettext("Port")?></th>
 						<th><?=gettext("Destination")?></th>
@@ -695,7 +695,7 @@ for ($i = 0; isset($a_filter[$i]); $i++):
 	</nav>
 </form>
 
-<div id="infoblock">
+<div class="infoblock">
 	<div class="alert alert-info clearfix" role="alert"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button><div class="pull-left">
 		<dl class="dl-horizontal responsive">
 		<!-- Legend -->

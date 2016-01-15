@@ -116,7 +116,7 @@ $pgtitle = array(gettext("Status"), gettext("System logs"), gettext($allowed_log
 include("head.inc");
 
 if (!$input_errors && $savemsg) {
-	print_info_box($savemsg);
+	print_info_box($savemsg, 'success');
 	$manage_log_active = false;
 }
 
@@ -406,12 +406,12 @@ function toggleListDescriptions() {
 			<table class="table table-striped table-hover table-condensed">
 				<thead>
 					<tr class="text-nowrap">
-						<th><?=gettext("Act")?></th>
+						<th><?=gettext("Action")?></th>
 						<th><?=gettext("Time")?></th>
-						<th><?=gettext("IF")?></th>
+						<th><?=gettext("Interface")?></th>
 						<th><?=gettext("Source")?></th>
 						<th><?=gettext("Destination")?></th>
-						<th><?=gettext("Proto")?></th>
+						<th><?=gettext("Protocol")?></th>
 					</tr>
 				</thead>
 				<tbody id="filter-log-entries">
@@ -451,7 +451,7 @@ function toggleListDescriptions() {
 								$icon_act = "fa-check text-success";
 							}
 ?>
-							<i class="fa <?php echo $icon_act;?> icon-pointer" title="<?php echo $filterent['act'] .'/'. $filterent['tracker'];?>" onclick="javascript:getURL('status_logs_filter.php?getrulenum=<?="{$filterent['rulenum']},{$filterent['tracker']},{$filterent['act']}"; ?>', outputrule);"></i>
+							<i class="fa <?=$icon_act;?> icon-pointer" title="<?php echo $filterent['act'] .'/'. $filterent['tracker'];?>" onclick="javascript:getURL('status_logs_filter.php?getrulenum=<?="{$filterent['rulenum']},{$filterent['tracker']},{$filterent['act']}"; ?>', outputrule);"></i>
 						</td>
 						<td><?=htmlspecialchars($filterent['time'])?></td>
 						<td><?=htmlspecialchars($filterent['interface'])?></td>
@@ -477,10 +477,10 @@ function toggleListDescriptions() {
 <?php
 if ($tcpcnt > 0) {
 ?>
-<div id="infoblock">
+<div class="infoblock">
 <?php
 	print_info_box('<a href="https://doc.pfsense.org/index.php/What_are_TCP_Flags%3F">' .
-					gettext("TCP Flags") . '</a>: F - FIN, S - SYN, A or . - ACK, R - RST, P - PSH, U - URG, E - ECE, C - CWR');
+					gettext("TCP Flags") . '</a>: F - FIN, S - SYN, A or . - ACK, R - RST, P - PSH, U - URG, E - ECE, C - CWR', 'info', false);
 ?>
 </div>
 <?php

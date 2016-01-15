@@ -483,12 +483,13 @@ $serport_count = 0;
 function build_link_list() {
 	global $pconfig, $portlist, $port_count, $serport_count;
 
-	$linklist = array('list'	 => array(),
-					  'selected' => array());
+	$linklist = array('list' => array(), 'selected' => array());
 
 	$selected_ports = array();
 
-	if ($pconfig['interfaces']) {
+	if (is_array($pconfig['interfaces'])) {
+		$selected_ports = $pconfig['interfaces'];
+	} elseif (!empty($pconfig['interfaces'])) {
 		$selected_ports = explode(',', $pconfig['interfaces']);
 	}
 
@@ -550,7 +551,7 @@ $linkparamstr = gettext('Bandwidth is set only for MLPPP connections and when li
 
 $form = new Form();
 
-$section = new Form_Section('PPPs Configuration');
+$section = new Form_Section('PPP Configuration');
 
 $section->addInput(new Form_Select(
 	'type',

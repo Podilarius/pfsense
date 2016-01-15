@@ -126,7 +126,7 @@ if ($savemsg) {
 					<th><?=gettext("Name")?></th>
 					<th><?=gettext("Range: Date / Times / Name")?></th>
 					<th><?=gettext("Description")?></th>
-					<th><!--Buttons--></th>
+					<th><?=gettext("Actions")?></th>
 				</tr>
 			</thead>
 			<tbody>
@@ -279,8 +279,8 @@ endforeach;
 	</a>
 </nav>
 
-<div id="infoblock">
-	<?=print_info_box(gettext('Schedules act as placeholders for time ranges to be used in Firewall Rules.'), info)?>
+<div class="infoblock">
+	<?=print_info_box(gettext('Schedules act as placeholders for time ranges to be used in Firewall Rules.'), 'info', false)?>
 </div>
 
 <?php

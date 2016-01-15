@@ -82,7 +82,7 @@ if ($_REQUEST['delete']) {
 	exit;
 }
 
-if ($_POST['deleteall']) {
+if ($_POST['clearall']) {
 	exec("/sbin/pfctl -t " . escapeshellarg($tablename) . " -T show", $entries);
 	if (is_array($entries)) {
 		foreach ($entries as $entryA) {
@@ -90,6 +90,7 @@ if ($_POST['deleteall']) {
 			exec("/sbin/pfctl -t " . escapeshellarg($tablename) . " -T delete " . escapeshellarg($entry), $delete);
 		}
 	}
+	unset($entries);
 }
 
 if (($tablename == "bogons") || ($tablename == "bogonsv6")) {
@@ -122,22 +123,61 @@ exec("/sbin/pfctl -sT", $tables);
 include("head.inc");
 
 if ($savemsg) {
-	print_info_box($savemsg);
+	print_info_box($savemsg, 'success');
 }
 
-$form = new Form('Show');
+if ($tablename == "webConfiguratorlockout") {
+	$displayname = gettext("Web configurator lockout table");
+} else {
+	$displayname = ucfirst($tablename) . " " . gettext("table");
+}
+
+$form = new Form(false);
 
 $section = new Form_Section('Table to display');
+$group = new Form_Group("Table");
 
-$section->addInput(new Form_Select(
+$group->add(new Form_Select(
 	'type',
-	'Table',
+	null,
 	$tablename,
 	array_combine($tables, $tables)
 ));
 
+if ($bogons || !empty($entries)) {
+	if ($bogons) {
+		$group->add(new Form_Button(
+			'Download',
+			'Update'
+		))->removeClass('btn-primary')->addClass('btn-success btn-sm');
+	} elseif (!empty($entries)) {
+		$group->add(new Form_Button(
+			'clearall',
+			'Clear Table'
+		))->removeClass('btn-primary')->addClass('btn-danger btn-sm');
+	}
+}
+
+$section->add($group);
 $form->add($section);
 print $form;
+
+if ($bogons || !empty($entries)) {
+?>
+<div>
+	<div class="infoblock blockopen">
+<?php
+	$last_updated = exec('/usr/bin/grep -i -m 1 -E "^# last updated" /etc/' . escapeshellarg($tablename) . '|cut -d"(" -f2|tr -d ")" ');
+	if ($last_updated != "") {
+		print_info_box(gettext("Table last updated on ") . $last_updated, 'info', false);
+	} else {
+		print_info_box(gettext("Date of last update of table is unknown"), 'info', false);
+	}
+?>
+	</div>
+</div>
+<?php
+}
 ?>
 
 <script type="text/javascript">
@@ -159,69 +199,52 @@ events.push(function() {
 				},
 		});
 	});
+
+	// Auto-submit the form on table selector change
+	$('#type').on('change', function() {
+        $('form').submit();
+    });
 });
 //]]>
 </script>
 
-<div class="table-responsive">
-	<table class="table table-striped table-hover table-condensed">
-		<thead>
-			<tr>
-				<th><?=gettext("IP Address")?></th>
-				<th></th>
-			</tr>
-		</thead>
-		<tbody>
+<div class="panel panel-default">
+	<div class="panel-heading"><h2 class="panel-title"><?=$displayname?></h2></div>
+	<div class="panel-body">
+		<div class="table-responsive">
+			<table class="table table-striped table-hover table-condensed">
+				<thead>
+					<tr>
+						<th><?=gettext("IP Address")?></th>
+						<th></th>
+					</tr>
+				</thead>
+				<tbody>
 <?php
 		foreach ($entries as $entry):
 			$entry = trim($entry);
 ?>
-			<tr>
-				<td>
-					<?=$entry?>
-				</td>
-				<td>
-					<?php if (!$bogons): ?>
-						<a class="btn btn-xs btn-default" data-entry="<?=htmlspecialchars($entry)?>">Remove</a>
-					<?php endif ?>
-				</td>
-			</tr>
+					<tr>
+						<td>
+							<?=$entry?>
+						</td>
+						<td>
+							<?php if (!$bogons): ?>
+								<a class="btn btn-xs btn-default" data-entry="<?=htmlspecialchars($entry)?>">Remove</a>
+							<?php endif ?>
+						</td>
+					</tr>
 <?php endforeach ?>
-		</tbody>
-	</table>
+				</tbody>
+			</table>
+		</div>
+	</div>
 </div>
+
 <?php if (empty($entries)): ?>
-	<div class="alert alert-warning" role="alert">No entries exist in this table</div>
+	<div class="alert alert-warning" role="alert"><?=gettext("No entries exist in this table")?></div>
 <?php endif ?>
 
 <?php
-
-if ($bogons || !empty($entries)) {
-	$form = new Form;
-
-	$section = new Form_Section('Table Data');
-
-	if ($bogons) {
-		$last_updated = exec('/usr/bin/grep -i -m 1 -E "^# last updated" /etc/' . escapeshellarg($tablename) . '|cut -d"(" -f2|tr -d ")" ');
-
-		$section->addInput(new Form_StaticText(
-			'Last update',
-			$last_updated
-		));
-
-		$section->addInput(new Form_Button(
-			'Download',
-			'Download'
-		))->setHelp('Download the latest bogon data')->addClass('btn-warning');
-	} elseif (!empty($entries)) {
-		$section->addInput(new Form_Button(
-			'deleteall',
-			'Clear Table'
-		))->setHelp('Clear all of the entries in this table')->addClass('btn-danger');
-	}
-
-	$form->add($section);
-	print $form;
-}
 
 include("foot.inc");

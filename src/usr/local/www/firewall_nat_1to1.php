@@ -173,7 +173,7 @@ display_top_tabs($tab_array);
 ?>
 <form action="firewall_nat_1to1.php" method="post">
 	<div class="panel panel-default">
-		<div class="panel-heading"><?=gettext("NAT 1 to 1 mappings")?></div>
+		<div class="panel-heading"><h2 class="panel-title"><?=gettext("NAT 1 to 1 mappings")?></h2></div>
 		<div id="mainarea" class="table-responsive panel-body">
 			<table class="table table-striped table-hover table-condensed">
 				<thead>
@@ -208,7 +208,10 @@ display_top_tabs($tab_array);
 
 						<td>
 							<a href="?act=toggle&amp;id=<?=$i?>">
-								<i class="<?= ($iconfn == "pass") ? "fa-check":"fa-times"?>" title="<?=gettext("click to toggle enabled/disabled status")?>"></i>
+								<i class="fa <?= ($iconfn == "pass") ? "fa-check":"fa-times"?>" title="<?=gettext("click to toggle enabled/disabled status")?>"></i>
+<?php 				if (isset($natent['nobinat'])) { ?>
+								&nbsp;<i class="fa fa-hand-paper-o text-danger" title="<?=gettext("Negated: This rule excludes NAT from a later rule")?>"></i>
+<?php 				} ?>
 							</a>
 						</td>
 						<td>
@@ -248,7 +251,7 @@ display_top_tabs($tab_array);
 						<td>
 							<a class="fa fa-pencil" title="<?=gettext("Edit rule")?>" href="firewall_nat_1to1_edit.php?id=<?=$i?>"></a>
 							<a class="fa fa-clone" title="<?=gettext("Add a new rule based on this one")?>" href="firewall_nat_1to1_edit.php?dup=<?=$i?>"></a>
-							<a class="fa fa-trash" title="<?=gettext("Delete rule")?>" href="firewall_nat_1to1.php?act=del&amp;id=<?=$i?>" onclick="return confirm('<?=gettext("Are you sure you want to delete this rule?")?>')"></a>
+							<a class="fa fa-trash" title="<?=gettext("Delete rule")?>" href="firewall_nat_1to1.php?act=del&amp;id=<?=$i?>" ></a>
 						</td>
 
 					</tr>
@@ -277,13 +280,13 @@ display_top_tabs($tab_array);
 	</nav>
 </form>
 
-<div id="infoblock">
+<div class="infoblock">
 <?=print_info_box(gettext('Depending on the way your WAN connection is setup, you may also need a ') . '<a href="firewall_virtual_ip.php">' .
 			   gettext("Virtual IP.") . '</a>' . '<br />' .
 			   gettext('If you add a 1:1 NAT entry for any of the interface IPs on this system, ' .
 					   'it will make this system inaccessible on that IP address. i.e. if ' .
 					   'you use your WAN IP address, any services on this system (IPsec, OpenVPN server, etc.) ' .
-					   'using the WAN IP address will no longer function.'), info)?>
+					   'using the WAN IP address will no longer function.'), 'info', false)?>
 
 </div>
 
