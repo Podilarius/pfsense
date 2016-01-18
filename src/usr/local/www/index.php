@@ -328,8 +328,12 @@ pfSense_handle_custom_code("/usr/local/pkg/dashboard/pre_dashboard");
 <?php
 
 // Build the Available Widgets table using a sorted copy of the $widgets array
+function wgtcmp($a, $b) {
+	return(strtolower($a['name']) > strtolower($b['name']));
+}
+
 $available = $widgets;
-ksort($available);
+uasort($available, 'wgtcmp');
 
 foreach ($available as $widgetname => $widgetconfig):
 	if ($widgetconfig['display'] == 'none'):

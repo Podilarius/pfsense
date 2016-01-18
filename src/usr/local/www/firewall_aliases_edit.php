@@ -172,7 +172,7 @@ if ($_POST) {
 		$input_errors[] = gettext("Reserved word used for alias name.");
 	} else {
 		if (is_validaliasname($_POST['name']) == false) {
-			$input_errors[] = gettext("The alias name must be less than 32 characters long, may not consist of only numbers, and may only contain the following characters") . " a-z, A-Z, 0-9, _.";
+			$input_errors[] = gettext("The alias name must be less than 32 characters long, may not consist of only numbers, may not consist of only underscores, and may only contain the following characters:") . ' a-z, A-Z, 0-9, _';
 		}
 	}
 	/* check for name conflicts */
@@ -591,6 +591,19 @@ $help = array(
 						 "update frequency in days.</b>"
 );
 
+// Tab type specific patterns.
+// Intentionally loose (valid character check only, no pattern recognition).
+// Can be tightend up with pattern recognition as desired for each tab type.
+$pattern_str = array(
+	'network'			=> '[a-zA-Z0-9_:.-]+',	// Alias Name, Host Name, IP Address, FQDN, Network or IP Address Range
+	'host'				=> '[a-zA-Z0-9_:.-]+',	// Alias Name, Host Name, IP Address, FQDN
+	'port'				=> '[a-zA-Z0-9_:]+',	// Alias Name, Port Number, or Port Number Range
+	'url'				=> '.*',				// Alias Name or URL
+	'url_ports'			=> '.*',				// Alias Name or URL
+	'urltable'			=> '.*',				// Alias Name or URL
+	'urltable_ports'	=> '.*'					// Alias Name or URL
+);
+
 $types = array(
 	'host' => 'Host(s)',
 	'network' => 'Network(s)',
@@ -689,7 +702,13 @@ while ($counter < count($addresses)) {
 		list($address, $address_subnet) = explode("/", $addresses[$counter]);
 	} else {
 		$address = $addresses[$counter];
-		$address_subnet = "";
+		if (isset($pconfig['updatefreq'])) {
+			// Note: There is only 1 updatefreq possible.
+			// The alias types that use updatefreq only allow a single entry.
+			$address_subnet = $pconfig['updatefreq'];
+		} else {
+			$address_subnet = "";
+		}
 	}
 
 	$group = new Form_Group($counter == 0 ? $label_str[$tab]:'');
@@ -699,7 +718,7 @@ while ($counter < count($addresses)) {
 		'address' . $counter,
 		'Address',
 		$address
-	))->addMask('address_subnet' . $counter, $address_subnet)->setWidth(4)->setPattern('[a-zA-Z0-9\-\.\:]+');
+	))->addMask('address_subnet' . $counter, $address_subnet)->setWidth(4)->setPattern($pattern_str[$tab]);
 
 	$group->add(new Form_Input(
 		'detail' . $counter,
@@ -756,6 +775,12 @@ events.push(function() {
 		// Set the input field label by tab
 		var labelstr = <?=json_encode($label_str);?>;
 		$('.repeatable:first').find('label').text(labelstr[tab]);
+
+		// Set the input field pattern by tab type
+		var patternstr = <?=json_encode($pattern_str);?>;
+		for (i = 0; i < <?=$counter;?>; i++) {
+			$('#address' + i).prop('pattern', patternstr[tab]);
+		}
 
 		// Hide and disable rows other than the first
 		hideRowsAfter(1, (tab == 'urltable') || (tab == 'urltable_ports'));
