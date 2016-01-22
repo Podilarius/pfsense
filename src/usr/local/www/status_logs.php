@@ -71,29 +71,29 @@ Build a list of allowed log files so we can reject others to prevent the page
 from acting on unauthorized files.
 */
 $allowed_logs = array(
-	"system" => array("name" => "General",
+	"system" => array("name" => gettext("General"),
 		    "shortcut" => ""),
-	"dhcpd" => array("name" => "DHCP",
+	"dhcpd" => array("name" => gettext("DHCP"),
 		    "shortcut" => "dhcp"),
-	"portalauth" => array("name" => "Captive Portal Authentication",
+	"portalauth" => array("name" => gettext("Captive Portal Authentication"),
 		    "shortcut" => "captiveportal"),
-	"ipsec" => array("name" => "IPsec",
+	"ipsec" => array("name" => gettext("IPsec"),
 		    "shortcut" => "ipsec"),
-	"ppp" => array("name" => "PPP",
+	"ppp" => array("name" => gettext("PPP"),
 		    "shortcut" => ""),
-	"relayd" => array("name" => "Load Balancer",
+	"relayd" => array("name" => gettext("Load Balancer"),
 		    "shortcut" => "relayd"),
-	"openvpn" => array("name" => "OpenVPN",
+	"openvpn" => array("name" => gettext("OpenVPN"),
 		    "shortcut" => "openvpn"),
-	"ntpd" => array("name" => "NTPd",
+	"ntpd" => array("name" => gettext("NTPd"),
 		    "shortcut" => "ntp"),
-	"gateways" => array("name" => "Gateways",
+	"gateways" => array("name" => gettext("Gateways"),
 		    "shortcut" => "gateways"),
-	"routing" => array("name" => "Routing",
+	"routing" => array("name" => gettext("Routing"),
 		    "shortcut" => "routing"),
-	"resolver" => array("name" => "DNS Resolver",
+	"resolver" => array("name" => gettext("DNS Resolver"),
 		    "shortcut" => "resolver"),
-	"wireless" => array("name" => "Wireless",
+	"wireless" => array("name" => gettext("Wireless"),
 		    "shortcut" => "wireless"),
 );
 
@@ -135,6 +135,12 @@ if (!$input_errors && $savemsg) {
 
 // Tab Array
 tab_array_logs_common();
+
+
+// Manage Log - Section/Form
+if ($system_logs_manage_log_form_hidden) {
+	manage_log_section();
+}
 
 
 // Filter Section/Form - System
@@ -248,7 +254,9 @@ if (!$rawfilter) {
 
 <?php
 # Manage Log - Section/Form
-manage_log_section();
+if (!$system_logs_manage_log_form_hidden) {
+	manage_log_section();
+}
 ?>
 
 <?php include("foot.inc"); ?>

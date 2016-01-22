@@ -107,7 +107,7 @@ if ($g['disablecrashreporter'] != true) {
 		}
 
 		if ($x > 0) {
-			$savemsg = "{$g['product_name']} has detected a crash report or programming bug.  Click <a href='crash_reporter.php'>here</a> for more information.";
+			$savemsg = sprintf(gettext("%s has detected a crash report or programming bug.  Click <a href='crash_reporter.php'>here</a> for more information."), $g['product_name']);
 			$class = "warning";
 		}
 	}
@@ -300,6 +300,17 @@ if ($config['widgets'] && $config['widgets']['sequence'] != "") {
 	}
 }
 
+## Get the configured options for Show/Hide available widgets panel.
+$dashboard_available_widgets_hidden = isset($config['system']['webgui']['dashboardavailablewidgetspanel']) ? false : true;
+
+if ($dashboard_available_widgets_hidden) {
+	$panel_state = 'out';
+	$panel_body_state = 'in';
+} else {
+	$panel_state = 'in';
+	$panel_body_state = 'out';
+}
+
 ## Set Page Title and Include Header
 $pgtitle = array(gettext("Status"), gettext("Dashboard"));
 include("head.inc");
@@ -312,7 +323,7 @@ pfSense_handle_custom_code("/usr/local/pkg/dashboard/pre_dashboard");
 
 ?>
 
-<div class="panel panel-default" id="widget-available">
+<div class="panel panel-default collapse <?=$panel_state?>" id="widget-available">
 	<div class="panel-heading">
 		<h2 class="panel-title"><?=gettext("Available Widgets"); ?>
 			<span class="widget-heading-icon">
@@ -322,7 +333,7 @@ pfSense_handle_custom_code("/usr/local/pkg/dashboard/pre_dashboard");
 			</span>
 		</h2>
 	</div>
-	<div id="widget-available_panel-body" class="panel-body collapse out">
+	<div id="widget-available_panel-body" class="panel-body collapse <?=$panel_body_state?>">
 		<div class="content">
 			<div class="row">
 <?php
@@ -346,7 +357,7 @@ foreach ($available as $widgetname => $widgetconfig):
 	<form action="/" method="post" id="widgetSequence_form" name="widgetForm">
 		<input type="hidden" name="sequence" value="" />
 
-		<button type="submit" id="btnstore" class="btn btn-primary">Store widget configuration</button>
+		<button type="submit" id="btnstore" class="btn btn-primary"><?=gettext("Store widget configuration")?></button>
 	</form>
 </div>
 

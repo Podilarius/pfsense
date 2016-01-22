@@ -280,14 +280,6 @@ $pconfig['dhcp_plus'] = isset($wancfg['dhcp_plus']);
 $pconfig['descr'] = remove_bad_chars($wancfg['descr']);
 $pconfig['enable'] = isset($wancfg['enable']);
 
-if (is_array($config['aliases']['alias'])) {
-	foreach ($config['aliases']['alias'] as $alias) {
-		if ($alias['name'] == $wancfg['descr']) {
-			$input_errors[] = sprintf(gettext("Sorry, an alias with the name %s already exists. Interfaces cannot have the same name as an alias."), $wancfg['descr']);
-		}
-	}
-}
-
 switch ($wancfg['ipaddr']) {
 	case "dhcp":
 		$pconfig['type'] = "dhcp";
@@ -546,6 +538,15 @@ if ($_POST['apply']) {
 		foreach ($config['aliases']['alias'] as $alias) {
 			if ($alias['name'] == $_POST['descr']) {
 				$input_errors[] = sprintf(gettext("Sorry, an alias with the name %s already exists."), $_POST['descr']);
+			}
+		}
+	}
+
+	/* Is the description already used as an interface group name? */
+	if (is_array($config['ifgroups']['ifgroupentry'])) {
+		foreach ($config['ifgroups']['ifgroupentry'] as $ifgroupentry) {
+			if ($ifgroupentry['ifname'] == $_POST['descr']) {
+				$input_errors[] = sprintf(gettext("Sorry, an interface group with the name %s already exists."), $wancfg['descr']);
 			}
 		}
 	}
@@ -2587,7 +2588,7 @@ $section->addInput(new Form_Select(
 	'pppoe-reset-type',
 	'Periodic reset',
 	$pconfig['pppoe-reset-type'],
-	['' => 'Disabled', 'custom' => 'Custom', 'preset' => 'Pre-set']
+	['' => gettext('Disabled'), 'custom' => gettext('Custom'), 'preset' => gettext('Pre-set')]
 ))->setHelp('Select a reset timing type');
 
 $group = new Form_Group('Custom reset');

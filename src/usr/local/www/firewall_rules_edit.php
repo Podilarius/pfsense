@@ -966,7 +966,7 @@ function build_flag_table() {
 	$flagtable .=  "</table>";
 
 	$flagtable .= '<input type="checkbox" name="tcpflags_any" id="tcpflags_any" value="on"';
-	$flagtable .= $pconfig['tcpflags_any'] ? 'checked':'' . '/>';
+	$flagtable .= ($pconfig['tcpflags_any'] ? 'checked':'') . '/>';
 	$flagtable .= '<strong>' . gettext(" Any flags.") . '</strong>';
 
 	return($flagtable);
@@ -1399,7 +1399,7 @@ $section->addInput(new Form_Select(
 	'os',
 	'Source OS',
 	(empty($pconfig['os']) ? '':$pconfig['os']),
-	['' => 'Any'] + array_combine($ostypes, $ostypes)
+	['' => gettext('Any')] + array_combine($ostypes, $ostypes)
 ))->setHelp('Note: this only works for TCP rules. General OS choice matches all subtypes.');
 
 $section->addInput(new Form_Select(
@@ -1505,7 +1505,7 @@ $section->addInput(new Form_Checkbox(
 $section->addInput(new Form_Select(
 	'statetype',
 	'State type',
-	(isset($pconfig['statetype'])) ? "keep state":$pconfig['statetype'],
+	(isset($pconfig['statetype'])) ? $pconfig['statetype'] : "keep state",
 	array(
 		'keep state' => gettext('Keep'),
 		'sloppy state' => gettext('Sloppy'),
@@ -1678,6 +1678,7 @@ events.push(function() {
 	var srcportsvisible = 0;
 
 	function ext_change() {
+
 		if (($('#srcbeginport').find(":selected").index() == 0) && portsenabled && editenabled) {
 			disableInput('srcbeginport_cust', false);
 		} else {
@@ -1937,6 +1938,18 @@ events.push(function() {
 		setHelpText(target, dispstr);
 	}
 
+	// When editing "associated" rules, everything except the enable, action, address family and desscription
+	// fields are disabled
+	function disable_most(disable) {
+		var elementsToDisable = [
+			'interface', 'proto', 'icmptype', 'icmp6type', 'srcnot', 'srctype', 'src', 'srcmask', 'srcbebinport', 'srcbeginport_cust', 'srcendport',
+			'srcendport_cust', 'dstnot', 'dsttype', 'dst', 'dstmask', 'dstbeginport', 'dstbeginport_cust', 'dstendport', 'dstendport_cust'];
+
+		for (var idx=0, len = elementsToDisable.length; idx<len; idx++) {
+			disableInput(elementsToDisable[idx], disable);
+		}
+	}
+
 	// ---------- Click checkbox handlers ---------------------------------------------------------
 
 	$('#statetype').on('change', function() {
@@ -1946,6 +1959,12 @@ events.push(function() {
 	// ---------- On initial page load ------------------------------------------------------------
 
 	setOptText('statetype', $('#statetype').val())
+<?php if ($edit_disabled) {
+?>
+	disable_most(true);
+<?php
+}
+?>
 
 	// ---------- Autocomplete --------------------------------------------------------------------
 

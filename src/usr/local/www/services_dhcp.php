@@ -374,25 +374,26 @@ if (isset($_POST['submit'])) {
 
 		if (is_array($pconfig['numberoptions']['item'])) {
 			foreach ($pconfig['numberoptions']['item'] as $numberoption) {
-				if ($numberoption['type'] == 'text' && strstr($numberoption['value'], '"')) {
+				$numberoption_value = base64_decode($numberoption['value']);
+				if ($numberoption['type'] == 'text' && strstr($numberoption_value, '"')) {
 					$input_errors[] = gettext("Text type cannot include quotation marks.");
-				} else if ($numberoption['type'] == 'string' && !preg_match('/^"[^"]*"$/', $numberoption['value']) && !preg_match('/^[0-9a-f]{2}(?:\:[0-9a-f]{2})*$/i', $numberoption['value'])) {
+				} else if ($numberoption['type'] == 'string' && !preg_match('/^"[^"]*"$/', $numberoption_value) && !preg_match('/^[0-9a-f]{2}(?:\:[0-9a-f]{2})*$/i', $numberoption_value)) {
 					$input_errors[] = gettext("String type must be enclosed in quotes like \"this\" or must be a series of octets specified in hexadecimal, separated by colons, like 01:23:45:67:89:ab:cd:ef");
-				} else if ($numberoption['type'] == 'boolean' && $numberoption['value'] != 'true' && $numberoption['value'] != 'false' && $numberoption['value'] != 'on' && $numberoption['value'] != 'off') {
+				} else if ($numberoption['type'] == 'boolean' && $numberoption_value != 'true' && $numberoption_value != 'false' && $numberoption_value != 'on' && $numberoption_value != 'off') {
 					$input_errors[] = gettext("Boolean type must be true, false, on, or off.");
-				} else if ($numberoption['type'] == 'unsigned integer 8' && (!is_numeric($numberoption['value']) || $numberoption['value'] < 0 || $numberoption['value'] > 255)) {
+				} else if ($numberoption['type'] == 'unsigned integer 8' && (!is_numeric($numberoption_value) || $numberoption_value < 0 || $numberoption_value > 255)) {
 					$input_errors[] = gettext("Unsigned 8-bit integer type must be a number in the range 0 to 255.");
-				} else if ($numberoption['type'] == 'unsigned integer 16' && (!is_numeric($numberoption['value']) || $numberoption['value'] < 0 || $numberoption['value'] > 65535)) {
+				} else if ($numberoption['type'] == 'unsigned integer 16' && (!is_numeric($numberoption_value) || $numberoption_value < 0 || $numberoption_value > 65535)) {
 					$input_errors[] = gettext("Unsigned 16-bit integer type must be a number in the range 0 to 65535.");
-				} else if ($numberoption['type'] == 'unsigned integer 32' && (!is_numeric($numberoption['value']) || $numberoption['value'] < 0 || $numberoption['value'] > 4294967295)) {
+				} else if ($numberoption['type'] == 'unsigned integer 32' && (!is_numeric($numberoption_value) || $numberoption_value < 0 || $numberoption_value > 4294967295)) {
 					$input_errors[] = gettext("Unsigned 32-bit integer type must be a number in the range 0 to 4294967295.");
-				} else if ($numberoption['type'] == 'signed integer 8' && (!is_numeric($numberoption['value']) || $numberoption['value'] < -128 || $numberoption['value'] > 127)) {
+				} else if ($numberoption['type'] == 'signed integer 8' && (!is_numeric($numberoption_value) || $numberoption_value < -128 || $numberoption_value > 127)) {
 					$input_errors[] = gettext("Signed 8-bit integer type must be a number in the range -128 to 127.");
-				} else if ($numberoption['type'] == 'signed integer 16' && (!is_numeric($numberoption['value']) || $numberoption['value'] < -32768 || $numberoption['value'] > 32767)) {
+				} else if ($numberoption['type'] == 'signed integer 16' && (!is_numeric($numberoption_value) || $numberoption_value < -32768 || $numberoption_value > 32767)) {
 					$input_errors[] = gettext("Signed 16-bit integer type must be a number in the range -32768 to 32767.");
-				} else if ($numberoption['type'] == 'signed integer 32' && (!is_numeric($numberoption['value']) || $numberoption['value'] < -2147483648 || $numberoption['value'] > 2147483647)) {
+				} else if ($numberoption['type'] == 'signed integer 32' && (!is_numeric($numberoption_value) || $numberoption_value < -2147483648 || $numberoption_value > 2147483647)) {
 					$input_errors[] = gettext("Signed 32-bit integer type must be a number in the range -2147483648 to 2147483647.");
-				} else if ($numberoption['type'] == 'ip-address' && !is_ipaddrv4($numberoption['value']) && !is_hostname($numberoption['value'])) {
+				} else if ($numberoption['type'] == 'ip-address' && !is_ipaddrv4($numberoption_value) && !is_hostname($numberoption_value)) {
 					$input_errors[] = gettext("IP address or host type must be an IP address or host name.");
 				}
 			}
@@ -1048,21 +1049,21 @@ $btnadv = new Form_Button(
 $btnadv->removeClass('btn-primary')->addClass('btn-info btn-sm');
 
 $section->addInput(new Form_StaticText(
-	'NTP servers',
+	'NTP',
 	$btnadv
 ));
 
 $section->addInput(new Form_IpAddress(
 	'ntp1',
-	null,
+	'NTP Server 1',
 	$pconfig['ntp1']
-))->setAttribute('placeholder', 'NTP Server 1');
+));
 
 $section->addInput(new Form_IpAddress(
 	'ntp2',
-	null,
+	'NTP Server 2',
 	$pconfig['ntp2']
-))->setAttribute('placeholder', 'NTP Server 2');
+));
 
 // Advanced TFTP
 $btnadv = new Form_Button(
@@ -1073,13 +1074,13 @@ $btnadv = new Form_Button(
 $btnadv->removeClass('btn-primary')->addClass('btn-info btn-sm');
 
 $section->addInput(new Form_StaticText(
-	'TFTP server',
+	'TFTP',
 	$btnadv
 ));
 
 $section->addInput(new Form_IpAddress(
 	'tftp',
-	'Host or IP',
+	'TFTP Server',
 	$pconfig['tftp']
 ))->setHelp('Leave blank to disable.  Enter a full hostname or IP for the TFTP server')->setPattern('[.a-zA-Z0-9_]+');
 
@@ -1092,13 +1093,13 @@ $btnadv = new Form_Button(
 $btnadv->removeClass('btn-primary')->addClass('btn-info btn-sm');
 
 $section->addInput(new Form_StaticText(
-	'LDAP URI',
+	'LDAP',
 	$btnadv
 ));
 
 $section->addInput(new Form_Input(
 	'ldap',
-	null,
+	'LDAP Server URI',
 	'text',
 	$pconfig['ldap']
 ))->setHelp('Leave blank to disable. Enter a full URI for the LDAP server in the form ldap://ldap.example.com/dc=example,dc=com ');

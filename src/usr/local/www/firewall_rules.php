@@ -734,7 +734,7 @@ for ($i = 0; isset($a_filter[$i]); $i++):
 </form>
 
 <div class="infoblock">
-	<div class="alert alert-info clearfix" role="alert"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button><div class="pull-left">
+	<div class="alert alert-info clearfix" role="alert"><div class="pull-left">
 		<dl class="dl-horizontal responsive">
 		<!-- Legend -->
 			<dt><?=gettext('Legend')?></dt>				<dd></dd>
@@ -774,6 +774,7 @@ events.push(function() {
 		cursor: 'grabbing',
 		update: function(event, ui) {
 			$('#order-store').removeAttr('disabled');
+			dirty = true;
 		}
 	});
 
@@ -783,6 +784,9 @@ events.push(function() {
 
 		// Save the separator bar configuration
 		save_separators();
+
+		// Suppress the "Do you really want to leave the page" message
+		saving = true;
 	});
 
 	// Separator bar stuff ------------------------------------------------------------------------
@@ -790,6 +794,8 @@ events.push(function() {
 	// Globals
 	gColor = 'bg-info';
 	newSeperator = false;
+	saving = false;
+	dirty = false;
 
 	$("#addsep").prop('type' ,'button');
 
@@ -816,6 +822,19 @@ events.push(function() {
 
 		$("#btnnewsep").prop('type' ,'button');
 
+		// Watch escape and enter keys
+		$('#newsep').keyup(function(e) {
+			if(e.which == 27) {
+				$('#btncncsep').trigger('click');
+			}
+		});
+
+		$('#newsep').keypress(function(e) {
+			if(e.which == 13) {
+				$('#btnnewsep').trigger('click');
+			}
+		});
+
 		handle_colors();
 
 		// Remove the temporary separator bar and replace it with the final version containing the
@@ -830,6 +849,7 @@ events.push(function() {
 
 			$('#order-store').removeAttr('disabled');
 			newSeperator = false;
+			dirty = true;
 		});
 
 		// Cancel button
@@ -846,10 +866,11 @@ events.push(function() {
 			e.preventDefault();
 			$(this).parents('tr').remove();
 			$('#order-store').removeAttr('disabled');
+			dirty = true;
 		});
 	});
 
-	// Compose an inout array containing the row # and text for each separator
+	// Compose an inout array containing the row #, color and text for each separator
 	function save_separators() {
 		var seprow = 0;
 		var sepinput;
@@ -864,7 +885,7 @@ events.push(function() {
 
 				sepinput = '<input type="hidden" name="separator[' + sepnum + '][row]" value="' + seprow + '"></input>';
 				$('form').append(sepinput);
-				sepinput = '<input type="hidden" name="separator[' + sepnum + '][text]" value="' + $(this).find('td').text() + '"></input>';
+				sepinput = '<input type="hidden" name="separator[' + sepnum + '][text]" value="' + escapeHtml($(this).find('td').text()) + '"></input>';
 				$('form').append(sepinput);
 				sepinput = '<input type="hidden" name="separator[' + sepnum + '][color]" value="' + $(this).find('td').prop('class') + '"></input>';
 				$('form').append(sepinput);
@@ -883,7 +904,7 @@ events.push(function() {
 		$('[id^=sepclr]').prop("type", "button");
 
 		$('[id^=sepclr]').click(function () {
-			var color =  $(this).attr('value');
+			var color =	 $(this).attr('value');
 			// Clear all the color classes
 			$(this).parent('td').prop('class', '');
 			$(this).parent('td').prev('td').prop('class', '');
@@ -894,6 +915,15 @@ events.push(function() {
 			gColor = color;
 		});
 	}
+
+	// provide a warning message if the user tries to change page before saving
+	$(window).bind('beforeunload', function(){
+		if ((!saving && dirty) || newSeperator) {
+			return ("<?=gettext('You have moved one or more rules but have now yet saved')?>");
+		} else {
+			return undefined;
+		}
+	});
 
 	//JS equivalent to PHP htmlspecialchars()
 	function escapeHtml(text) {

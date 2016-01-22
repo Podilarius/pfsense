@@ -824,14 +824,14 @@ if ($act=="new" || $act=="edit"):
 		'cert_depth',
 		'Certificate Depth',
 		$pconfig['cert_depth'],
-		["" => "Do Not Check"] + $openvpn_cert_depths
+		["" => gettext("Do Not Check")] + $openvpn_cert_depths
 		))->setHelp('When a certificate-based client logs in, do not accept certificates below this depth. ' .
 					'Useful for denying certificates made with intermediate CAs generated from the same CA as the server.');
 
 	$section->addInput(new Form_Checkbox(
 		'strictusercn',
 		'Strict User-CN Matching',
-		null,
+		'Enforce match',
 		$pconfig['strictusercn']
 	))->setHelp('When authenticating users, enforce a match between the common name of the client certificate and the username given at login.');
 
@@ -1266,7 +1266,7 @@ events.push(function() {
 				hideInput('certref', false);
 				hideInput('dh_length', false);
 				hideInput('cert_depth', false);
-				hideInput('strictusercn', true);
+				hideCheckbox('strictusercn', true);
 				hideCheckbox('autokey_enable', true);
 				hideInput('shared_key', false);
 				hideInput('topology', false);
@@ -1276,7 +1276,7 @@ events.push(function() {
 				hideInput('certref', false);
 				hideInput('dh_length', false);
 				hideInput('cert_depth', false);
-				hideInput('strictusercn', false);
+				hideCheckbox('strictusercn', false);
 				hideCheckbox('autokey_enable', true);
 				hideInput('shared_key', true);
 				hideInput('topology', false);
@@ -1291,7 +1291,7 @@ events.push(function() {
 				hideCheckbox('tlsauth_enable', true);
 				hideInput('dh_length', true);
 				hideInput('cert_depth', true);
-				hideInput('strictusercn', true);
+				hideCheckbox('strictusercn', true);
 				hideCheckbox('autokey_enable', true);
 				hideInput('shared_key', false);
 				hideInput('topology', true);

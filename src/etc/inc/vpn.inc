@@ -434,19 +434,7 @@ function vpn_ipsec_configure($restart = false) {
 		$i_dont_care_about_security_and_use_aggressive_mode_psk = "i_dont_care_about_security_and_use_aggressive_mode_psk=yes";
 	}
 
-	$unity_enabled = 'yes';
-	if (isset($config['ipsec']['unityplugin'])) {
-		$unity_enabled = 'no';
-		if (file_exists("/usr/local/lib/ipsec/plugins/libstrongswan-unity.so")) {
-			conf_mount_rw();
-			mwexec("mv /usr/local/lib/ipsec/plugins/libstrongswan-unity.so /usr/local/lib/ipsec/plugins/libstrongswan-unity.MOVED");
-			conf_mount_ro();
-		}
-	} else if (file_exists("/usr/local/lib/ipsec/plugins/libstrongswan-unity.MOVED")) {
-		conf_mount_rw();
-		mwexec("mv /usr/local/lib/ipsec/plugins/libstrongswan-unity.MOVED /usr/local/lib/ipsec/plugins/libstrongswan-unity.so");
-		conf_mount_ro();
-	}
+	$unity_enabled = isset($config['ipsec']['unityplugin']) ? 'no' : 'yes';
 
 	$makebeforebreak = '';
 	if (isset($config['ipsec']['makebeforebreak'])) {
@@ -469,7 +457,7 @@ function vpn_ipsec_configure($restart = false) {
 	$ipsecloglevels = vpn_logging_cfgtxt();
 	if (is_array($ipsecloglevels)) {
 		foreach ($ipsecloglevels as $loglevel) {
-			$strongswanlog .= "\t\t" . $loglevel . "\n";
+			$strongswanlog .= "\t\t\t" . $loglevel . "\n";
 		}
 	}
 	$strongswan = <<<EOD
@@ -482,33 +470,41 @@ starter {
 
 charon {
 # number of worker threads in charon
-threads = 16
-ikesa_table_size = 32
-ikesa_table_segments = 4
-init_limit_half_open = 1000
-install_routes = no
-{$i_dont_care_about_security_and_use_aggressive_mode_psk}
-{$accept_unencrypted}
-cisco_unity = {$unity_enabled}
-{$ifacesuse}
-{$makebeforebreak}
+	threads = 16
+	ikesa_table_size = 32
+	ikesa_table_segments = 4
+	init_limit_half_open = 1000
+	install_routes = no
+	load_modular = yes
+	{$i_dont_care_about_security_and_use_aggressive_mode_psk}
+	{$accept_unencrypted}
+	cisco_unity = {$unity_enabled}
+	{$ifacesuse}
+	{$makebeforebreak}
 
-syslog {
-	identifier = charon
-	# log everything under daemon since it ends up in the same place regardless with our syslog.conf
-	daemon {
-		ike_name = yes
+	syslog {
+		identifier = charon
+		# log everything under daemon since it ends up in the same place regardless with our syslog.conf
+		daemon {
+			ike_name = yes
 {$strongswanlog}
+		}
+		# disable logging under auth so logs aren't duplicated
+		auth {
+			default = -1
+		}
 	}
-	# disable logging under auth so logs aren't duplicated
-	auth {
-		default = -1
-	}
-}
 
 	plugins {
+		# Load defaults
+		include {$g['varetc_path']}/ipsec/strongswan.d/charon/*.conf
+
 		stroke {
 			secrets_file = {$g['varetc_path']}/ipsec/ipsec.secrets
+		}
+
+		unity {
+			load = {$unity_enabled}
 		}
 
 EOD;
@@ -652,7 +648,7 @@ EOD;
 		}
 	}
 
-	$strongswan .= "\t}\n}\n";
+	$strongswan .= "\n\t}\n}\n";
 	@file_put_contents("{$g['varetc_path']}/ipsec/strongswan.conf", $strongswan);
 	unset($strongswan);
 

@@ -170,8 +170,8 @@ $group->add(new Form_Select(
 	null,
 	$cursort,
 	array (
-		'in'	=> 'Bandwidth In',
-		'out'	=> 'Bandwidth Out'
+		'in'	=> gettext('Bandwidth In'),
+		'out'	=> gettext('Bandwidth Out')
 	)
 ))->setHelp('Sort by');
 
@@ -180,9 +180,9 @@ $group->add(new Form_Select(
 	null,
 	$curfilter,
 	array (
-		'local'	=> 'Local',
-		'remote'=> 'Remote',
-		'all'	=> 'All'
+		'local'	=> gettext('Local'),
+		'remote'=> gettext('Remote'),
+		'all'	=> gettext('All')
 	)
 ))->setHelp('Filter');
 
@@ -191,10 +191,10 @@ $group->add(new Form_Select(
 	null,
 	$curhostipformat,
 	array (
-		''			=> 'IP Address',
-		'hostname'	=> 'Host Name',
-		'descr'		=> 'Description',
-		'fqdn'		=> 'FQDN'
+		''			=> gettext('IP Address'),
+		'hostname'	=> gettext('Host Name'),
+		'descr'		=> gettext('Description'),
+		'fqdn'		=> gettext('FQDN')
 	)
 ))->setHelp('Display');
 
@@ -225,8 +225,8 @@ function updateBandwidth() {
 
 						$('#top10-hosts').append('<tr>'+
 							'<td>'+ hostinfo[0] +'</td>'+
-							'<td>'+ hostinfo[1] +' Bits/sec</td>'+
-							'<td>'+ hostinfo[2] +' Bits/sec</td>'+
+							'<td>'+ hostinfo[1] +' <?=gettext("Bits/sec");?></td>'+
+							'<td>'+ hostinfo[2] +' <?=gettext("Bits/sec");?></td>'+
 						'</tr>');
 					}
 				}
@@ -255,7 +255,7 @@ if (ipsec_enabled()) {
 ?>
 <div class="panel panel-default">
 	<div class="panel-heading">
-		<h2 class="panel-title">Traffic graph</h2>
+		<h2 class="panel-title"><?=gettext("Traffic graph");?></h2>
 	</div>
 	<div class="panel-body">
 		<div class="col-sm-6">
