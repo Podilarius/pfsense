@@ -130,7 +130,7 @@ if ($_POST) {
 
 		if (isset($_POST['enable']) && isset($config['unbound']['enable'])) {
 			if ($_POST['port'] == $config['unbound']['port']) {
-				$input_errors[] = "The DNS Resolver is enabled using this port. Choose a non-conflicting port, or disable DNS Resolver.";
+				$input_errors[] = gettext("The DNS Resolver is enabled using this port. Choose a non-conflicting port, or disable DNS Resolver.");
 			}
 		}
 
@@ -225,7 +225,7 @@ if ($savemsg) {
 }
 
 if (is_subsystem_dirty('hosts')) {
-	print_info_box_np(gettext("The DNS forwarder configuration has been changed") . ".<br />" . gettext("You must apply the changes in order for them to take effect."));
+	print_apply_box(gettext("The DNS forwarder configuration has been changed") . ".<br />" . gettext("You must apply the changes in order for them to take effect."));
 }
 
 $form = new Form();
@@ -406,7 +406,7 @@ foreach ($a_hosts as $i => $hostent):
 						<?=$alias['domain']?>
 					</td>
 					<td>
-						Alias for <?=$hostent['host'] ? $hostent['host'] . '.' . $hostent['domain'] : $hostent['domain']?>
+						<?=gettext("Alias for ");?><?=$hostent['host'] ? $hostent['host'] . '.' . $hostent['domain'] : $hostent['domain']?>
 					</td>
 					<td>
 						<i class="fa fa-angle-double-right text-info"></i>

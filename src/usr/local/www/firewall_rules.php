@@ -277,10 +277,28 @@ if ($savemsg) {
 }
 
 if (is_subsystem_dirty('filter')) {
-	print_info_box_np(gettext("The firewall rule configuration has been changed.") . "<br />" . gettext("You must apply the changes in order for them to take effect."), "apply", "", true);
+	print_apply_box(gettext("The firewall rule configuration has been changed.") . "<br />" . gettext("You must apply the changes in order for them to take effect."));
 }
 
 display_top_tabs($tab_array);
+
+$showantilockout = false;
+$showprivate = false;
+$showblockbogons = false;
+
+if (!isset($config['system']['webgui']['noantilockout']) &&
+    (((count($config['interfaces']) > 1) && ($if == 'lan')) ||
+    ((count($config['interfaces']) == 1) && ($if == 'wan')))) {
+	$showantilockout = true;
+}
+
+if (isset($config['interfaces'][$if]['blockpriv'])) {
+	$showprivate = true;
+}
+
+if (isset($config['interfaces'][$if]['blockbogons'])) {
+	$showblockbogons = true;
+}
 
 ?>
 <form method="post">
@@ -304,13 +322,14 @@ display_top_tabs($tab_array);
 						<th><?=gettext("Actions")?></th>
 					</tr>
 				</thead>
+
+<?php if ($showblockbogons || $showantilockout || $showprivate) :
+?>
 				<tbody>
 <?php
 		// Show the anti-lockout rule if it's enabled, and we are on LAN with an if count > 1, or WAN with an if count of 1.
-	if (!isset($config['system']['webgui']['noantilockout']) &&
-		(((count($config['interfaces']) > 1) && ($if == 'lan')) ||
-		 ((count($config['interfaces']) == 1) && ($if == 'wan')))):
-		$alports = implode('<br />', filter_get_antilockout_ports(true));
+		if ($showantilockout):
+			$alports = implode('<br />', filter_get_antilockout_ports(true));
 ?>
 					<tr id="antilockout">
 						<td></td>
@@ -328,8 +347,8 @@ display_top_tabs($tab_array);
 							<a href="system_advanced_admin.php" title="<?=gettext("Settings");?>"><i class="fa fa-cog"></i></a>
 						</td>
 					</tr>
-<?php endif;?>
-<?php if (isset($config['interfaces'][$if]['blockpriv'])): ?>
+<?php 	endif;?>
+<?php 	if ($showprivate): ?>
 					<tr id="frrfc1918">
 						<td></td>
 						<td title="<?=gettext("traffic is blocked")?>"><i class="fa fa-times text-danger"></i></td>
@@ -346,8 +365,8 @@ display_top_tabs($tab_array);
 							<a href="interfaces.php?if=<?=htmlspecialchars($if)?>" title="<?=gettext("Settings");?>"><i class="fa fa-cog"></i></a>
 						</td>
 					</tr>
-<?php endif;?>
-<?php if (isset($config['interfaces'][$if]['blockbogons'])): ?>
+<?php 	endif;?>
+<?php 	if ($showblockbogons): ?>
 					<tr id="frrfc1918">
 					<td></td>
 						<td title="<?=gettext("traffic is blocked")?>"><i class="fa fa-times text-danger"></i></td>
@@ -364,9 +383,9 @@ display_top_tabs($tab_array);
 							<a href="interfaces.php?if=<?=htmlspecialchars($if)?>" title="<?=gettext("Settings");?>"><i class="fa fa-cog"></i></a>
 						</td>
 					</tr>
-<?php endif;?>
+<?php 	endif;?>
 			</tbody>
-
+<?php endif;?>
 			<tbody class="user-entries">
 <?php
 $nrules = 0;
@@ -391,7 +410,7 @@ for ($i = 0; isset($a_filter[$i]); $i++):
 
 ?>
 					<tr id="fr<?=$nrules;?>" <?=$display?> onClick="fr_toggle(<?=$nrules;?>)" ondblclick="document.location='firewall_rules_edit.php?id=<?=$i;?>';" <?=(isset($filterent['disabled']) ? ' class="disabled"' : '')?>>
-						<td >
+						<td>
 							<input type="checkbox" id="frc<?=$nrules;?>" onClick="fr_toggle(<?=$nrules;?>)" name="rule[]" value="<?=$i;?>"/>
 						</td>
 
@@ -540,7 +559,7 @@ for ($i = 0; isset($a_filter[$i]); $i++):
 					$sched_caption_escaped = str_replace("'", "\'", $schedule['descr']);
 					$schedule_span_begin = '<a href="/firewall_schedule_edit.php?id=' . $idx . '" data-toggle="popover" data-trigger="hover focus" title="' . $schedule['name'] . '" data-content="' .
 						$sched_caption_escaped . '" data-html="true">';
-					$schedule_span_end = "";
+					$schedule_span_end = "</a>";
 				}
 			}
 			$idx++;
@@ -607,26 +626,38 @@ for ($i = 0; isset($a_filter[$i]); $i++):
 						<td>
 							<?php if (isset($alias['src'])): ?>
 								<a href="/firewall_aliases_edit.php?id=<?=$alias['src']?>" data-toggle="popover" data-trigger="hover focus" title="<?=gettext('Alias details')?>" data-content="<?=alias_info_popup($alias['src'])?>" data-html="true">
+									<?=htmlspecialchars(pprint_address($filterent['source']))?>
+								</a>
+							<?php else: ?>
+								<?=htmlspecialchars(pprint_address($filterent['source']))?>
 							<?php endif; ?>
-							<?=htmlspecialchars(pprint_address($filterent['source']))?>
 						</td>
 						<td>
 							<?php if (isset($alias['srcport'])): ?>
 								<a href="/firewall_aliases_edit.php?id=<?=$alias['srcport']?>" data-toggle="popover" data-trigger="hover focus" title="<?=gettext('Alias details')?>" data-content="<?=alias_info_popup($alias['srcport'])?>" data-html="true">
+									<?=htmlspecialchars(pprint_port($filterent['source']['port']))?>
+								</a>
+							<?php else: ?>
+								<?=htmlspecialchars(pprint_port($filterent['source']['port']))?>
 							<?php endif; ?>
-							<?=htmlspecialchars(pprint_port($filterent['source']['port']))?>
 						</td>
 						<td>
 							<?php if (isset($alias['dst'])): ?>
 								<a href="/firewall_aliases_edit.php?id=<?=$alias['dst']?>" data-toggle="popover" data-trigger="hover focus" title="<?=gettext('Alias details')?>" data-content="<?=alias_info_popup($alias['dst'])?>" data-html="true">
+									<?=htmlspecialchars(pprint_address($filterent['destination']))?>
+								</a>
+							<?php else :?>
+								<?=htmlspecialchars(pprint_address($filterent['destination']))?>
 							<?php endif; ?>
-							<?=htmlspecialchars(pprint_address($filterent['destination']))?>
 						</td>
 						<td>
 							<?php if (isset($alias['dstport'])): ?>
 								<a href="/firewall_aliases_edit.php?id=<?=$alias['dstport']?>" data-toggle="popover" data-trigger="hover focus" title="<?=gettext('Alias details')?>" data-content="<?=alias_info_popup($alias['dstport'])?>" data-html="true">
+									<?=htmlspecialchars(pprint_port($filterent['destination']['port']))?>
+								</a>
+							<?php else: ?>
+								<?=htmlspecialchars(pprint_port($filterent['destination']['port']))?>
 							<?php endif; ?>
-							<?=htmlspecialchars(pprint_port($filterent['destination']['port']))?>
 						</td>
 						<td>
 							<?php if (isset($config['interfaces'][$filterent['gateway']]['descr'])):?>
@@ -652,7 +683,7 @@ for ($i = 0; isset($a_filter[$i]); $i++):
 						</td>
 						<td>
 							<?php if ($printicon) { ?>
-								<i class="fa fa-<?=$image?> <?=$dispcolor?>" title="<?=$alttext;?>" alt="icon"></i>
+								<i class="fa fa-<?=$image?> <?=$dispcolor?>" title="<?=$alttext;?>"></i>
 							<?php } ?>
 							<?=$schedule_span_begin;?><?=htmlspecialchars($filterent['sched']);?>&nbsp;<?=$schedule_span_end;?>
 						</td>
@@ -807,7 +838,7 @@ events.push(function() {
 		gColor = 'bg-info';
 		// Inset a temporary bar in which the user can enter some optional text
 		$('#ruletable > tbody:last').append('<tr>' +
-			'<td class="' + gColor + '" colspan="10"><input id="newsep" placeholder="<?=gettext("Enter a description, Save, then drag to final location.")?>" class="col-md-12" type="text"></input></td>' +
+			'<td class="' + gColor + '" colspan="10"><input id="newsep" placeholder="<?=gettext("Enter a description, Save, then drag to final location.")?>" class="col-md-12" type="text" /></td>' +
 			'<td class="' + gColor + '" colspan="2"><button class="btn btn-default btn-sm" id="btnnewsep"><?=gettext("Save")?></button>' +
 			'<button class="btn btn-default btn-sm" id="btncncsep"><?=gettext("Cancel")?></button>' +
 			'&nbsp;&nbsp;&nbsp;&nbsp;' +
@@ -845,7 +876,7 @@ events.push(function() {
 			$('#ruletable > tbody:last').append('<tr class="ui-sortable-handle separator">' +
 				'<td class="' + gColor + '" colspan="11">' + '<font class="' + gColor + '">' + septext + '</font></td>' +
 				'<td class="' + gColor + '"><a href="#"><i class="fa fa-trash sepdel"></i></a>' +
-				'</tr>');
+				'</td></tr>');
 
 			$('#order-store').removeAttr('disabled');
 			newSeperator = false;
@@ -919,7 +950,7 @@ events.push(function() {
 	// provide a warning message if the user tries to change page before saving
 	$(window).bind('beforeunload', function(){
 		if ((!saving && dirty) || newSeperator) {
-			return ("<?=gettext('You have moved one or more rules but have now yet saved')?>");
+			return ("<?=gettext('You have moved one or more rules but have not yet saved')?>");
 		} else {
 			return undefined;
 		}

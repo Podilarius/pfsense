@@ -181,6 +181,7 @@ if (is_array($dhcpdconf)) {
 	list($pconfig['wins1'], $pconfig['wins2']) = $dhcpdconf['winsserver'];
 	list($pconfig['dns1'], $pconfig['dns2'], $pconfig['dns3'], $pconfig['dns4']) = $dhcpdconf['dnsserver'];
 	$pconfig['denyunknown'] = isset($dhcpdconf['denyunknown']);
+	$pconfig['nonak'] = isset($dhcpdconf['nonak']);
 	$pconfig['ddnsdomain'] = $dhcpdconf['ddnsdomain'];
 	$pconfig['ddnsdomainprimary'] = $dhcpdconf['ddnsdomainprimary'];
 	$pconfig['ddnsdomainkeyname'] = $dhcpdconf['ddnsdomainkeyname'];
@@ -369,7 +370,7 @@ if (isset($_POST['submit'])) {
 		}
 
 		if ($_POST['staticarp'] && $noip) {
-			$input_errors[] = "Cannot enable static ARP when you have static map entries without IP addresses. Ensure all static maps have IP addresses and try again.";
+			$input_errors[] = gettext("Cannot enable static ARP when you have static map entries without IP addresses. Ensure all static maps have IP addresses and try again.");
 		}
 
 		if (is_array($pconfig['numberoptions']['item'])) {
@@ -537,6 +538,7 @@ if (isset($_POST['submit'])) {
 		$dhcpdconf['domain'] = $_POST['domain'];
 		$dhcpdconf['domainsearchlist'] = $_POST['domainsearchlist'];
 		$dhcpdconf['denyunknown'] = ($_POST['denyunknown']) ? true : false;
+		$dhcpdconf['nonak'] = ($_POST['nonak']) ? true : false;
 		$dhcpdconf['ddnsdomain'] = $_POST['ddnsdomain'];
 		$dhcpdconf['ddnsdomainprimary'] = $_POST['ddnsdomainprimary'];
 		$dhcpdconf['ddnsdomainkeyname'] = $_POST['ddnsdomainkeyname'];
@@ -713,7 +715,7 @@ if (isset($config['dhcrelay']['enable'])) {
 }
 
 if (is_subsystem_dirty('staticmaps')) {
-	print_info_box_np(gettext("The static mapping configuration has been changed") . ".<br />" . gettext("You must apply the changes in order for them to take effect."));
+	print_apply_box(gettext("The static mapping configuration has been changed") . ".<br />" . gettext("You must apply the changes in order for them to take effect."));
 }
 
 /* active tabs */
@@ -775,6 +777,14 @@ $section->addInput(new Form_Checkbox(
 	$pconfig['denyunknown']
 ));
 
+$section->addInput(new Form_Checkbox(
+	'nonak',
+	'Ignore denied clients',
+	'Denied clients will be ignored rather than rejected.',
+	$pconfig['nonak']
+));
+
+
 if (is_numeric($pool) || ($act == "newpool")) {
 	$section->addInput(new Form_Input(
 		'descr',
@@ -804,7 +814,7 @@ $range_to--;
 $rangestr = long2ip32($range_from) . ' - ' . long2ip32($range_to);
 
 if (is_numeric($pool) || ($act == "newpool")) {
-	$rangestr .= '<br />' . 'In-use DHCP Pool Ranges:';
+	$rangestr .= '<br />' . gettext('In-use DHCP Pool Ranges:');
 	if (is_array($config['dhcpd'][$if]['range'])) {
 		$rangestr .= '<br />' . $config['dhcpd'][$if]['range']['from'] . ' - ' . $config['dhcpd'][$if]['range']['to'];
 	}
@@ -1106,55 +1116,6 @@ $section->addInput(new Form_Input(
 
 $form->add($section);
 
-if ($pconfig['netboot']) {
-	$sectate = COLLAPSIBLE|SEC_OPEN;
-} else {
-	$sectate = COLLAPSIBLE|SEC_CLOSED;
-}
-$section = new Form_Section("Network booting", nwkbootsec, $sectate);
-
-$section->addInput(new Form_Checkbox(
-	'netboot',
-	'Enable',
-	'Enables network booting',
-	$pconfig['netboot']
-));
-
-$section->addInput(new Form_IpAddress(
-	'nextserver',
-	'Next Server',
-	$pconfig['nextserver']
-))->setHelp('Enter the IP address of the next server');
-
-$section->addInput(new Form_Input(
-	'filename',
-	'Default BIOS file name',
-	'text',
-	$pconfig['filename']
-));
-
-$section->addInput(new Form_Input(
-	'filename32',
-	'UEFI 32 bit file name',
-	'text',
-	$pconfig['filename32']
-));
-
-$section->addInput(new Form_Input(
-	'filename64',
-	'UEFI 64 bit file name',
-	'text',
-	$pconfig['filename64']
-))->setHelp('You need both a filename and a boot server configured for this to work! ' .
-			'You will need all three filenames and a boot server configured for UEFI to work! ');
-
-$section->addInput(new Form_Input(
-	'rootpath',
-	'Root path',
-	'text',
-	$pconfig['rootpath']
-))->setHelp('string-format: iscsi:(servername):(protocol):(port):(LUN):targetname ');
-
 // Advanced Additional options
 $btnadv = new Form_Button(
 	'btnadvopts',
@@ -1167,8 +1128,6 @@ $section->addInput(new Form_StaticText(
 	'Additional BOOTP/DHCP Options',
 	$btnadv
 ));
-
-$form->add($section);
 
 $section = new Form_Section('Additional BOOTP/DHCP Options');
 $section->addClass('adnlopts');
@@ -1238,6 +1197,57 @@ $section->addInput(new Form_Button(
 	'addrow',
 	'Add'
 ))->removeClass('btn-primary')->addClass('btn-success');
+
+$form->add($section);
+
+if ($pconfig['netboot']) {
+	$sectate = COLLAPSIBLE|SEC_OPEN;
+} else {
+	$sectate = COLLAPSIBLE|SEC_CLOSED;
+}
+$section = new Form_Section("Network booting", nwkbootsec, $sectate);
+
+$section->addInput(new Form_Checkbox(
+	'netboot',
+	'Enable',
+	'Enables network booting',
+	$pconfig['netboot']
+));
+
+$section->addInput(new Form_IpAddress(
+	'nextserver',
+	'Next Server',
+	$pconfig['nextserver']
+))->setHelp('Enter the IP address of the next server');
+
+$section->addInput(new Form_Input(
+	'filename',
+	'Default BIOS file name',
+	'text',
+	$pconfig['filename']
+));
+
+$section->addInput(new Form_Input(
+	'filename32',
+	'UEFI 32 bit file name',
+	'text',
+	$pconfig['filename32']
+));
+
+$section->addInput(new Form_Input(
+	'filename64',
+	'UEFI 64 bit file name',
+	'text',
+	$pconfig['filename64']
+))->setHelp('You need both a filename and a boot server configured for this to work! ' .
+			'You will need all three filenames and a boot server configured for UEFI to work! ');
+
+$section->addInput(new Form_Input(
+	'rootpath',
+	'Root path',
+	'text',
+	$pconfig['rootpath']
+))->setHelp('string-format: iscsi:(servername):(protocol):(port):(LUN):targetname ');
 
 $form->add($section);
 

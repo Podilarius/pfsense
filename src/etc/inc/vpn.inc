@@ -434,7 +434,7 @@ function vpn_ipsec_configure($restart = false) {
 		$i_dont_care_about_security_and_use_aggressive_mode_psk = "i_dont_care_about_security_and_use_aggressive_mode_psk=yes";
 	}
 
-	$unity_enabled = isset($config['ipsec']['unityplugin']) ? 'no' : 'yes';
+	$unity_enabled = isset($config['ipsec']['unityplugin']) ? 'yes' : 'no';
 
 	$makebeforebreak = '';
 	if (isset($config['ipsec']['makebeforebreak'])) {
@@ -1625,13 +1625,18 @@ poes{$pppoecfg['pppoeid']}{$i}:
 
 EOD;
 			}
+			if (is_numeric($pppoecfg['n_pppoe_maxlogin']) && ($pppoecfg['n_pppoe_maxlogin'] > 0)) {
+				$pppoemaxlogins = $pppoecfg['n_pppoe_maxlogin'];
+			} else {
+				$pppoemaxlogins = 1;
+			}
 
 			$mpdconf .=<<<EOD
 
 pppoe_standard:
 	set bundle no multilink
 	set bundle enable compression
-	set auth max-logins 1
+	set auth max-logins {$pppoemaxlogins}
 	set iface up-script /usr/local/sbin/vpn-linkup
 	set iface down-script /usr/local/sbin/vpn-linkdown
 	set iface idle 0

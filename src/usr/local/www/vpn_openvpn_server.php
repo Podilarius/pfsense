@@ -126,7 +126,7 @@ if ($_GET['act'] == "del") {
 	}
 	unset($a_server[$id]);
 	write_config();
-	$savemsg = gettext("Server successfully deleted")."<br />";
+	$savemsg = gettext("Server successfully deleted");
 }
 
 if ($_GET['act'] == "new") {
@@ -603,7 +603,7 @@ if ($input_errors) {
 }
 
 if ($savemsg) {
-	print_info_box_np($savemsg, 'success');
+	print_info_box($savemsg, 'success');
 }
 
 $tab_array = array();
@@ -762,7 +762,7 @@ if ($act=="new" || $act=="edit"):
 			}
 		}
 	} else {
-		$certhelp = sprintf('%s%s%s$s', '<span id="certtype">', gettext('No Certificates defined. You may create one here: '), '<a href="system_camanager.php">System &gt; Cert Manager</a>', '</span>');
+		$certhelp = sprintf('%s%s%s$s', '<span id="certtype">', gettext('No Certificates defined. You may create one here: '), '<a href="system_camanager.php">' . gettext("System &gt; Cert Manager") . '</a>', '</span>');
 	}
 
 	$cl = openvpn_build_cert_list(false, true);

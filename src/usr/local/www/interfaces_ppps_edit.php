@@ -452,7 +452,7 @@ $pgtitle = array(gettext("Interfaces"), gettext("PPPs"), gettext("Edit"));
 $shortcut_section = "interfaces";
 include("head.inc");
 
-$types = array("select" => gettext("Select"), "ppp" => "PPP", "pppoe" => "PPPoE", "pptp" => "PPTP", "l2tp" => "L2TP"/*, "tcp" => "TCP", "udp" => "UDP"*/);
+$types = array("select" => gettext("Select"), "ppp" => gettext("PPP"), "pppoe" => gettext("PPPoE"), "pptp" => gettext("PPTP"), "l2tp" => gettext("L2TP")/*, "tcp" => "TCP", "udp" => "UDP"*/);
 
 $serviceproviders_xml = "/usr/local/share/mobile-broadband-provider-info/serviceproviders.xml";
 $serviceproviders_contents = file_get_contents($serviceproviders_xml);
@@ -725,9 +725,9 @@ $section->addInput(new Form_Select(
 	'Periodic Reset',
 	$pconfig['pppoe-reset-type'],
 	array(
-		'' => 'Disabled',
-		'custom' => 'Custom',
-		'preset' => 'Pre-set'
+		'' => gettext('Disabled'),
+		'custom' => gettext('Custom'),
+		'preset' => gettext('Pre-set')
 	)
 ))->addClass('pppoe')->setHelp('Select a reset timing type');
 
@@ -965,18 +965,19 @@ events.push(function() {
 		// The options that follow are only shown if type == 'ppp'
 		var ppptype = ($('#type').val() == 'ppp');
 
-		hideInput('apnum', showadvanced && ppptype);
-		hideInput('simpin', showadvanced && ppptype);
-		hideInput('pin-wait', showadvanced && ppptype);
-		hideInput('initstr', showadvanced && ppptype);
-		hideInput('connect-timeout', showadvanced && ppptype);
-		hideCheckbox('uptime', showadvanced && ppptype);
+		hideInput('apn', showadvanced || !ppptype);
+		hideInput('apnum', showadvanced || !ppptype);
+		hideInput('simpin', showadvanced || !ppptype);
+		hideInput('pin-wait', showadvanced || !ppptype);
+		hideInput('initstr', showadvanced || !ppptype);
+		hideInput('connect-timeout', showadvanced || !ppptype);
+		hideCheckbox('uptime', showadvanced || !ppptype);
 
 		// The options that follow are only shown if type == 'pppoe'
 		var pppoetype = ($('#type').val() != 'pppoe');
 
-		hideClass('pppoe', showadvanced || pppoetype);
-		hideInput('pppoe-reset-type', showadvanced || pppoetype);
+		hideClass('pppoe', pppoetype);
+		hideInput('pppoe-reset-type', pppoetype || showadvanced);
 
 		hideResetDisplay(true);
 

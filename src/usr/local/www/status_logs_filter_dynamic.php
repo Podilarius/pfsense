@@ -132,15 +132,12 @@ if ($system_logs_manage_log_form_hidden) {
 
 
 // Log Filter Submit - Firewall
+$rawfilter = false;
 filter_form_firewall();
 
 
 // Now the forms are complete we can draw the log table and its controls
-if ($filterlogentries_submit) {
-	$filterlog = conv_log_filter($logfile_path, $nentries, $nentries + 100, $filterfieldsarray);
-} else {
-	$filterlog = conv_log_filter($logfile_path, $nentries, $nentries + 100, $filtertext, $interfacefilter);
-}
+system_log_filter();
 ?>
 
 <script type="text/javascript">
@@ -301,7 +298,7 @@ function in_arrayi(needle, haystack) {
 }
 
 function update_table_rows(data) {
-	if (isPaused) {
+	if ((isPaused) || (data.length < 1)) {
 		return;
 	}
 
@@ -322,7 +319,7 @@ function update_table_rows(data) {
 
 	data = data.slice(startat, data.length);
 
-	var rows = jQuery('#filter-log-entries>tr');
+	var rows = $('#filter-log-entries>tr');
 
 	// Number of rows to move by
 	var move = rows.length + data.length - nentries;
@@ -331,43 +328,49 @@ function update_table_rows(data) {
 		move = 0;
 	}
 
+	if (($("#count").text() == 0) && (data.length < nentries)){
+		move += rows.length;
+	}
+
 	if (isReverse == false) {
 		for (var i = move; i < rows.length; i++) {
-			jQuery(rows[i - move]).html(jQuery(rows[i]).html());
+			$(rows[i - move]).html($(rows[i]).html());
 		}
 
-		var tbody = jQuery('#filter-log-entries');
+		var tbody = $('#filter-log-entries');
 
 		for (var i = 0; i < data.length; i++) {
 			var rowIndex = rows.length - move + i;
 			if (rowIndex < rows.length) {
-				jQuery(rows[rowIndex]).html(data[i]);
+				$(rows[rowIndex]).html(data[i]);
 			} else {
-				jQuery(tbody).append('<tr>' + data[i] + '</tr>');
+				$(tbody).append('<tr>' + data[i] + '</tr>');
 			}
 		}
 	} else {
 		for (var i = rows.length - 1; i >= move; i--) {
-			jQuery(rows[i]).html(jQuery(rows[i - move]).html());
+			$(rows[i]).html($(rows[i - move]).html());
 		}
 
-		var tbody = jQuery('#filter-log-entries');
+		var tbody = $('#filter-log-entries');
 
 		for (var i = 0; i < data.length; i++) {
 			var rowIndex = move - 1 - i;
 			if (rowIndex >= 0) {
-				jQuery(rows[rowIndex]).html(data[i]);
+				$(rows[rowIndex]).html(data[i]);
 			} else {
-				jQuery(tbody).prepend('<tr>' + data[i] + '</tr>');
+				$(tbody).prepend('<tr>' + data[i] + '</tr>');
 			}
 		}
 	}
 
 	// Much easier to go through each of the rows once they've all be added.
-	rows = jQuery('#filter-log-entries>tr');
+	rows = $('#filter-log-entries>tr');
 	for (var i = 0; i < rows.length; i++) {
-		rows[i].className = i % 2 == 0 ? 'listMRodd' : 'listMReven';
+		rows[i].className = 'text-nowrap';
 	}
+
+	$("#count").html(rows.length);
 
 	$('.fa').tooltip();
 }
@@ -404,7 +407,11 @@ function toggleListDescriptions() {
 <div class="panel panel-default">
 	<div class="panel-heading">
 		<h2 class="panel-title">
-			<?=gettext('Last ') . $nentries . gettext(' records. ') . gettext('Pause ')?><input type="checkbox" onclick="javascript:toggle_pause();" />
+<?php
+	$rawfilter = true;
+	print(system_log_table_panel_title());
+?>
+<?=" " . gettext('Pause') . " "?><input type="checkbox" onclick="javascript:toggle_pause();" />
 		</h2>
 	</div>
 	<div class="panel-body">
@@ -426,7 +433,6 @@ function toggleListDescriptions() {
 				$tcpcnt = 0;
 
 				foreach ($filterlog as $filterent) {
-					$evenRowClass = $rowIndex % 2 ? " listMReven" : " listMRodd";
 					$rowIndex++;
 					if ($filterent['version'] == '6') {
 						$srcIP = "[" . htmlspecialchars($filterent['srcip']) . "]";
@@ -474,6 +480,13 @@ function toggleListDescriptions() {
 <?php
 				} // e-o-foreach()
 ?>
+<?php
+	if (count($filterlog) == 0) {
+		print '<tr class="text-nowrap"><td colspan=6>';
+		print_info_box(gettext('No logs to display'));
+		print '</td></tr>';
+	}
+?>
 				</tbody>
 			</table>
 		</div>
@@ -506,6 +519,14 @@ events.push(function() {
 	$(document).ready(function() {
 	    $('.fa').tooltip();
 	});
+});
+//]]>
+</script>
+
+<script type="text/javascript">
+//<![CDATA[
+events.push(function() {
+	$("#count").html(<?=count($filterlog);?>);
 });
 //]]>
 </script>

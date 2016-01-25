@@ -244,8 +244,8 @@ if ($savemsg) {
 }
 
 if (is_subsystem_dirty('natconf')) {
-	print_info_box_np(gettext('The NAT configuration has been changed.') . '<br />' .
-					  gettext('You must apply the changes in order for them to take effect.'));
+	print_apply_box(gettext('The NAT configuration has been changed.') . '<br />' .
+					gettext('You must apply the changes in order for them to take effect.'));
 }
 
 $tab_array = array();
@@ -684,12 +684,29 @@ events.push(function() {
 		cursor: 'grabbing',
 		update: function(event, ui) {
 			$('#order-store').removeAttr('disabled');
+			dirty = true;
 		}
 	});
 
 	// Check all of the rule checkboxes so that their values are posted
 	$('#order-store').click(function () {
 	   $('[id^=frc]').prop('checked', true);
+
+		// Suppress the "Do you really want to leave the page" message
+		saving = true;
+	});
+
+	// Globals
+	saving = false;
+	dirty = false;
+
+	// provide a warning message if the user tries to change page before saving
+	$(window).bind('beforeunload', function(){
+		if (!saving && dirty) {
+			return ("<?=gettext('You have moved one or more NAT outbound mappings but have not yet saved')?>");
+		} else {
+			return undefined;
+		}
 	});
 });
 //]]>
