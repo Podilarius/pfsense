@@ -646,7 +646,6 @@ function scrollToBottom() {
 	$('#output').scrollTop($('#output')[0].scrollHeight);
 }
 
-var timeoutmsg = '<h4>' + '<?=gettext('Rebooting')?>' + '<br />' + 'Page will automatically reload in ';
 var time = 0;
 
 function checkonline() {
@@ -661,16 +660,22 @@ function checkonline() {
 
 function startCountdown() {
 	setInterval(function() {
+		if (time == "<?=$guitimeout?>") {
+			$('#countdown').html('<h4><?=sprintf(gettext("Rebooting%sPage will automatically reload in %s seconds"), "<br />", "<span id=\"secs\"></span>");?></h4>');
+		}
+
 		if (time > 0) {
-			$('#countdown').html(timeoutmsg + time + ' seconds.</h4>');
+			$('#secs').html(time);
 			time--;
 		} else {
 			time = "<?=$guiretry?>";
-			timeoutmsg = '<h4>' + '<?=gettext('Not yet ready')?>' + '<br />Retrying in another ';
+			$('#countdown').html('<h4><?=sprintf(gettext("Not yet ready%s Retrying in another %s seconds"), "<br />", "<span id=\"secs\"></span>");?></h4>');
+			$('#secs').html(time);
 			checkonline();
 		}
 	}, 1000);
 }
+
 
 events.push(function() {
 	if ("<?=$start_polling?>") {
