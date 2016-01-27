@@ -182,8 +182,8 @@ if ($argc < 2) {
 	foreach ($playback_files as $pbf) {
 		echo "{$pbf} ";
 		if (function_exists("readline_add_history")) {
-			readline_add_history("playback $file");
-			$tccommands[] = "$file";
+			readline_add_history("playback $pbf");
+			$tccommands[] = "$pbf";
 		}
 	}
 	echo "\n\n";
@@ -196,7 +196,7 @@ $playbackbuffer = "";
 if ($argv[1]=="playback" or $argv[1]=="run") {
 	if (empty($argv[2]) || !file_exists("/etc/phpshellsessions/" . basename($argv[2]))) {
 		echo "Error: Invalid playback file specified.\n\n";
-		show_playback_files();
+		show_recordings();
 		exit(-1);
 	}
 	playback_file(basename($argv[2]));

@@ -229,9 +229,9 @@ if ($_POST) {
 			unset($config['system']['powerd_enable']);
 		}
 
-		$config['system']['powerd_ac_mode'] = $_POST['ac-power'];
-		$config['system']['powerd_battery_mode'] = $_POST['battery-power'];
-		$config['system']['powerd_normal_mode'] = $_POST['unknown-power'];
+		$config['system']['powerd_ac_mode'] = $_POST['powerd_ac_mode'];
+		$config['system']['powerd_battery_mode'] = $_POST['powerd_battery_mode'];
+		$config['system']['powerd_normal_mode'] = $_POST['powerd_normal_mode'];
 
 		if ($_POST['crypto_hardware']) {
 			$config['system']['crypto_hardware'] = $_POST['crypto_hardware'];
