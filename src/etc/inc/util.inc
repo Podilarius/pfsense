@@ -1720,8 +1720,21 @@ function format_bytes($bytes) {
 	} else if ($bytes >= 1024) {
 		return sprintf("%.0f KB", $bytes/1024);
 	} else {
-		return sprintf("%d bytes", $bytes);
+		return sprintf("%d B", $bytes);
 	}
+}
+
+function format_number($num, $precision = 3) {
+	$units = array('', 'K', 'M', 'G', 'T');
+
+	$i = 0;
+	while ($num > 1000 && $i < count($units)) {
+		$num /= 1000;
+		$i++;
+	}
+	round($num, $precision);
+
+	return ("$num {$units[$i]}");
 }
 
 function update_filter_reload_status($text) {

@@ -206,6 +206,15 @@ function services_radvd_configure($blacklist = array()) {
 				$radvdconf .= "\t\tAdvRouterAddr on;\n";
 				break;
 		}
+
+		if (is_numericint($dhcpv6ifconf['ravalidlifetime'])) {
+		  $radvdconf .= "\t\tAdvValidLifetime {$dhcpv6ifconf['ravalidlifetime']};\n";
+		}
+
+		if (is_numericint($dhcpv6ifconf['rapreferredlifetime'])) {
+		  $radvdconf .= "\t\tAdvPreferredLifetime {$dhcpv6ifconf['rapreferredlifetime']};\n";
+		}
+
 		$radvdconf .= "\t};\n";
 
 		if (is_array($dhcpv6ifconf['subnets']['item'])) {
@@ -292,7 +301,9 @@ function services_radvd_configure($blacklist = array()) {
 
 	/* handle DHCP-PD prefixes and 6RD dynamic interfaces */
 	foreach ($Iflist as $if => $ifdescr) {
-		if (!isset($config['interfaces'][$if]['track6-interface'])) {
+		if (!isset($config['interfaces'][$if]['track6-interface']) ||
+		    !isset($config['interfaces'][$if]['ipaddrv6']) ||
+		    $config['interfaces'][$if]['ipaddrv6'] != 'track6') {
 			continue;
 		}
 		if (!isset($config['interfaces'][$if]['enable'])) {

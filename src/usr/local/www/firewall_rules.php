@@ -72,6 +72,51 @@ require_once("shaper.inc");
 $pgtitle = array(gettext("Firewall"), gettext("Rules"));
 $shortcut_section = "firewall";
 
+function get_pf_rules($rules, $tracker) {
+
+	if ($rules == NULL || !is_array($rules))
+		return (NULL);
+
+	$arr = array();
+	for ($i = 0; $i < count($rules); $i++) {
+		if ($rules[$i]['tracker'] === $tracker)
+			$arr[] = $rules[$i];
+	}
+
+	if (count($arr) == 0)
+		return (NULL);
+
+	return ($arr);
+}
+
+function print_states($tracker) {
+	global $rulescnt;
+
+	$rulesid = "";
+	$bytes = 0;
+	$states = 0;
+	$packets = 0;
+	$evaluations = 0;
+	$stcreations = 0;
+	$rules = get_pf_rules($rulescnt, $tracker);
+	for ($j = 0; is_array($rules) && $j < count($rules); $j++) {
+		$bytes += $rules[$j]['bytes'];
+		$states += $rules[$j]['states'];
+		$packets += $rules[$j]['packets'];
+		$evaluations += $rules[$j]['evaluations'];
+		$stcreations += $rules[$j]['state creations'];
+		if (strlen($rulesid) > 0)
+			$rulesid .= ",";
+		$rulesid .= "{$rules[$j]['id']}";
+	}
+	printf("<a href=\"diag_dump_states.php?ruleid=%s\" data-toggle=\"popover\" data-trigger=\"hover focus\" title=\"%s\" ",
+	    $rulesid, gettext("States details"));
+	printf("data-content=\"evaluations: %s<br>packets: %s<br>bytes: %s<br>states: %s<br>state creations: %s\" data-html=\"true\">",
+	    format_number($evaluations), format_number($packets), format_bytes($bytes),
+	    format_number($states), format_number($stcreations));
+	printf("%d/%s</a><br>", format_number($states), format_bytes($bytes));
+}
+
 function delete_nat_association($id) {
 	global $config;
 
@@ -175,6 +220,17 @@ if ($_GET['act'] == "del") {
 			delete_nat_association($a_filter[$_GET['id']]['associated-rule-id']);
 		}
 		unset($a_filter[$_GET['id']]);
+
+		// Update the separators
+		$a_separators = &$config['filter']['separator'][$if];
+
+		for ($idx=0; isset($a_separators['sep' . $idx]); $idx++ ) {
+			$seprow = substr($a_separators['sep' . $idx]['row']['0'], 2);
+			if ($seprow >= $_GET['id']) {
+				$a_separators['sep' . $idx]['row']['0'] = 'fr' . ($seprow - 1);
+			}
+		}
+
 		if (write_config()) {
 			mark_subsystem_dirty('filter');
 		}
@@ -194,10 +250,20 @@ if (isset($_POST['del_x'])) {
 	$deleted = false;
 
 	if (is_array($_POST['rule']) && count($_POST['rule'])) {
+		$a_separators = &$config['filter']['separator'][$if];
+
 		foreach ($_POST['rule'] as $rulei) {
 			delete_nat_association($a_filter[$rulei]['associated-rule-id']);
 			unset($a_filter[$rulei]);
 			$deleted = true;
+
+			// Update the separators
+			for ($idx=0; isset($a_separators['sep' . $idx]); $idx++ ) {
+				$seprow = substr($a_separators['sep' . $idx]['row']['0'], 2);
+				if ($seprow >= $rulei) {
+					$a_separators['sep' . $idx]['row']['0'] = 'fr' . ($seprow - 1);
+				}
+			}
 		}
 
 		if ($deleted) {
@@ -300,8 +366,13 @@ if (isset($config['interfaces'][$if]['blockbogons'])) {
 	$showblockbogons = true;
 }
 
-?>
+/* Load the counter data of each pf rule. */
+$rulescnt = pfSense_get_pf_rules();
 
+// Update this if you add or remove columns!
+$columns_in_table = 13;
+
+?>
 <form method="post">
 	<div class="panel panel-default">
 		<div class="panel-heading"><h2 class="panel-title"><?=gettext("Rules (Drag to change order)")?></h2></div>
@@ -311,6 +382,7 @@ if (isset($config['interfaces'][$if]['blockbogons'])) {
 					<tr>
 						<th><!-- checkbox --></th>
 						<th><!-- status icons --></th>
+						<th><?=gettext("States")?></th>
 						<th><?=gettext("Protocol")?></th>
 						<th><?=gettext("Source")?></th>
 						<th><?=gettext("Port")?></th>
@@ -335,6 +407,7 @@ if (isset($config['interfaces'][$if]['blockbogons'])) {
 					<tr id="antilockout">
 						<td></td>
 						<td title="<?=gettext("traffic is passed")?>"><i class="fa fa-check text-success"></i></td>
+						<td><? print_states(intval(ANTILOCKOUT_TRACKER)); ?></td>
 						<td>*</td>
 						<td>*</td>
 						<td>*</td>
@@ -353,6 +426,7 @@ if (isset($config['interfaces'][$if]['blockbogons'])) {
 					<tr id="frrfc1918">
 						<td></td>
 						<td title="<?=gettext("traffic is blocked")?>"><i class="fa fa-times text-danger"></i></td>
+						<td><? print_states(intval(RFC1918_TRACKER)); ?></td>
 						<td>*</td>
 						<td><?=gettext("RFC 1918 networks");?></td>
 						<td>*</td>
@@ -369,10 +443,11 @@ if (isset($config['interfaces'][$if]['blockbogons'])) {
 <?php 	endif;?>
 <?php 	if ($showblockbogons): ?>
 					<tr id="frrfc1918">
-					<td></td>
+						<td></td>
 						<td title="<?=gettext("traffic is blocked")?>"><i class="fa fa-times text-danger"></i></td>
+						<td><? print_states(intval(BOGONS_TRACKER)); ?></td>
 						<td>*</td>
-						<td><?=gettext("Reserved/not assigned by IANA");?></td>
+						<td><?=sprintf(gettext("Reserved%sNot assigned by IANA"), "<br />");?></td>
 						<td>*</td>
 						<td>*</td>
 						<td>*</td>
@@ -395,7 +470,7 @@ $seps = 0;
 // There can be a separator before any rules are listed
 if ($config['filter']['separator'][strtolower($if)]['sep0']['row'][0] == "fr-1") {
 	print('<tr class="ui-sortable-handle separator">' .
-		'<td bgcolor="#cce5ff" colspan="11">' . '<font color="#002699">' . $config['filter']['separator'][strtolower($if)]['sep0']['text'] . '</font></td>' .
+		'<td bgcolor="#cce5ff" colspan="' . ($columns_in_table -1 ) . '">' . '<font color="#002699">' . $config['filter']['separator'][strtolower($if)]['sep0']['text'] . '</font></td>' .
 		'<td  bgcolor="#cce5ff"><a href="#"><i class="fa fa-trash no-confirm sepdel" title="delete this separator"></i></a></td>' .
 		'</tr>' . "\n");
 }
@@ -592,6 +667,7 @@ for ($i = 0; isset($a_filter[$i]); $i++):
 			}
 		}
 	?>
+				<td><? print_states(intval($filterent['tracker'])); ?></td>
 				<td>
 	<?php
 		if (isset($filterent['ipprotocol'])) {
@@ -703,7 +779,7 @@ for ($i = 0; isset($a_filter[$i]); $i++):
 							<a href="?act=toggle&amp;if=<?=htmlspecialchars($if);?>&amp;id=<?=$i;?>" class="fa fa-ban" title="<?=gettext('Disable')?>"></a>
 <?php }
 ?>
-							<a href="?act=del&amp;if=<?=htmlspecialchars($if);?>&amp;id=<?=$i;?>" class="fa fa-trash" title="<?=gettext('Delete')?>"></a>
+							<a href="?act=del&amp;if=<?=htmlspecialchars($if);?>&amp;id=<?=$i;?>" class="fa fa-trash" title="<?=gettext('Delete this rule')?>"></a>
 						</td>
 					</tr>
 <?php
@@ -712,7 +788,7 @@ for ($i = 0; isset($a_filter[$i]); $i++):
 				if ($rulesep['row']['0'] == "fr" . $nrules) {
 					$cellcolor = $rulesep['color'];
 					print('<tr class="ui-sortable-handle separator">' .
-						'<td class="' . $cellcolor . '" colspan="11">' . '<span class="' . $cellcolor . '">' . $rulesep['text'] . '</span></td>' .
+						'<td class="' . $cellcolor . '" colspan="' . ($columns_in_table -1) . '">' . '<span class="' . $cellcolor . '">' . $rulesep['text'] . '</span></td>' .
 						'<td  class="' . $cellcolor . '"><a href="#"><i class="fa fa-trash no-confirm sepdel" title="delete this separator"></i></a></td>' .
 						'</tr>' . "\n");
 				}
@@ -806,6 +882,7 @@ events.push(function() {
 		cursor: 'grabbing',
 		update: function(event, ui) {
 			$('#order-store').removeAttr('disabled');
+			reindex_rules(ui.item.parent('tbody'));
 			dirty = true;
 		}
 	});
@@ -838,15 +915,17 @@ events.push(function() {
 
 		gColor = 'bg-info';
 		// Inset a temporary bar in which the user can enter some optional text
+		sepcols = $( "#ruletable tr th" ).length - 2;
+
 		$('#ruletable > tbody:last').append('<tr>' +
-			'<td class="' + gColor + '" colspan="10"><input id="newsep" placeholder="<?=gettext("Enter a description, Save, then drag to final location.")?>" class="col-md-12" type="text" /></td>' +
+			'<td class="' + gColor + '" colspan="' + sepcols + '"><input id="newsep" placeholder="<?=gettext("Enter a description, Save, then drag to final location.")?>" class="col-md-12" type="text" /></td>' +
 			'<td class="' + gColor + '" colspan="2"><button class="btn btn-default btn-sm" id="btnnewsep"><?=gettext("Save")?></button>' +
 			'<button class="btn btn-default btn-sm" id="btncncsep"><?=gettext("Cancel")?></button>' +
 			'&nbsp;&nbsp;&nbsp;&nbsp;' +
-			'&nbsp;&nbsp;<a href="#" id="sepclrblue" value="bg-info"><i class="fa fa-circle text-info"></i></a>' +
-			'&nbsp;&nbsp;<a href="#" id="sepclrred" value="bg-danger"><i class="fa fa-circle text-danger"></i></a>' +
-			'&nbsp;&nbsp;<a href="#" id="sepclrgreen" value="bg-success"><i class="fa fa-circle text-success"></i></a>' +
-			'&nbsp;&nbsp;<a href="#" id="sepclrorange" value="bg-warning"><i class="fa fa-circle text-warning"></i></a>' +
+			'&nbsp;&nbsp;<a id="sepclrblue" value="bg-info"><i class="fa fa-circle text-info icon-pointer"></i></a>' +
+			'&nbsp;&nbsp;<a id="sepclrred" value="bg-danger"><i class="fa fa-circle text-danger icon-pointer"></i></a>' +
+			'&nbsp;&nbsp;<a id="sepclrgreen" value="bg-success"><i class="fa fa-circle text-success icon-pointer"></i></a>' +
+			'&nbsp;&nbsp;<a id="sepclrorange" value="bg-warning"><i class="fa fa-circle text-warning icon-pointer"></i></button>' +
 			'</td></tr>');
 
 		$('#newsep').focus();
@@ -873,9 +952,11 @@ events.push(function() {
 		// user's text and a delete icon
 		$("#btnnewsep").click(function() {
 			var septext = escapeHtml($('#newsep').val());
+			sepcols = $( "#ruletable tr th" ).length - 1;
+
 			$('#ruletable > tbody:last >tr:last').remove();
 			$('#ruletable > tbody:last').append('<tr class="ui-sortable-handle separator">' +
-				'<td class="' + gColor + '" colspan="11">' + '<span class="' + gColor + '">' + septext + '</span></td>' +
+				'<td class="' + gColor + '" colspan="' + sepcols + '">' + '<span class="' + gColor + '">' + septext + '</span></td>' +
 				'<td class="' + gColor + '"><a href="#"><i class="fa fa-trash sepdel"></i></a>' +
 				'</td></tr>');
 
@@ -932,6 +1013,17 @@ events.push(function() {
 		});
 	}
 
+	function reindex_rules(section) {
+		var row = 0;
+
+		section.find('tr').each(function() {
+			if(this.id) {
+				$(this).attr("id", "fr" + row);
+				row++;
+			}
+		})
+	}
+
 	function handle_colors() {
 		$('[id^=sepclr]').prop("type", "button");
 
@@ -975,4 +1067,3 @@ events.push(function() {
 </script>
 
 <?php include("foot.inc");?>
-
