@@ -4351,4 +4351,30 @@ function upgrade_139_to_140() {
 	}
 }
 
+function upgrade_140_to_141() {
+	global $config; 
+
+	// retain OpenVPN's net30 default topology for upgraded client configs so they still work
+	if (is_array($config['openvpn']) && is_array($config['openvpn']['openvpn-client'])) {
+		foreach ($config['openvpn']['openvpn-client'] as $idx => $ovpnclient) {
+			if (!isset($ovpnclient['topology'])) {
+				$config['openvpn']['openvpn-client'][$idx]['topology'] = "net30";
+			}
+		}
+	}
+
+	// repeat addition of filter tracker IDs from 106_to_107 where missing since associated filter rules were missing them
+	if (is_array($config['filter']) && is_array($config['filter']['rule'])) {
+		$tracker = (int)microtime(true);
+		foreach ($config['filter']['rule'] as $ridx => $rule) {
+			if (empty($rule['tracker'])) {
+				$config['filter']['rule'][$ridx]['tracker'] = $tracker;
+				$tracker++;
+			}
+		}
+		unset($tracker, $ridx);
+	}
+
+}
+
 ?>

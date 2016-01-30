@@ -491,6 +491,7 @@ if ($_POST) {
 			// If this is a new rule, create an ID and add the rule
 			if ($_POST['filter-rule-association'] == 'add-associated') {
 				$filterent['associated-rule-id'] = $natent['associated-rule-id'] = get_unique_id();
+				$filterent['tracker'] = (int)microtime(true);
 				$filterent['created'] = make_config_revision_entry(null, gettext("NAT Port Forward"));
 				$config['filter']['rule'][] = $filterent;
 			}
@@ -514,6 +515,18 @@ if ($_POST) {
 			$natent['created'] = make_config_revision_entry();
 			if (is_numeric($after)) {
 				array_splice($a_nat, $after+1, 0, array($natent));
+
+				// Update the separators
+				$a_separators = &$config['nat']['separator'];
+
+				for ($idx=0; isset($a_separators['sep' . $idx]); $idx++ ) {
+					$seprow = substr($a_separators['sep' . $idx]['row']['0'], 2);
+
+					// If the separator is located after the place where the new rule is to go, increment the separator row
+					if ($seprow > $after) {
+						$a_separators['sep' . $idx]['row']['0'] = 'fr' . ($seprow + 1);
+					}
+				}
 			} else {
 				$a_nat[] = $natent;
 			}
