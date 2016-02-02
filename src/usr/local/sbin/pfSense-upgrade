@@ -176,8 +176,9 @@ pkg_with_pb() {
 	fi
 
 	pkg ${_event_pipe} $@
+	local _pkg_result=$?
 	nc_pid=""
-	return $?
+	return ${_pkg_result}
 }
 
 fetch_upgrade_packages() {
@@ -618,8 +619,19 @@ pkg_install() {
 		local _msg="Installing"
 	fi
 
-	_exec "pkg_with_pb ${_cmd} ${_pkg_name}" "${_msg} ${_pkg_name}"
+	_exec "pkg_with_pb ${_cmd}${dry_run:+ }${dry_run} ${_pkg_name}" "${_msg} ${_pkg_name}"
 	_exec "pkg clean" "Cleaning up cache" mute ignore_result
+}
+
+# Reinstall every pfSense-pkg-* package
+pkg_reinstall_all() {
+	for _pkg in $(pkg query -e '%a == 0' %n); do
+		case ${_pkg} in "${pkg_prefix}"* )
+			_echo "Reinstalling ${_pkg}"
+			pkg_install ${_pkg} 1
+			;;
+		esac
+	done
 }
 
 pkg_delete() {
@@ -635,16 +647,16 @@ pkg_delete() {
 		_exit 1
 	fi
 
-	_exec "pkg_with_pb delete ${_pkg_name}" "Removing ${_pkg_name}"
+	_exec "pkg_with_pb delete${dry_run:+ }${dry_run} ${_pkg_name}" "Removing ${_pkg_name}"
 	_exec "pkg autoremove" "Removing stale packages" mute ignore_result
 }
 
-# Reinstall every pfSense-pkg-* package
-pkg_reinstall_all() {
+# Delete every pfSense-pkg-* package
+pkg_delete_all() {
 	for _pkg in $(pkg query -e '%a == 0' %n); do
 		case ${_pkg} in "${pkg_prefix}"* )
-			_echo "Reinstalling ${_pkg}"
-			pkg_install ${_pkg} 1
+			_echo "Removing ${_pkg}"
+			pkg_delete ${_pkg}
 			;;
 		esac
 	done
@@ -762,7 +774,7 @@ while getopts 46b:cdfi:hp:l:nr:Ruy opt; do
 			fi
 			;;
 		n)
-			dry_run=1
+			dry_run="-n"
 			;;
 		p)
 			progress_socket="${OPTARG}"
@@ -849,7 +861,11 @@ case "${action}" in
 		fi
 		;;
 	delete)
-		pkg_delete ${action_pkg}
+		if [ ${action_pkg} == "ALL_PACKAGES" ] && [ -n ${force} ]; then
+			pkg_delete_all
+		else
+			pkg_delete ${action_pkg}
+		fi
 		;;
 	*)
 		_echo "ERROR: Invalid action!"
