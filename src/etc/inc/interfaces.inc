@@ -971,6 +971,20 @@ function interface_gif_configure(&$gif, $gifkey = "") {
 	}
 	if ($gifif) {
 		interfaces_bring_up($gifif);
+		$gifmtu = "";
+		$currentgifmtu = get_interface_mtu($gifif);
+		foreach ($config['interfaces'] as $tmpinterface) {
+			if ($tmpinterface['if'] == $gifif) {
+				if (isset($tmpinterface['mtu']) && is_numericint($tmpinterface['mtu'])) {
+					$gifmtu = $tmpinterface['mtu'];
+				}
+			}
+		}
+		if (is_numericint($gifmtu)) {
+			if ($gifmtu != $currentgifmtu) {
+				mwexec("/sbin/ifconfig {$gifif} mtu {$gifmtu}");
+			}
+		}
 	} else {
 		log_error(gettext("could not bring gifif up -- variable not defined"));
 	}
@@ -4017,7 +4031,8 @@ function interface_dhcpv6_configure($interface = "wan", $wancfg) {
 	$rtsoldscript .= "\t/bin/pkill -F {$g['varrun_path']}/dhcp6c_{$wanif}.pid\n";
 	$rtsoldscript .= "\t/bin/sleep 1\n";
 	$rtsoldscript .= "fi\n";
-	$rtsoldscript .= "/usr/local/sbin/dhcp6c -d -c {$g['varetc_path']}/dhcp6c_{$interface}.conf -p {$g['varrun_path']}/dhcp6c_{$wanif}.pid {$wanif}\n";
+	$debugOption = isset($wancfg['dhcp6debug']) ? "-D" : "-d";
+	$rtsoldscript .= "/usr/local/sbin/dhcp6c {$debugOption} -c {$g['varetc_path']}/dhcp6c_{$interface}.conf -p {$g['varrun_path']}/dhcp6c_{$wanif}.pid {$wanif}\n";
 	$rtsoldscript .= "/usr/bin/logger -t rtsold \"Starting dhcp6 client for interface {$interface}({$wanif})\"\n";
 	/* Add wide-dhcp6c shell script here. Because we can not pass a argument to it. */
 	if (!@file_put_contents("{$g['varetc_path']}/rtsold_{$wanif}_script.sh", $rtsoldscript)) {
@@ -5460,14 +5475,18 @@ function get_possible_traffic_source_addresses($include_ipv6_link_local=false) {
 
 function get_interface_ip($interface = "wan") {
 
+	if (substr($interface, 0, 4) == '_vip') {
+		return get_configured_carp_interface_list($interface);
+	}
+
 	$realif = get_failover_interface($interface, 'inet');
 	if (!$realif) {
 		return null;
 	}
 
-	if (substr($interface, 0, 4) == '_vip') {
-		return get_configured_carp_interface_list($interface, 'inet', 'ip');
-	} else if (substr($interface, 0, 5) == '_lloc') {
+	if (substr($realif, 0, 4) == '_vip') {
+		return get_configured_carp_interface_list($realif, 'inet', 'ip');
+	} else if (substr($realif, 0, 5) == '_lloc') {
 		/* No link-local address for v4. */
 		return null;
 	}

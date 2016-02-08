@@ -190,7 +190,7 @@ function build_gateway_protocol_map (&$a_gateways) {
 }
 
 function build_carp_list() {
-	global $carplist;
+	global $carplist, $gateway;
 
 	$list = array('address' => gettext('Interface Address'));
 
@@ -201,8 +201,9 @@ function build_carp_list() {
 		if (($gateway['ipprotocol'] == "inet6") && (!is_ipaddrv6($address))) {
 			continue;
 		}
-
-		$list[$vip] = "$vip - $address";
+		if ($gateway['friendlyiface'] == link_carp_interface_to_parent($vip)) {
+			$list[$vip] = "$address";
+		}
 	}
 
 	return($list);
@@ -231,7 +232,7 @@ $section->addInput(new Form_Input(
 ));
 
 
-$carplist = get_configured_carp_interface_list($interface);
+$carplist = get_configured_carp_interface_list();
 $row = 0;
 $numrows = count($a_gateways) - 1;
 
@@ -244,8 +245,6 @@ foreach ($a_gateways as $gwname => $gateway) {
 			continue;
 		}
 	}
-
-	$interface = $gateway['friendlyiface'];
 
 	foreach ((array)$pconfig['item'] as $item) {
 		$itemsplit = explode("|", $item);
@@ -296,7 +295,7 @@ foreach ($a_gateways as $gwname => $gateway) {
 	$group->add(new Form_Select(
 		$gwname . '_vip',
 		'Virtual IP',
-		!isset($pconfig['filterdescriptions']) ? '0':$pconfig['filterdescriptions'],
+		$selected,
 		build_carp_list()
 	))->setHelp($row == $numrows ? 'Virtual IP':null);
 
