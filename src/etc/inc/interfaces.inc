@@ -1188,20 +1188,7 @@ function interface_reconfigure($interface = "wan", $reloadall = false) {
 function interface_vip_bring_down($vip) {
 	global $g;
 
-	if (strpos($vip['interface'], '_vip')) {
-		if (is_ipaddrv6($vip['subnet'])) {
-			$family = 'inet6';
-		} else {
-			$family = 'inet';
-		}
-
-		$carpvip = get_configured_carp_interface_list($vip['interface'], $family, 'vip');
-		$iface = $carpvip['interface'];
-	} else {
-		$iface = $vip['interface'];
-	}
-
-	$vipif = get_real_interface($iface);
+	$vipif = get_real_interface($vip['interface']);
 	switch ($vip['mode']) {
 		case "proxyarp":
 			if (file_exists("{$g['varrun_path']}/choparp_{$vipif}.pid")) {
@@ -2324,12 +2311,14 @@ function interface_ipalias_configure(&$vip) {
 		return;
 	}
 
-	if ($vip['interface'] != 'lo0' && stripos($vip['interface'], '_vip') === false) {
-		if (!isset($config['interfaces'][$vip['interface']])) {
+	$realif = get_real_interface("_vip{$vip['uniqid']}");
+	if ($realif != "lo0") {
+		$if = convert_real_interface_to_friendly_interface_name($realif);
+		if (!isset($config['interfaces'][$if])) {
 			return;
 		}
 
-		if (!isset($config['interfaces'][$vip['interface']]['enable'])) {
+		if (!isset($config['interfaces'][$if]['enable'])) {
 			return;
 		}
 	}
@@ -2339,45 +2328,14 @@ function interface_ipalias_configure(&$vip) {
 		$af = 'inet6';
 	}
 	$iface = $vip['interface'];
-	$vipadd = '';
-	if (strpos($vip['interface'], '_vip')) {
-		$carpvip = get_configured_carp_interface_list($vip['interface'], $af, 'vip');
+	$vhid = '';
+	if (substr($vip['interface'], 0, 4) == "_vip") {
+		$carpvip = get_configured_vip($vip['interface']);
 		$iface = $carpvip['interface'];
-		$vipadd = "vhid {$carpvip['vhid']}";
+		$vhid = "vhid {$carpvip['vhid']}";
 	}
-	$if = get_real_interface($iface);
-	mwexec("/sbin/ifconfig " . escapeshellarg($if) ." {$af} ". escapeshellarg($vip['subnet']) ."/" . escapeshellarg($vip['subnet_bits']) . " alias {$vipadd}");
-	unset($iface, $af, $if, $carpvip, $vipadd);
-}
-
-function interface_reload_carps($cif) {
-	global $config;
-
-	$carpifs = link_ip_to_carp_interface(find_interface_ip($cif));
-	if (empty($carpifs)) {
-		return;
-	}
-
-	$carps = explode(" ", $carpifs);
-	if (is_array($config['virtualip']['vip'])) {
-		$viparr = &$config['virtualip']['vip'];
-		foreach ($viparr as $vip) {
-			if (in_array($vip['carpif'], $carps)) {
-				switch ($vip['mode']) {
-					case "carp":
-						interface_vip_bring_down($vip);
-						sleep(1);
-						interface_carp_configure($vip);
-						break;
-					case "ipalias":
-						interface_vip_bring_down($vip);
-						sleep(1);
-						interface_ipalias_configure($vip);
-						break;
-				}
-			}
-		}
-	}
+	mwexec("/sbin/ifconfig " . escapeshellarg($realif) ." {$af} ". escapeshellarg($vip['subnet']) ."/" . escapeshellarg($vip['subnet_bits']) . " alias {$vhid}");
+	unset($iface, $af, $realif, $carpvip, $vhid);
 }
 
 function interface_carp_configure(&$vip) {
@@ -4535,16 +4493,6 @@ function get_current_wan_address($interface = "wan") {
 function convert_real_interface_to_friendly_interface_name($interface = "wan", $checkparent = false) {
 	global $config;
 
-	if (stripos($interface, "_vip")) {
-		foreach ($config['virtualip']['vip'] as $counter => $vip) {
-			if ($vip['mode'] == "carp") {
-				if ($interface == "_vip{$vip['uniqid']}") {
-					return $vip['interface'];
-				}
-			}
-		}
-	}
-
 	/* XXX: For speed reasons reference directly the interface array */
 	$ifdescrs = &$config['interfaces'];
 	//$ifdescrs = get_configured_interface_list(false, true);
@@ -4781,9 +4729,9 @@ function get_real_interface($interface = "wan", $family = "all", $realv6iface = 
 			break;
 		default:
 			if (substr($interface, 0, 4) == '_vip') {
-				$wanif = get_configured_carp_interface_list($interface, $family, 'iface');
+				$wanif = get_configured_vip_interface($interface);
 				if (!empty($wanif)) {
-					$wanif = get_real_interface($wanif, $family);
+					$wanif = get_real_interface($wanif);
 				}
 				break;
 			} else if (substr($interface, 0, 5) == '_lloc') {
@@ -4959,123 +4907,6 @@ function find_virtual_ip_alias($ip, $bits = null) {
 		}
 	}
 	return false;
-}
-
-/*
- *   find_number_of_created_carp_interfaces: return the number of carp interfaces
- */
-function find_number_of_created_carp_interfaces() {
-	return `/sbin/ifconfig | /usr/bin/grep "carp:" | /usr/bin/wc -l`;
-}
-
-/*
- * find_carp_interface($ip): return the carp interface where an ip is defined
- */
-function find_carp_interface($ip) {
-	global $config;
-	if (is_array($config['virtualip']['vip'])) {
-		foreach ($config['virtualip']['vip'] as $vip) {
-			if ($vip['mode'] == "carp") {
-				if (is_ipaddrv4($ip)) {
-					$carp_ip = get_interface_ip($vip['interface']);
-				}
-				if (is_ipaddrv6($ip)) {
-					$carp_ip = get_interface_ipv6($vip['interface']);
-				}
-				exec("/sbin/ifconfig", $output, $return);
-				foreach ($output as $line) {
-					$elements = preg_split("/[ ]+/i", $line);
-					if (strstr($elements[0], "vip")) {
-						$curif = str_replace(":", "", $elements[0]);
-					}
-					if (stristr($line, $ip)) {
-						$if = $curif;
-						continue;
-					}
-				}
-
-				if ($if) {
-					return $if;
-				}
-			}
-		}
-	}
-}
-
-function link_carp_interface_to_parent($interface) {
-	global $config;
-
-	if (empty($interface)) {
-		return;
-	}
-
-	$carp_ip = get_interface_ip($interface);
-	$carp_ipv6 = get_interface_ipv6($interface);
-
-	if ((!is_ipaddrv4($carp_ip)) && (!is_ipaddrv6($carp_ipv6))) {
-		return;
-	}
-
-	/* if list */
-	$ifdescrs = get_configured_interface_list();
-	foreach ($ifdescrs as $ifdescr => $ifname) {
-		/* check IPv4 */
-		if (is_ipaddrv4($carp_ip)) {
-			$interfaceip = get_interface_ip($ifname);
-			$subnet_bits = get_interface_subnet($ifname);
-			$subnet_ip = gen_subnet("{$interfaceip}", "{$subnet_bits}");
-			if (ip_in_subnet($carp_ip, "{$subnet_ip}/{$subnet_bits}")) {
-				return $ifname;
-			}
-		}
-		/* Check IPv6 */
-		if (is_ipaddrv6($carp_ipv6)) {
-			$interfaceipv6 = get_interface_ipv6($ifname);
-			$prefixlen = get_interface_subnetv6($ifname);
-			if (ip_in_subnet($carp_ipv6, "{$interfaceipv6}/{$prefixlen}")) {
-				return $ifname;
-			}
-		}
-	}
-	return "";
-}
-
-
-/****f* interfaces/link_ip_to_carp_interface
- * NAME
- *   link_ip_to_carp_interface - Find where a CARP interface links to.
- * INPUTS
- *   $ip
- * RESULT
- *   $carp_ints
- ******/
-function link_ip_to_carp_interface($ip) {
-	global $config;
-
-	if (!is_ipaddr($ip)) {
-		return;
-	}
-
-	$carp_ints = "";
-	if (is_array($config['virtualip']['vip'])) {
-		$first = 0;
-		$carp_int = array();
-		foreach ($config['virtualip']['vip'] as $vip) {
-			if ($vip['mode'] == "carp") {
-				$carp_ip = $vip['subnet'];
-				$carp_sn = $vip['subnet_bits'];
-				$carp_nw = gen_subnet($carp_ip, $carp_sn);
-				if (ip_in_subnet($ip, "{$carp_nw}/{$carp_sn}")) {
-					$carp_int[] = get_real_interface($vip['interface']);
-				}
-			}
-		}
-		if (!empty($carp_int)) {
-			$carp_ints = implode(" ", array_unique($carp_int));
-		}
-	}
-
-	return $carp_ints;
 }
 
 function link_interface_to_track6($int, $action = "") {
@@ -5433,21 +5264,11 @@ function get_possible_listen_ips($include_ipv6_link_local=false) {
 			}
 		}
 	}
-	/* XXX: Maybe use array_merge below? */
-	$carplist = get_configured_carp_interface_list();
-	foreach ($carplist as $cif => $carpip) {
-		if (get_vip_descr($carpip)) {
-			$interfaces[$cif] = $carpip . ' (' . get_vip_descr($carpip) . ')';
-		} else {
-			$interfaces[$cif] = $carpip;
-		}
-	}
-	$aliaslist = get_configured_ip_aliases_list();
-	foreach ($aliaslist as $aliasip => $aliasif) {
-		if (get_vip_descr($aliasip)) {
-			$interfaces[$aliasip] = $aliasip . ' (' . get_vip_descr($aliasip) . ')';
-		} else {
-			$interfaces[$aliasip] = $aliasip;
+	$viplist = get_configured_vip_list();
+	foreach ($viplist as $vip => $address) {
+		$interfaces[$vip] = $address;
+		if (get_vip_descr($address)) {
+			$interfaces[$vip] .= " (". get_vip_descr($address) .")";
 		}
 	}
 
@@ -5476,7 +5297,10 @@ function get_possible_traffic_source_addresses($include_ipv6_link_local=false) {
 function get_interface_ip($interface = "wan") {
 
 	if (substr($interface, 0, 4) == '_vip') {
-		return get_configured_carp_interface_list($interface);
+		return get_configured_vip_ipv4($interface);
+	} else if (substr($interface, 0, 5) == '_lloc') {
+		/* No link-local address for v4. */
+		return null;
 	}
 
 	$realif = get_failover_interface($interface, 'inet');
@@ -5485,12 +5309,22 @@ function get_interface_ip($interface = "wan") {
 	}
 
 	if (substr($realif, 0, 4) == '_vip') {
-		return get_configured_carp_interface_list($realif, 'inet', 'ip');
+		return get_configured_vip_ipv4($realif);
 	} else if (substr($realif, 0, 5) == '_lloc') {
 		/* No link-local address for v4. */
 		return null;
 	}
 
+	if (is_array($config['interfaces'][$interface]) &&
+	    is_ipaddr($config['interfaces'][$interface]['ipaddr'])) {
+		return ($config['interfaces'][$interface]['ipaddr']);
+	}
+
+	/*
+	 * Beaware that find_interface_ip() is our last option, it will
+	 * return the first IP it find on interface, not necessarily the
+	 * main IP address.
+	 */
 	$curip = find_interface_ip($realif);
 	if ($curip && is_ipaddr($curip) && ($curip != "0.0.0.0")) {
 		return $curip;
@@ -5502,15 +5336,21 @@ function get_interface_ip($interface = "wan") {
 function get_interface_ipv6($interface = "wan", $flush = false) {
 	global $config;
 
+	if (substr($interface, 0, 4) == '_vip') {
+		return get_configured_vip_ipv6($interface);
+	} else if (substr($interface, 0, 5) == '_lloc') {
+		return get_interface_linklocal($interface);
+	}
+
 	$realif = get_failover_interface($interface, 'inet6');
 	if (!$realif) {
 		return null;
 	}
 
-	if (substr($interface, 0, 4) == '_vip') {
-		return get_configured_carp_interface_list($interface, 'inet6', 'ip');
-	} else if (substr($interface, 0, 5) == '_lloc') {
-		return get_interface_linklocal($interface);
+	if (substr($realif, 0, 4) == '_vip') {
+		return get_configured_vip_ipv6($realif);
+	} else if (substr($realif, 0, 5) == '_lloc') {
+		return get_interface_linklocal($realif);
 	}
 
 	if (is_array($config['interfaces'][$interface])) {
@@ -5524,8 +5364,16 @@ function get_interface_ipv6($interface = "wan", $flush = false) {
 				}
 				break;
 		}
+		if (is_ipaddrv6($config['interfaces'][$interface]['ipaddrv6'])) {
+			return ($config['interfaces'][$interface]['ipaddrv6']);
+		}
 	}
 
+	/*
+	 * Beaware that find_interface_ip() is our last option, it will
+	 * return the first IP it find on interface, not necessarily the
+	 * main IP address.
+	 */
 	$curip = find_interface_ipv6($realif, $flush);
 	if ($curip && is_ipaddrv6($curip) && ($curip != "::")) {
 		return $curip;
@@ -5568,41 +5416,41 @@ function get_interface_linklocal($interface = "wan") {
 function get_interface_subnet($interface = "wan") {
 
 	if (substr($interface, 0, 4) == '_vip') {
-		return get_configured_carp_interface_list($interface, 'inet', 'subnet');
+		return (get_configured_vip_subnetv4($interface));
 	}
 
 	$realif = get_real_interface($interface);
 	if (!$realif) {
-		return null;
+		return (NULL);
 	}
 
 	$cursn = find_interface_subnet($realif);
 	if (!empty($cursn)) {
-		return $cursn;
+		return ($cursn);
 	}
 
-	return null;
+	return (NULL);
 }
 
 function get_interface_subnetv6($interface = "wan") {
 
 	if (substr($interface, 0, 4) == '_vip') {
-		return get_configured_carp_interface_list($interface, 'inet6', 'subnet');
+		return (get_configured_vip_subnetv6($interface));
 	} else if (substr($interface, 0, 5) == '_lloc') {
 		$interface = substr($interface, 5);
 	}
 
 	$realif = get_real_interface($interface, 'inet6');
 	if (!$realif) {
-		return null;
+		return (NULL);
 	}
 
 	$cursn = find_interface_subnetv6($realif);
 	if (!empty($cursn)) {
-		return $cursn;
+		return ($cursn);
 	}
 
-	return null;
+	return (NULL);
 }
 
 /* return outside interfaces with a gateway */

@@ -1053,7 +1053,9 @@ function filter_get_direct_networks_list($returnsubnetsonly = true) {
 			}
 		}
 	}
-	foreach (get_configured_ip_aliases_list(true) as $vip) {
+	$viplist = get_configured_vip_list();
+	foreach ($viplist as $vid => $address) {
+		$vip = get_configured_vip($vid);
 		$subnet = "{$vip['subnet']}/{$vip['subnet_bits']}";
 		if (is_subnet($subnet) && !(is_subnetv4($subnet) && $vip['subnet_bits'] == 32) && !(is_subnetv6($subnet) && $vip['subnet_bits'] == 128)) {
 			if (is_subnetv4($subnet)) {
@@ -4087,15 +4089,11 @@ function filter_generate_ipsec_rules($log = array()) {
 				}
 			}
 
-			if (strpos($ph1ent['interface'], "_vip")) {
-				$parentinterface = get_configured_carp_interface_list($ph1ent['interface'], '', 'iface');
-			} else if (is_ipaddr($ph1ent['interface'])) {
-				if (is_array($config['virtualip']['vip'])) {
-					foreach ($config['virtualip']['vip'] as $vip) {
-						if ($ph1ent['interface'] == $vip['subnet']) {
-							$parentinterface = $vip['interface'];
-						}
-					}
+			if (substr($ph1ent['interface'], 0, 4) == "_vip") {
+				$parentinterface = get_configured_vip_interface($ph1ent['interface']);
+				/* IP Alias -> CARP */
+				if (substr($parentinterface, 0, 4) == "_vip") {
+					$parentinterface = get_configured_vip_interface($parentinterface);
 				}
 			} else {
 				$parentinterface = $ph1ent['interface'];
@@ -4234,6 +4232,42 @@ function filter_get_antilockout_ports($wantarray = false) {
 		return implode(" ", $lockoutports);
 	}
 
+}
+
+/* get rule index within interface */
+function ifridx($if, $ridx) {
+	global $config;
+
+	if ($ridx < 0) {
+		return $ridx;
+	}
+	
+	$i = $ifridx = 0;
+	foreach ($config['filter']['rule'] as $rulen => $filterent) {
+		if (($filterent['interface'] == $if && !isset($filterent['floating'])) || (isset($filterent['floating']) && "FloatingRules" == $if)) {
+			if ($i == $ridx) {
+				return $ifridx;
+			}
+			$ifridx++;
+		}
+		$i++;
+	}
+	return $i;
+}
+
+/* display rules separators */
+function display_separator($separators, $nrules, $columns_in_table) {
+	if (!empty($separators)) {
+		foreach ($separators as $sepn => $separator) {
+			if ($separator['row'][0] == "fr" . $nrules) {
+				$cellcolor = $separator['color'];
+				print('<tr class="ui-sortable-handle separator">' .
+					'<td class="' . $cellcolor . '" colspan="' . ($columns_in_table -1) . '">' . '<span class="' . $cellcolor . '">' . $separator['text'] . '</span></td>' .
+					'<td  class="' . $cellcolor . '"><a href="#"><i class="fa fa-trash no-confirm sepdel" title="delete this separator"></i></a></td>' .
+					'</tr>' . "\n");
+			}
+		}
+	}
 }
 
 ?>

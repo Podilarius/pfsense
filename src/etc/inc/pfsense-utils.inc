@@ -1683,25 +1683,34 @@ function download_file($url, $destination, $verify_ssl = true, $connect_timeout 
 	$http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 	fclose($fp);
 	curl_close($ch);
-	return ($http_code == 200) ? true : $http_code;
+	if ($http_code == 200) {
+		return true;
+	} else {
+		log_error("Download file failed with status code $http_code. URL: $url");
+		unlink_if_exists($destination);
+		return false;
+	}
 }
 
-function download_file_with_progress_bar($url_file, $destination_file, $readbody = 'read_body', $connect_timeout = 5, $timeout = 0) {
+function download_file_with_progress_bar($url, $destination, $verify_ssl = true, $readbody = 'read_body', $connect_timeout = 5, $timeout = 0) {
 	global $config, $g;
 	global $ch, $fout, $file_size, $downloaded, $config, $first_progress_update;
 	$file_size = 1;
 	$downloaded = 1;
 	$first_progress_update = TRUE;
 	/* open destination file */
-	$fout = fopen($destination_file, "wb");
+	$fout = fopen($destination, "wb");
 
+	if (!$fout) {
+		return false;
+	}
 	/*
 	 *      Originally by Author: Keyvan Minoukadeh
 	 *      Modified by Scott Ullrich to return Content-Length size
 	 */
-
 	$ch = curl_init();
-	curl_setopt($ch, CURLOPT_URL, $url_file);
+	curl_setopt($ch, CURLOPT_URL, $url);
+	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, $verify_ssl);
 	curl_setopt($ch, CURLOPT_HEADERFUNCTION, 'read_header');
 	curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
 	curl_setopt($ch, CURLOPT_WRITEFUNCTION, $readbody);
@@ -1727,11 +1736,15 @@ function download_file_with_progress_bar($url_file, $destination_file, $readbody
 
 	@curl_exec($ch);
 	$http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-	if ($fout) {
-		fclose($fout);
-	}
+	fclose($fout);
 	curl_close($ch);
-	return ($http_code == 200) ? true : $http_code;
+	if ($http_code == 200) {
+		return true;
+	} else {
+		log_error("Download file failed with status code $http_code. URL: $url");
+		unlink_if_exists($destination);
+		return false;
+	}
 }
 
 function read_header($ch, $string) {
@@ -1925,7 +1938,7 @@ function parse_aliases_file($filename, $type = "url", $max_items = -1) {
 
 	$fd = @fopen($filename, 'r');
 	if (!$fd) {
-		log_error(gettext("Could not process aliases from alias: {$alias_url}"));
+		log_error(gettext("Could not process aliases from alias: {$filename}"));
 		return null;
 	}
 	$items = array();
@@ -1976,20 +1989,19 @@ function update_alias_url_data() {
 				unlink($temp_filename);
 				$verify_ssl = isset($config['system']['checkaliasesurlcert']);
 				mkdir($temp_filename);
-				download_file($alias_url, $temp_filename . "/aliases", $verify_ssl);
+				if (!download_file($alias_url, $temp_filename . "/aliases", $verify_ssl)) {
+					log_error(sprintf(gettext("Failed to download alias %s"), $alias_url));
+					continue;
+				}
 
 				/* if the item is tar gzipped then extract */
 				if (stripos($alias_url, '.tgz')) {
 					if (!process_alias_tgz($temp_filename)) {
 						continue;
 					}
-				} else if (stripos($alias_url, '.zip')) {
-					if (!process_alias_unzip($temp_filename)) {
-						continue;
-					}
 				}
 				if (file_exists("{$temp_filename}/aliases")) {
-					$address = parse_aliases_file("{$temp_filename}/aliases", $alias['type'], 3000);
+					$address = parse_aliases_file("{$temp_filename}/aliases", $alias['type'], 5000);
 					mwexec("/bin/rm -rf {$temp_filename}");
 				}
 			}
@@ -2003,39 +2015,6 @@ function update_alias_url_data() {
 
 	/* Report status to callers as well */
 	return $updated;
-}
-
-function process_alias_unzip($temp_filename) {
-	if (!file_exists("/usr/local/bin/unzip")) {
-		log_error(gettext("Alias archive is a .zip file which cannot be decompressed because utility is missing!"));
-		return false;
-	}
-	rename("{$temp_filename}/aliases", "{$temp_filename}/aliases.zip");
-	mwexec("/usr/local/bin/unzip {$temp_filename}/aliases.tgz -d {$temp_filename}/aliases/");
-	unlink("{$temp_filename}/aliases.zip");
-	$files_to_process = return_dir_as_array("{$temp_filename}/");
-	/* foreach through all extracted files and build up aliases file */
-	$fd = @fopen("{$temp_filename}/aliases", "w");
-	if (!$fd) {
-		log_error(gettext("Could not open {$temp_filename}/aliases for writing!"));
-		return false;
-	}
-	foreach ($files_to_process as $f2p) {
-		$tmpfd = @fopen($f2p, 'r');
-		if (!$tmpfd) {
-			log_error(gettext("The following file could not be read {$f2p} from {$temp_filename}"));
-			continue;
-		}
-		while (($tmpbuf = fread($tmpfd, 65536)) !== FALSE) {
-			fwrite($fd, $tmpbuf);
-		}
-		fclose($tmpfd);
-		unlink($f2p);
-	}
-	fclose($fd);
-	unset($tmpbuf);
-
-	return true;
 }
 
 function process_alias_tgz($temp_filename) {
@@ -2202,6 +2181,8 @@ function process_alias_urltable($name, $url, $freq, $forceupdate=false) {
 			unlink_if_exists($urltable_filename . ".tmp");
 		} else {
 			touch($urltable_filename);
+			conf_mount_ro();
+			return false;
 		}
 		conf_mount_ro();
 		return true;
@@ -2705,20 +2686,6 @@ function where_is_ipaddr_configured($ipaddr, $ignore_if = "", $check_localip = f
 				$where_entry['ip_or_subnet'] = $ilips;
 				$where_configured[] = $where_entry;
 			}
-		}
-	}
-
-	$interface_list_vips = get_configured_vips_list(true);
-	foreach ($interface_list_vips as $id => $vip) {
-		/* Skip CARP interfaces here since they were already checked above */
-		if ($id == $ignore_vip_id || (substr($ignore_if, 0, 4) == '_vip') && $ignore_vip_if === $vip['if']) {
-			continue;
-		}
-		if (strcasecmp($ipaddr, $vip['ipaddr']) == 0) {
-			$where_entry = array();
-			$where_entry['if'] = $vip['if'];
-			$where_entry['ip_or_subnet'] = $vip['ipaddr'];
-			$where_configured[] = $where_entry;
 		}
 	}
 
