@@ -875,7 +875,8 @@ EOD;
 			if (!empty($ph1ent['iketype'])) {
 				if ($ph1ent['iketype'] == "ikev2") {
 					$keyexchange = "ikev2";
-					//$passive = "start";
+				} elseif ($ph1ent['iketype'] == "auto") {
+					$keyexchange = "ike";
 				}
 			}
 
@@ -1164,6 +1165,14 @@ EOD;
 				$mobike = 'mobike = no';
 			}
 
+			if (isset($ph1ent['tfc_enable'])) {
+				if (isset($ph1ent['tfc_bytes']) && is_numericint($ph1ent['tfc_bytes'])) {
+					$tfc = "tfc = {$ph1ent['tfc_bytes']}";
+				} else {
+					$tfc = "tfc = %mtu";
+				}
+			}
+
 			$ipseclifetime = 0;
 			$rightsubnet_spec = array();
 			$leftsubnet_spec = array();
@@ -1337,6 +1346,7 @@ EOD;
 	{$reauth}
 	{$forceencaps}
 	{$mobike}
+	{$tfc}
 	{$rekey}
 	installpolicy = yes
 	{$tunneltype}

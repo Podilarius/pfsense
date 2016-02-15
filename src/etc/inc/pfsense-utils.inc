@@ -421,33 +421,27 @@ function get_carp_interface_status($carpinterface) {
 	global $config;
 
 	foreach ($config['virtualip']['vip'] as $carp) {
-		if ($carp['mode'] != "carp") {
+		if ($carp['mode'] != "carp")
 			continue;
-		}
-		$carpif = "_vip{$carp['uniqid']}";
-		if ($carpinterface !== $carpif) {
+		if ($carpinterface !== "_vip{$carp['uniqid']}")
 			continue;
-		}
 
 		$interface = get_real_interface($carp['interface']);
 		$vhid = $carp['vhid'];
 		$carp_query = '';
 		$_gb = exec("/sbin/ifconfig $interface | /usr/bin/grep carp: | /usr/bin/grep \"vhid $vhid\"", $carp_query);
 		foreach ($carp_query as $int) {
-			if (stripos($int, "MASTER")) {
+			if (stripos($int, "MASTER"))
 				return "MASTER";
-			}
-			if (stripos($int, "BACKUP")) {
+			elseif (stripos($int, "BACKUP"))
 				return "BACKUP";
-			}
-			if (stripos($int, "INIT")) {
+			elseif (stripos($int, "INIT"))
 				return "INIT";
-			}
 		}
 		break;
 	}
 
-	return;
+	return "";
 }
 
 /*
@@ -2148,11 +2142,12 @@ function pfs_version_compare($cur_time, $cur_text, $remote) {
 	}
 	return $v;
 }
-function process_alias_urltable($name, $url, $freq, $forceupdate=false) {
+function process_alias_urltable($name, $url, $freq, $forceupdate=false, $validateonly=false) {
 	global $config;
 
 	$urltable_prefix = "/var/db/aliastables/";
 	$urltable_filename = $urltable_prefix . $name . ".txt";
+	$tmp_urltable_filename = $urltable_filename . ".tmp";
 
 	// Make the aliases directory if it doesn't exist
 	if (!file_exists($urltable_prefix)) {
@@ -2163,24 +2158,29 @@ function process_alias_urltable($name, $url, $freq, $forceupdate=false) {
 	}
 
 	// If the file doesn't exist or is older than update_freq days, fetch a new copy.
-	if (!file_exists($urltable_filename) ||
+	if (!file_exists($urltable_filename) || (filesize($urltable_filename) == "0") ||
 	    ((time() - filemtime($urltable_filename)) > ($freq * 86400 - 90)) ||
 	    $forceupdate) {
 
 		// Try to fetch the URL supplied
 		conf_mount_rw();
-		unlink_if_exists($urltable_filename . ".tmp");
+		unlink_if_exists($tmp_urltable_filename);
 		$verify_ssl = isset($config['system']['checkaliasesurlcert']);
-		if (download_file($url, $urltable_filename . ".tmp", $verify_ssl)) {
-			mwexec("/usr/bin/sed -E 's/\;.*//g; /^[[:space:]]*($|#)/d' ". escapeshellarg($urltable_filename . ".tmp") . " > " . escapeshellarg($urltable_filename));
+		if (download_file($url, $tmp_urltable_filename, $verify_ssl)) {
+			mwexec("/usr/bin/sed -i \"\" -E 's/\;.*//g; /^[[:space:]]*($|#)/d' " . escapeshellarg($tmp_urltable_filename));
 			if (alias_get_type($name) == "urltable_ports") {
-				$ports = explode("\n", str_replace("\r", "", file_get_contents($urltable_filename)));
+				$ports = parse_aliases_file($tmp_urltable_filename, "url_ports", "-1");
 				$ports = group_ports($ports);
 				file_put_contents($urltable_filename, implode("\n", $ports));
+			} else {
+				$urltable = parse_aliases_file($tmp_urltable_filename, "url", "-1");
+				file_put_contents($urltable_filename, implode("\n", $urltable));
 			}
-			unlink_if_exists($urltable_filename . ".tmp");
+			unlink_if_exists($tmp_urltable_filename);
 		} else {
-			touch($urltable_filename);
+			if (!$validateonly) {
+				touch($urltable_filename);
+			}
 			conf_mount_ro();
 			return false;
 		}

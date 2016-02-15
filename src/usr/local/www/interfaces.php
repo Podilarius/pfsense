@@ -1691,7 +1691,8 @@ if ($input_errors) {
 
 if (is_subsystem_dirty('interfaces')) {
 	print_apply_box(sprintf(gettext("The %s configuration has been changed."), $wancfg['descr']) . "<br />" .
-					gettext("You must apply the changes in order for them to take effect. Don't forget to adjust the DHCP Server range if needed after applying."));
+					gettext("You must apply the changes in order for them to take effect.") . "<br />" .
+					gettext("Don't forget to adjust the DHCP Server range if needed after applying."));
 }
 
 if ($savemsg) {
@@ -1704,7 +1705,7 @@ $form = new Form(new Form_Button(
 	gettext("Save")
 ));
 
-$section = new Form_Section('General configuration');
+$section = new Form_Section('General Configuration');
 
 $section->addInput(new Form_Checkbox(
 	'enable',
@@ -1785,7 +1786,7 @@ if (count($mediaopts_list) > 0) {
 
 $form->add($section);
 
-$section = new Form_Section('Static IPv4 configuration');
+$section = new Form_Section('Static IPv4 Configuration');
 $section->addClass('staticv4');
 
 $section->addInput(new Form_IpAddress(
@@ -1816,7 +1817,7 @@ $section->add($group);
 
 $form->add($section);
 
-$section = new Form_Section('Static IPv6 configuration');
+$section = new Form_Section('Static IPv6 Configuration');
 $section->addClass('staticv6');
 
 $section->addInput(new Form_IpAddress(
@@ -1846,7 +1847,7 @@ $section->add($group);
 $form->add($section);
 
 // Add new gateway modal pop-up for IPv6
-$modal = new Modal('New IPv6 gateway', 'newgateway6', 'large');
+$modal = new Modal('New IPv6 Gateway', 'newgateway6', 'large');
 
 $modal->addInput(new Form_Checkbox(
 	'defaultgw6',
@@ -1897,24 +1898,24 @@ $form->add($modal);
 
 // ==== DHCP client configuration =============================
 
-$section = new Form_Section('DHCP client configuration');
+$section = new Form_Section('DHCP Client Configuration');
 $section->addClass('dhcp');
 
 $group = new Form_Group('Options');
 
 $group->add(new Form_Checkbox(
-	'dhcpadv',
+	'adv_dhcp_config_advanced',
 	null,
-	'Show DHCP advanced options',
-	false
-));
+	'Advanced Configuration',
+	$pconfig['adv_dhcp_config_advanced']
+))->setHelp('Use advanced DHCP configuration options.');
 
 $group->add(new Form_Checkbox(
-	'dhcpovr',
+	'adv_dhcp_config_file_override',
 	null,
-	'Config file override',
-	false
-));
+	'Configuration Override',
+	$pconfig['adv_dhcp_config_file_override']
+))->setHelp('Override the configuration from this file.');
 
 $section->add($group);
 
@@ -2023,16 +2024,16 @@ $group->add(new Form_Checkbox(
 ))->displayAsRadio();
 
 $group->setHelp('The values in these fields are DHCP protocol timings used when requesting a lease.' . '<br />' .
-				'<a href="http://www.freebsd.org/cgi/man.cgi?query=dhclient.conf&sektion=5#PROTOCOL_TIMING">' . 'See here more information' . '</a>');
+				'<a target="_blank" href="https://www.freebsd.org/cgi/man.cgi?query=dhclient.conf&sektion=5#PROTOCOL_TIMING">' . 'See here more information' . '</a>');
 
 $section->add($group);
 
 $section->addInput(new Form_Input(
 	'adv_dhcp_config_file_override_path',
-	'Config file override',
+	'Configuration File Override',
 	'text',
 	$pconfig['adv_dhcp_config_file_override_path']
-))->sethelp('The value in this field is the full absolute path to a DHCP client configuration file.	 [/[dirname/[.../]]filename[.ext]]' . '<br />' .
+))->setWidth(9)->sethelp('The value in this field is the full absolute path to a DHCP client configuration file.	 [/[dirname/[.../]]filename[.ext]]' . '<br />' .
 			'Value Substitutions in Config File: {interface}, {hostname}, {mac_addr_asciiCD}, {mac_addr_hexCD}' . '<br />' .
 			'Where C is U(pper) or L(ower) Case, and D is ":-." Delimiter (space, colon, hyphen, or period) (omitted for none).' . '<br />' .
 			'Some ISPs may require certain options be or not be sent.');
@@ -2047,7 +2048,7 @@ $section->addInput(new Form_Input(
 	'Send options',
 	'text',
 	$pconfig['adv_dhcp_send_options']
-))->sethelp('The values in this field are DHCP options to be sent when requesting a DHCP lease.	 [option declaration [, ...]]' . '<br />' .
+))->setWidth(9)->sethelp('The values in this field are DHCP options to be sent when requesting a DHCP lease.	 [option declaration [, ...]]' . '<br />' .
 			'Value Substitutions: {interface}, {hostname}, {mac_addr_asciiCD}, {mac_addr_hexCD}' . '<br />' .
 			'Where C is U(pper) or L(ower) Case, and D is " :-." Delimiter (space, colon, hyphen, or period) (omitted for none).' . '<br />' .
 			'Some ISPs may require certain options be or not be sent.');
@@ -2057,7 +2058,7 @@ $section->addInput(new Form_Input(
 	'Request options',
 	'text',
 	$pconfig['adv_dhcp_request_options']
-))->sethelp('The values in this field are DHCP option 55 to be sent when requesting a DHCP lease.  [option [, ...]]' . '<br />' .
+))->setWidth(9)->sethelp('The values in this field are DHCP option 55 to be sent when requesting a DHCP lease.  [option [, ...]]' . '<br />' .
 			'Some ISPs may require certain options be or not be requested.');
 
 $section->addInput(new Form_Input(
@@ -2065,38 +2066,41 @@ $section->addInput(new Form_Input(
 	'Require options',
 	'text',
 	$pconfig['adv_dhcp_required_options']
-))->sethelp('The values in this field are DHCP options required by the client when requesting a DHCP lease.	 [option [, ...]]');
+))->setWidth(9)->sethelp('The values in this field are DHCP options required by the client when requesting a DHCP lease.	 [option [, ...]]');
 
 $section->addInput(new Form_Input(
 	'adv_dhcp_option_modifiers',
 	'Option modifiers',
 	'text',
 	$pconfig['adv_dhcp_option_modifiers']
-))->sethelp('The values in this field are DHCP option modifiers applied to obtained DHCP lease.	 [modifier option declaration [, ...]]' . '<br />' .
-			'modifiers: (default, supersede, prepend, append)');
+))->setWidth(9)->sethelp('The values in this field are DHCP option modifiers applied to obtained DHCP lease.	 [modifier option declaration [, ...]]' . '<br />' .
+			'modifiers: (default, supersede, prepend, append)' . '<br />' .
+			'<a target="_blank" href="https://www.freebsd.org/cgi/man.cgi?query=dhclient.conf&sektion=5#LEASE_REQUIREMENTS_AND_REQUESTS">' . 'See here more information' . '</a>');
 
 $form->add($section);
 
 // DHCP6 client config
 
-$section = new Form_Section('DHCP6 client configuration');
+$section = new Form_Section('DHCP6 Client Configuration');
 $section->addClass('dhcp6');
 
-$section->addInput(new Form_Checkbox(
-	'adv_dhcp6_config_advanced',
-	'Advanced',
-	'Show DHCPv6 advanced options',
-	$pconfig['adv_dhcp6_config_advanced'],
-	'Selected'
-));
+$group = new Form_Group('Options');
 
-$section->addInput(new Form_Checkbox(
+$group->add(new Form_Checkbox(
+	'adv_dhcp6_config_advanced',
+	null,
+	'Advanced Configuration',
+	$pconfig['adv_dhcp6_config_advanced']
+))->setHelp('Use advanced DHCPv6 configuration options.');
+
+$group->add(new Form_Checkbox(
 	'adv_dhcp6_config_file_override',
-	'Config file override',
-	'Override the configuration from this file',
-	$pconfig['adv_dhcp6_config_file_override'],
-	'Selected'
-));
+	null,
+	'Configuration Override',
+	$pconfig['adv_dhcp6_config_file_override']
+))->setHelp('Override the configuration from this file.');
+
+$section->add($group);
 
 $section->addInput(new Form_Checkbox(
 	'dhcp6usev4iface',
@@ -2138,32 +2142,32 @@ $section->addInput(new Form_Input(
 	'Configuration File Override',
 	'text',
 	$pconfig['adv_dhcp6_config_file_override_path']
-))->setHelp('The value in this field is the full absolute path to a DHCP client configuration file.	 [/[dirname/[.../]]filename[.ext]]' . '<br />' .
+))->setWidth(9)->setHelp('The value in this field is the full absolute path to a DHCP client configuration file.	 [/[dirname/[.../]]filename[.ext]]' . '<br />' .
 			'Value Substitutions in Config File: {interface}, {hostname}, {mac_addr_asciiCD}, {mac_addr_hexCD}' . '<br />' .
-			'Where C is U(pper) or L(ower) Case, and D is \" :-.\" Delimiter (space, colon, hyphen, or period) (omitted for none).' . '<br />' .
+			'Where C is U(pper) or L(ower) Case, and D is " :-." Delimiter (space, colon, hyphen, or period) (omitted for none).' . '<br />' .
 			'Some ISPs may require certain options be or not be sent.');
 
 $form->add($section);
 
 // DHCP6 client config - Advanced
 
-$section = new Form_Section('Advanced DHCP6 client configuration');
+$section = new Form_Section('Advanced DHCP6 Client Configuration');
 $section->addClass('dhcp6advanced');
 
 $section->addInput(new Form_Checkbox(
 	'adv_dhcp6_interface_statement_information_only_enable',
 	'Information only',
-	null,
+	'Exchange Information Only',
 	$pconfig['adv_dhcp6_interface_statement_information_only_enable'],
 	'Selected'
-));
+))->setHelp('Only exchange informational configuration parameters with servers.');
 
 $section->addInput(new Form_Input(
 	'adv_dhcp6_interface_statement_send_options',
 	'Send options',
 	'text',
 	$pconfig['adv_dhcp6_interface_statement_send_options']
-))->sethelp('DHCP send options to be sent when requesting a DHCP lease.	 [option declaration [, ...]]' . '<br />' .
+))->setWidth(9)->sethelp('DHCP send options to be sent when requesting a DHCP lease.	 [option declaration [, ...]]' . '<br />' .
 			'Value Substitutions: {interface}, {hostname}, {mac_addr_asciiCD}, {mac_addr_hexCD}' . '<br />' .
 			'Where C is U(pper) or L(ower) Case, and D is \" :-.\" Delimiter (space, colon, hyphen, or period) (omitted for none).' . '<br />' .
 			'Some DHCP services may require certain options be or not be sent.');
@@ -2173,7 +2177,7 @@ $section->addInput(new Form_Input(
 	'Request Options',
 	'text',
 	$pconfig['adv_dhcp6_interface_statement_request_options']
-))->sethelp('DHCP request options to be sent when requesting a DHCP lease.	[option [, ...]]' . '<br />' .
+))->setWidth(9)->sethelp('DHCP request options to be sent when requesting a DHCP lease.	[option [, ...]]' . '<br />' .
 			'Some DHCP services may require certain options be or not be requested.');
 
 $section->addInput(new Form_Input(
@@ -2181,7 +2185,7 @@ $section->addInput(new Form_Input(
 	'Scripts',
 	'text',
 	$pconfig['adv_dhcp6_interface_statement_script']
-))->sethelp('Absolute path to a script invoked on certain conditions including when a reply message is received.' . '<br />' .
+))->setWidth(9)->sethelp('Absolute path to a script invoked on certain conditions including when a reply message is received.' . '<br />' .
 			'[/[dirname/[.../]]filename[.ext]].');
 
 $group = new Form_Group('Identity Association Statement');
@@ -2353,6 +2357,8 @@ $group->add(new Form_Input(
 	'text',
 	$pconfig['adv_dhcp6_key_info_statement_expire']
 ))->sethelp('Expire');
+
+$group->setHelp('<a target="_blank" href="https://www.freebsd.org/cgi/man.cgi?query=dhcp6c.conf&sektion=5&apropos=0&manpath=FreeBSD+10.1-RELEASE+and+Ports#Interface_statement">' . 'See here more information' . '</a>');
 
 $section->add($group);
 
@@ -2742,7 +2748,7 @@ $form->add($section);
 // Wireless interface
 if (isset($wancfg['wireless'])) {
 
-	$section = new Form_Section('Common wireless configuration - Settings apply to all wireless networks on ' . $wlanbaseif . '.');
+	$section = new Form_Section('Common Wireless Configuration - Settings apply to all wireless networks on ' . $wlanbaseif . '.');
 
 	$section->addInput(new Form_Checkbox(
 		'persistcommonwireless',
@@ -2866,7 +2872,7 @@ if (isset($wancfg['wireless'])) {
 	$form->add($section);
 
 	// Regulatory settings
-	$section = new Form_Section('Regulatory settings');
+	$section = new Form_Section('Regulatory Settings');
 
 	$domain_list = array("" => 'Default');
 
@@ -2911,7 +2917,7 @@ if (isset($wancfg['wireless'])) {
 
 	$form->add($section);
 
-	$section = new Form_Section('Network-specific wireless configuration');
+	$section = new Form_Section('Network-Specific Wireless Configuration');
 
 	$section->addInput(new Form_Select(
 		'mode',
@@ -3035,7 +3041,7 @@ if (isset($wancfg['wireless'])) {
 
 	$form->add($section);
 
-	$section = new Form_Section('802.1x RADIUS options');
+	$section = new Form_Section('802.1x RADIUS Options');
 
 	$section->addInput(new Form_Checkbox(
 		'ieee8021x',
@@ -3104,7 +3110,7 @@ if (isset($wancfg['wireless'])) {
 	$form->add($section);
 }
 
-$section = new Form_Section('Private networks');
+$section = new Form_Section('Private Networks');
 
 $section->addInput(new Form_Checkbox(
 	'blockpriv',
@@ -3153,7 +3159,7 @@ $form->addGlobal(new Form_Input(
 
 
 // Add new gateway modal pop-up
-$modal = new Modal('New gateway', 'newgateway', 'large');
+$modal = new Modal('New Gateway', 'newgateway', 'large');
 
 $modal->addInput(new Form_Checkbox(
 	'defaultgw',
@@ -3531,8 +3537,8 @@ events.push(function() {
 	}
 
 	function setDHCPoptions() {
-		var adv = $('#dhcpadv').prop('checked');
-		var ovr = $('#dhcpovr').prop('checked');
+		var adv = $('#adv_dhcp_config_advanced').prop('checked');
+		var ovr = $('#adv_dhcp_config_file_override').prop('checked');
 
 		if (ovr) {
 			hideInput('dhcphostname', true);
@@ -3637,7 +3643,7 @@ events.push(function() {
 		prefill_provider();
 	});
 
-	$('#dhcpadv, #dhcpovr').click(function () {
+	$('#adv_dhcp_config_advanced, #adv_dhcp_config_file_override').click(function () {
 		setDHCPoptions();
 	});
 

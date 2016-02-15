@@ -92,8 +92,8 @@ if ($config['installedpackages']['olsrd']) {
 }
 
 if (!$_GET['if']) {
-	$savemsg = "<p><b>" . gettext("The DHCPv6 Server can only be enabled on interfaces configured with static, non unique local IP addresses.") . "</b></p>" .
-		"<p><b>" . gettext("Only interfaces configured with a static IP will be shown.") . "</b></p>";
+	$savemsg = gettext("The DHCPv6 Server can only be enabled on interfaces configured with static, non unique local IP addresses.") . "<br />" .
+	    gettext("Only interfaces configured with a static IP will be shown.");
 }
 
 $iflist = get_configured_interface_with_descr();
@@ -234,7 +234,12 @@ if ($_POST) {
 	}
 }
 
-$pgtitle = array(gettext("Services"), gettext("Router Advertisements"));
+$pgtitle = array(gettext("Services"), htmlspecialchars(gettext("DHCPv6 Server & RA")));
+
+if (!empty($if) && isset($iflist[$if])) {
+	$pgtitle[] = $iflist[$if];
+}
+$pgtitle[] = gettext("Router Advertisements");
 
 include("head.inc");
 

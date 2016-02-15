@@ -4089,7 +4089,20 @@ function filter_generate_ipsec_rules($log = array()) {
 				}
 			}
 
-			if (substr($ph1ent['interface'], 0, 4) == "_vip") {
+			$a_groups = return_gateway_groups_array();
+			if (is_array($a_groups[$ph1ent['interface']])) {
+				// bound to gateway group
+				$parentinterface = get_failover_interface($ph1ent['interface']);
+				if (substr($parentinterface, 0, 4) == "_vip") {
+					$parentinterface = get_configured_vip_interface($parentinterface);
+					/* IP Alias -> CARP */
+					if (substr($parentinterface, 0, 4) == "_vip") {
+						$parentinterface = get_configured_vip_interface($parentinterface);
+					}
+				} else {
+					$parentinterface = convert_real_interface_to_friendly_interface_name($parentinterface);
+				}
+			} elseif (substr($ph1ent['interface'], 0, 4) == "_vip") {
 				$parentinterface = get_configured_vip_interface($ph1ent['interface']);
 				/* IP Alias -> CARP */
 				if (substr($parentinterface, 0, 4) == "_vip") {
@@ -4243,21 +4256,23 @@ function ifridx($if, $ridx) {
 	}
 	
 	$i = $ifridx = 0;
-	foreach ($config['filter']['rule'] as $rulen => $filterent) {
-		if (($filterent['interface'] == $if && !isset($filterent['floating'])) || (isset($filterent['floating']) && "FloatingRules" == $if)) {
-			if ($i == $ridx) {
-				return $ifridx;
+	if (is_array($config['filter']['rule'])) {
+		foreach ($config['filter']['rule'] as $rulen => $filterent) {
+			if (($filterent['interface'] == $if && !isset($filterent['floating'])) || (isset($filterent['floating']) && "FloatingRules" == $if)) {
+				if ($i == $ridx) {
+					return $ifridx;
+				}
+				$ifridx++;
 			}
-			$ifridx++;
+			$i++;
 		}
-		$i++;
 	}
-	return $i;
+	return $ifridx;
 }
 
 /* display rules separators */
 function display_separator($separators, $nrules, $columns_in_table) {
-	if (!empty($separators)) {
+	if (is_array($separators)) {
 		foreach ($separators as $sepn => $separator) {
 			if ($separator['row'][0] == "fr" . $nrules) {
 				$cellcolor = $separator['color'];
@@ -4265,6 +4280,29 @@ function display_separator($separators, $nrules, $columns_in_table) {
 					'<td class="' . $cellcolor . '" colspan="' . ($columns_in_table -1) . '">' . '<span class="' . $cellcolor . '">' . $separator['text'] . '</span></td>' .
 					'<td  class="' . $cellcolor . '"><a href="#"><i class="fa fa-trash no-confirm sepdel" title="delete this separator"></i></a></td>' .
 					'</tr>' . "\n");
+			}
+		}
+	}
+}
+
+/* Return a list of separator rows */
+function separator_rows($separators) {
+	$seprowns = array();
+	if (is_array($separators)) {
+		foreach ($separators as $sepn => $separator) {
+			$seprows[substr($separator['row']['0'], 2)] = true;
+		}
+	}
+	return $seprows;
+}
+
+/* If the separator is located after the place ($ridx) where the rule was added or deleted, move the separator ($mvrows) */
+function move_separators(&$a_separators, $ridx, $mvnrows) {
+	if (is_array($a_separators)) {
+		foreach ($a_separators as $sepi => $separator) {
+			$seprow = substr($separator['row']['0'], 2);
+			if ($seprow > $ridx) {
+				$a_separators[$sepi]['row']['0'] = 'fr' . ($seprow + $mvnrows);
 			}
 		}
 	}

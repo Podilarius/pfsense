@@ -272,7 +272,7 @@ display_top_tabs($tab_array);
 
 <form name="mainform" method="post">
 	<div class="panel panel-default">
-		<div class="panel-heading"><h2 class="panel-title"><?=gettext('IPsec tunnels')?></h2></div>
+		<div class="panel-heading"><h2 class="panel-title"><?=gettext('IPsec Tunnels')?></h2></div>
 		<div class="panel-body table-responsive">
 			<table class="table table-striped table-hover">
 				<thead>
@@ -311,8 +311,10 @@ display_top_tabs($tab_array);
 <?php
 			if (empty($ph1ent['iketype']) || $ph1ent['iketype'] == "ikev1") {
 				echo "V1";
-			} else {
+			} elseif ($ph1ent['iketype'] == "ikev2") {
 				echo "V2";
+			} elseif ($ph1ent['iketype'] == "auto") {
+				echo "Auto";
 			}
 ?>
 						</td>
@@ -555,10 +557,9 @@ display_top_tabs($tab_array);
 </form>
 
 <div class="infoblock">
-	<?=print_info_box('<strong>' . gettext("Note:") . '</strong><br />' .
-	sprintf(gettext("You can check your IPsec status at %s%s%s."), '<a href="status_ipsec.php">', gettext("Status:IPsec"), '</a>') . '<br />' .
-	sprintf(gettext("IPsec Debug Mode can be enabled at %s%s%s."), '<a href="vpn_ipsec_settings.php">', gettext("VPN:IPsec:Advanced Settings"), '</a>') . '<br />' .
-	sprintf(gettext("IPsec can be set to prefer older SAs at %s%s%s."), '<a href="vpn_ipsec_settings.php">', gettext("VPN:IPsec:Advanced Settings"), '</a>'), 'info', false)?>
+	<?php print_info_box(sprintf(gettext("You can check your IPsec status at %s%s%s."), '<a href="status_ipsec.php">', gettext("Status:IPsec"), '</a>') . '<br />' .
+	sprintf(gettext("IPsec debug mode can be enabled at %s%s%s."), '<a href="vpn_ipsec_settings.php">', gettext("VPN:IPsec:Advanced Settings"), '</a>') . '<br />' .
+	sprintf(gettext("IPsec can be set to prefer older SAs at %s%s%s."), '<a href="vpn_ipsec_settings.php">', gettext("VPN:IPsec:Advanced Settings"), '</a>'), 'info', false); ?>
 </div>
 
 <script type="text/javascript">

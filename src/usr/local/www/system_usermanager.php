@@ -69,8 +69,6 @@ require("certs.inc");
 require("guiconfig.inc");
 
 // start admin user code
-$pgtitle = array(gettext("System"), gettext("User Manager"), gettext("Users"));
-
 if (isset($_POST['userid']) && is_numericint($_POST['userid'])) {
 	$id = $_POST['userid'];
 }
@@ -118,7 +116,7 @@ if ($_GET['act'] == "deluser") {
 	$userdeleted = $a_user[$id]['name'];
 	unset($a_user[$id]);
 	write_config();
-	$savemsg = sprintf(gettext("User %s successfully deleted"), $userdeleted);
+	$savemsg = sprintf(gettext("User %s successfully deleted."), $userdeleted);
 } else if ($act == "new") {
 	/*
 	 * set this value cause the text field is read only
@@ -142,7 +140,7 @@ if (isset($_POST['dellall'])) {
 				unset($a_user[$userid]);
 			}
 		}
-		$savemsg = gettext("Selected users removed successfully!");
+		$savemsg = gettext("Selected users removed successfully.");
 		write_config($savemsg);
 	}
 }
@@ -466,6 +464,11 @@ function build_cert_table() {
 	return($certhtml);
 }
 
+$pgtitle = array(gettext("System"), gettext("User Manager"), gettext("Users"));
+
+if ($act == "new" || $act == "edit" || $input_errors) {
+	$pgtitle[] = gettext('Edit');
+}
 include("head.inc");
 
 if ($input_errors) {
@@ -480,7 +483,7 @@ $tab_array = array();
 $tab_array[] = array(gettext("Users"), true, "system_usermanager.php");
 $tab_array[] = array(gettext("Groups"), false, "system_groupmanager.php");
 $tab_array[] = array(gettext("Settings"), false, "system_usermanager_settings.php");
-$tab_array[] = array(gettext("Servers"), false, "system_authservers.php");
+$tab_array[] = array(gettext("Authentication Servers"), false, "system_authservers.php");
 display_top_tabs($tab_array);
 
 if (!($act == "new" || $act == "edit" || $input_errors)) {
@@ -550,13 +553,13 @@ foreach ($a_user as $i => $userent):
 </form>
 
 <div class="infoblock">
-	<?=print_info_box(gettext("Additional users can be added here. User permissions for accessing " .
+	<?php print_info_box(gettext("Additional users can be added here. User permissions for accessing " .
 	"the webConfigurator can be assigned directly or inherited from group memberships. " .
 	"An icon that appears grey indicates that it is a system defined object. " .
 	"Some system object properties can be modified but they cannot be deleted.") .
 	'<br /><br />' .
 	gettext("Accounts added here are also used for other parts of the system " .
-	"such as OpenVPN, IPsec, and Captive Portal."), 'info', false)?>
+	"such as OpenVPN, IPsec, and Captive Portal."), 'info', false); ?>
 </div>
 
 <?php
@@ -753,7 +756,7 @@ if ($act == "new" || $act == "edit" || $input_errors):
 		$form->add($section);
 
 		// ==== Certificate table section =====================================
-		$section = new Form_Section('User certificates');
+		$section = new Form_Section('User Certificates');
 
 		$section->addInput(new Form_StaticText(
 			null,
@@ -765,7 +768,7 @@ if ($act == "new" || $act == "edit" || $input_errors):
 
 	// ==== Add user certificate for a new user
 	if (is_array($config['ca']) && count($config['ca']) > 0) {
-		$section = new Form_Section('Create certificate for user');
+		$section = new Form_Section('Create Certificate for User');
 		$section->addClass('cert-options');
 
 		$nonPrvCas = array();

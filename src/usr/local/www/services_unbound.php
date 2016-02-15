@@ -263,7 +263,7 @@ function build_if_list($selectedifs) {
 	return($iflist);
 }
 
-$pgtitle = array(gettext("Services"), gettext("DNS Resolver"), gettext("General"));
+$pgtitle = array(gettext("Services"), gettext("DNS Resolver"), gettext("General Settings"));
 $shortcut_section = "resolver";
 
 include_once("head.inc");
@@ -277,12 +277,12 @@ if ($savemsg) {
 }
 
 if (is_subsystem_dirty('unbound')) {
-	print_apply_box(gettext("The DNS Resolver configuration has been changed.") . "<br />" . gettext("You must apply the changes in order for them to take effect."));
+	print_apply_box(gettext("The DNS resolver configuration has been changed.") . "<br />" . gettext("You must apply the changes in order for them to take effect."));
 }
 
 $tab_array = array();
-$tab_array[] = array(gettext("General settings"), true, "services_unbound.php");
-$tab_array[] = array(gettext("Advanced settings"), false, "services_unbound_advanced.php");
+$tab_array[] = array(gettext("General Settings"), true, "services_unbound.php");
+$tab_array[] = array(gettext("Advanced Settings"), false, "services_unbound_advanced.php");
 $tab_array[] = array(gettext("Access Lists"), false, "/services_unbound_acls.php");
 display_top_tabs($tab_array, true);
 
@@ -556,14 +556,14 @@ endforeach;
 </nav>
 
 <div class="infoblock">
-	<?=print_info_box(sprintf(gettext("If the DNS Resolver is enabled, the DHCP".
+	<?php print_info_box(sprintf(gettext("If the DNS Resolver is enabled, the DHCP".
 		" service (if enabled) will automatically serve the LAN IP".
 		" address as a DNS server to DHCP clients so they will use".
 		" the DNS Resolver. If Forwarding is enabled, the DNS Resolver will use the DNS servers".
 		" entered in %sSystem: General setup%s".
 		" or those obtained via DHCP or PPP on WAN if &quot;Allow".
 		" DNS server list to be overridden by DHCP/PPP on WAN&quot;".
-		" is checked."), '<a href="system.php">', '</a>'), 'info', false)?>
+		" is checked."), '<a href="system.php">', '</a>'), 'info', false); ?>
 </div>
 
 <?php include("foot.inc");

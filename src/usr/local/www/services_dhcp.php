@@ -716,6 +716,10 @@ function build_pooltable() {
 }
 
 $pgtitle = array(gettext("Services"), gettext("DHCP Server"));
+
+if (!empty($if) && !isset($config['dhcrelay']['enable']) && isset($iflist[$if])) {
+	$pgtitle[] = $iflist[$if];
+}
 $shortcut_section = "dhcp";
 
 include("head.inc");
@@ -784,10 +788,7 @@ if (!is_numeric($pool) && !($act == "newpool")) {
 		$pconfig['enable']
 	));
 } else {
-	$section->addInput(new Form_StaticText(
-		null,
-		'<div class="alert alert-info"> Editing Pool-Specific Options. To return to the Interface, click its tab above. </div>'
-	));
+	print_info_box(gettext('Editing pool-specific options. To return to the Interface, click its tab above.'), 'info', false);
 }
 
 $section->addInput(new Form_Checkbox(
@@ -879,7 +880,7 @@ $section->add($group);
 $form->add($section);
 
 if (!is_numeric($pool) && !($act == "newpool")) {
-	$section = new Form_Section('Additional pools');
+	$section = new Form_Section('Additional Pools');
 
 	$btnaddpool = new Form_Button(
 		'btnaddpool',
@@ -926,7 +927,7 @@ for ($idx=1; $idx<=4; $idx++) {
 
 $form->add($section);
 
-$section = new Form_Section('Other options');
+$section = new Form_Section('Other Options');
 
 $section->addInput(new Form_IpAddress(
 	'gateway',
@@ -1225,7 +1226,7 @@ if ($pconfig['netboot']) {
 } else {
 	$sectate = COLLAPSIBLE|SEC_CLOSED;
 }
-$section = new Form_Section("Network booting", nwkbootsec, $sectate);
+$section = new Form_Section("Network Booting", nwkbootsec, $sectate);
 
 $section->addInput(new Form_Checkbox(
 	'netboot',
@@ -1304,7 +1305,7 @@ if (!is_numeric($pool) && !($act == "newpool")) {
 ?>
 
 <div class="panel panel-default">
-	<div class="panel-heading"><h2 class="panel-title"><?=gettext("DHCP Static Mappings for this interface")?></h2></div>
+	<div class="panel-heading"><h2 class="panel-title"><?=gettext("DHCP Static Mappings for this Interface")?></h2></div>
 	<div class="table-responsive">
 			<table class="table table-striped table-hover table-condensed">
 				<thead>

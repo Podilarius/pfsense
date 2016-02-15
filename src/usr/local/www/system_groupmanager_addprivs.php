@@ -80,7 +80,7 @@ function admin_groups_sort() {
 
 require("guiconfig.inc");
 
-$pgtitle = array(gettext("System"), gettext("User Manager"), gettext("Groups"), gettext("Add Privileges"));
+$pgtitle = array(gettext("System"), gettext("User Manager"), gettext("Groups"), gettext("Edit"), gettext("Add Privileges"));
 
 if (is_numericint($_GET['groupid'])) {
 	$groupid = $_GET['groupid'];
@@ -187,7 +187,7 @@ $tab_array = array();
 $tab_array[] = array(gettext("Users"), false, "system_usermanager.php");
 $tab_array[] = array(gettext("Groups"), true, "system_groupmanager.php");
 $tab_array[] = array(gettext("Settings"), false, "system_usermanager_settings.php");
-$tab_array[] = array(gettext("Servers"), false, "system_authservers.php");
+$tab_array[] = array(gettext("Authentication Servers"), false, "system_authservers.php");
 display_top_tabs($tab_array);
 
 $form = new Form;
@@ -200,7 +200,7 @@ if (isset($groupid)) {
 	));
 }
 
-$section = new Form_Section('Add privileges for '. $a_group['name']);
+$section = new Form_Section('Add Privileges for '. $a_group['name']);
 
 $section->addInput(new Form_Select(
 	'sysprivs',

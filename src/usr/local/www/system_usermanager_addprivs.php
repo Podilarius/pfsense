@@ -67,7 +67,7 @@ function admusercmp($a, $b) {
 
 require("guiconfig.inc");
 
-$pgtitle = array(gettext("System"), gettext("User Manager"), gettext("Users"), gettext("Add Privileges"));
+$pgtitle = array(gettext("System"), gettext("User Manager"), gettext("Users"), gettext("Edit"), gettext("Add Privileges"));
 
 if (is_numericint($_GET['userid'])) {
 	$userid = $_GET['userid'];
@@ -172,12 +172,12 @@ $tab_array = array();
 $tab_array[] = array(gettext("Users"), true, "system_usermanager.php");
 $tab_array[] = array(gettext("Groups"), false, "system_groupmanager.php");
 $tab_array[] = array(gettext("Settings"), false, "system_usermanager_settings.php");
-$tab_array[] = array(gettext("Servers"), false, "system_authservers.php");
+$tab_array[] = array(gettext("Authentication Servers"), false, "system_authservers.php");
 display_top_tabs($tab_array);
 
 $form = new Form();
 
-$section = new Form_Section('User privileges');
+$section = new Form_Section('User Privileges');
 
 $section->addInput(new Form_Select(
 	'sysprivs',

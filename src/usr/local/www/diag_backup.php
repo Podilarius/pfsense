@@ -58,8 +58,8 @@
 
 ##|+PRIV
 ##|*IDENT=page-diagnostics-backup-restore
-##|*NAME=Diagnostics: Backup/restore
-##|*DESCR=Allow access to the 'Diagnostics: Backup/restore' page.
+##|*NAME=Diagnostics: Backup & Restore
+##|*DESCR=Allow access to the 'Diagnostics: Backup & Restore' page.
 ##|*MATCH=diag_backup.php*
 ##|-PRIV
 
@@ -347,7 +347,7 @@ if ($_POST) {
 									conf_mount_ro();
 								}
 								filter_configure();
-								$savemsg = gettext("The configuration area has been restored.  You may need to reboot the firewall.");
+								$savemsg = gettext("The configuration area has been restored. You may need to reboot the firewall.");
 							}
 						}
 					} else {
@@ -527,7 +527,7 @@ if ($_POST) {
 			exit;
 		} else if ($mode == "clearpackagelock") {
 			clear_subsystem_dirty('packagelock');
-			$savemsg = "Package Lock Cleared";
+			$savemsg = "Package lock cleared.";
 		} else if ($mode == "restore_ver") {
 			$input_errors[] = gettext("XXX - this feature may hose your config (do NOT backrev configs!) - billm");
 			if ($ver2restore <> "") {
@@ -575,7 +575,7 @@ function build_area_list($showall) {
 		"snmpd" => gettext("SNMP Server"),
 		"shaper" => gettext("Traffic Shaper"),
 		"vlans" => gettext("VLANS"),
-		"wol" => gettext("Wake on LAN")
+		"wol" => gettext("Wake-on-LAN")
 		);
 
 	$list = array("" => gettext("All"));
@@ -593,7 +593,7 @@ function build_area_list($showall) {
 	}
 }
 
-$pgtitle = array(gettext("Diagnostics"), gettext("Backup/Restore"));
+$pgtitle = array(gettext("Diagnostics"), htmlspecialchars(gettext("Backup & Restore")), htmlspecialchars(gettext("Backup & Restore")));
 include("head.inc");
 
 if ($input_errors) {
@@ -609,21 +609,21 @@ if (is_subsystem_dirty('restore')):
 	<br/>
 	<form action="diag_reboot.php" method="post">
 		<input name="Submit" type="hidden" value="Yes" />
-		<?=print_info_box(gettext("The firewall configuration has been changed.") . "<br />" . gettext("The firewall is now rebooting."))?>
+		<?php print_info_box(gettext("The firewall configuration has been changed.") . "<br />" . gettext("The firewall is now rebooting.")); ?>
 		<br />
 	</form>
 <?php
 endif;
 
 $tab_array = array();
+$tab_array[] = array(htmlspecialchars(gettext("Backup & Restore")), true, "diag_backup.php");
 $tab_array[] = array(gettext("Config History"), false, "diag_confbak.php");
-$tab_array[] = array(gettext("Backup/Restore"), true, "diag_backup.php");
 display_top_tabs($tab_array);
 
 $form = new Form(false);
 $form->setMultipartEncoding();	// Allow file uploads
 
-$section = new Form_Section('Backup configuration');
+$section = new Form_Section('Backup Configuration');
 
 $section->addInput(new Form_Select(
 	'backuparea',
@@ -670,7 +670,7 @@ $group->add(new Form_Button(
 $section->add($group);
 $form->add($section);
 
-$section = new Form_Section('Restore backup');
+$section = new Form_Section('Restore Backup');
 
 $section->addInput(new Form_StaticText(
 	null,
@@ -718,7 +718,7 @@ $section->add($group);
 $form->add($section);
 
 if (($config['installedpackages']['package'] != "") || (is_subsystem_dirty("packagelock"))) {
-	$section = new Form_Section('Package functions');
+	$section = new Form_Section('Package Functions');
 
 	if ($config['installedpackages']['package'] != "") {
 		$group = new Form_Group('');

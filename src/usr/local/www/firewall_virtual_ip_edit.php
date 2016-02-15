@@ -317,7 +317,7 @@ if ($_POST) {
 $ipaliashelp = gettext('The mask must be the network\'s subnet mask. It does not specify a CIDR range.');
 $proxyarphelp = gettext('Enter a CIDR block of proxy ARP addresses.');
 
-$pgtitle = array(gettext("Firewall"), gettext("Virtual IP Address"), gettext("Edit"));
+$pgtitle = array(gettext("Firewall"), gettext("Virtual IPs"), gettext("Edit"));
 include("head.inc");
 
 function build_if_list() {
@@ -483,8 +483,8 @@ print($form);
 ?>
 
 <div class="infoblock">
-	<?=print_info_box(gettext("Proxy ARP and Other type Virtual IPs cannot be bound to by anything running on the firewall, such as IPsec, OpenVPN, etc.  Use a CARP or IP Alias type address for these types.") . '<br />' .
-			   sprintf(gettext("For more information on CARP and the above values, visit the OpenBSD %s"), '<a href="http://www.openbsd.org/faq/pf/carp.html">CARP FAQ</a>.'), 'info', false)?>
+	<?php print_info_box(gettext("Proxy ARP and Other type Virtual IPs cannot be bound to by anything running on the firewall, such as IPsec, OpenVPN, etc.  Use a CARP or IP Alias type address for these types.") . '<br />' .
+			   sprintf(gettext("For more information on CARP and the above values, visit the OpenBSD %s"), '<a href="http://www.openbsd.org/faq/pf/carp.html">CARP FAQ</a>.'), 'info', false); ?>
 </div>
 
 <script type="text/javascript">

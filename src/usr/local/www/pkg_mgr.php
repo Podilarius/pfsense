@@ -164,8 +164,8 @@ $pgtitle = array(gettext("System"), gettext("Package Manager"), gettext("Availab
 include("head.inc");
 
 $tab_array = array();
-$tab_array[] = array(gettext("Available Packages"), true, "pkg_mgr.php");
 $tab_array[] = array(gettext("Installed Packages"), false, "pkg_mgr_installed.php");
+$tab_array[] = array(gettext("Available Packages"), true, "pkg_mgr.php");
 display_top_tabs($tab_array);
 ?>
 <div class="panel panel-default" id="search-panel" style="display: none;">
@@ -207,11 +207,11 @@ display_top_tabs($tab_array);
 	<div class="panel-heading"><h2 class="panel-title"><?=gettext('Packages')?></h2></div>
 	<div id="pkgtbl" class="panel-body table-responsive">
 		<div id="waitmsg">
-			<?=print_info_box(gettext("Please wait while the list of packages is retrieved and formatted") . '&nbsp;<i class="fa fa-cog fa-spin"></i>')?>
+			<?php print_info_box(gettext("Please wait while the list of packages is retrieved and formatted.") . '&nbsp;<i class="fa fa-cog fa-spin"></i>'); ?>
 		</div>
 
 		<div id="errmsg" style="display: none;">
-			<?=print_info_box("<ul><li>" . gettext("Error: Unable to retrieve package information.") . "</li></ul>", 'danger')?>
+			<?php print_info_box("<ul><li>" . gettext("Unable to retrieve package information.") . "</li></ul>", 'danger'); ?>
 		</div>
 	</div>
 </div>

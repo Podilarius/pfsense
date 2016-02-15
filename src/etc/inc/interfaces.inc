@@ -617,9 +617,12 @@ function interface_bridge_configure(&$bridge, $checkmember = 0) {
 	if ($bridge['timeout'] <> "") {
 		mwexec("/sbin/ifconfig {$bridgeif} timeout " . escapeshellarg($bridge['timeout']));
 	}
-	if ($bridge['span'] <> "") {
-		$realif = get_real_interface($bridge['span']);
-		mwexec("/sbin/ifconfig {$bridgeif} span {$realif}");
+	if (!empty($bridge['span'])) {
+		$spanifs = explode(",", $bridge['span']);
+		foreach ($spanifs as $spanif) {
+			$realif = get_real_interface($spanif);
+			mwexec("/sbin/ifconfig {$bridgeif} span {$realif}");
+		}
 	}
 	if (!empty($bridge['edge'])) {
 		$edgeifs = explode(',', $bridge['edge']);
@@ -1766,6 +1769,8 @@ EOD;
 		}
 	}
 
+/* Omit this, we maintain the default route by other means, and it causes problems with
+ * default gateway switching. See redmine #1837
 	if (($interface == "wan" && $founddefaultgw == false) || $setdefaultgw == true) {
 		$setdefaultgw = true;
 		$mpdconf .= <<<EOD
@@ -1773,6 +1778,7 @@ EOD;
 
 EOD;
 	}
+*/
 	$mpdconf .= <<<EOD
 	set iface {$ondemand} on-demand
 	set iface idle {$ppp['idletimeout']}
@@ -3117,18 +3123,18 @@ function interface_mtu_wanted_for_pppoe($realif) {
 			continue;
 		}
 
+		$mtus = array();
+		if (!empty($ppp['mtu'])) {
+			$mtus = explode(',', $ppp['mtu']);
+		}
 		$ports = explode(',', $ppp['ports']);
+
 		$mtu_wanted = 1500;
 		foreach ($ports as $pid => $port) {
 			if (get_real_interface($port) != $realif) {
 				continue;
 			}
 
-			if (!empty($ppp['mtu'])) {
-				$mtus = explode(',', $ppp['mtu']);
-			} else {
-				$mtus = array();
-			}
 			// there is an MTU configured on the port in question
 			if (!empty($mtus[$pid])) {
 				$mtu_wanted = intval($mtus[$pid]) + 8;
@@ -3142,7 +3148,6 @@ function interface_mtu_wanted_for_pppoe($realif) {
 					}
 				}
 			}
-			unset($mtus);
 
 			if ($mtu_wanted > $mtu) {
 				$mtu = $mtu_wanted;
@@ -4541,6 +4546,9 @@ function convert_friendly_interface_to_friendly_descr($interface) {
 			break;
 		case "openvpn":
 			$ifdesc = "OpenVPN";
+			break;
+		case "lo0":
+			$ifdesc = "Loopback";
 			break;
 		case "enc0":
 		case "ipsec":
