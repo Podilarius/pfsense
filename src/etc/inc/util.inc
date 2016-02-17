@@ -56,6 +56,10 @@
  *
  */
 
+define(VIP_ALL, 1);
+define(VIP_CARP, 2);
+define(VIP_IPALIAS, 3);
+
 /* kill a process by pid file */
 function killbypid($pidfile) {
 	return sigkillbypid($pidfile, "TERM");
@@ -927,6 +931,58 @@ function check_subnetsv6_overlap($subnet1, $bits1, $subnet2, $bits2) {
 	return ($subnetv6_start1 == $subnetv6_start2);
 }
 
+/* return all PTR zones for a IPv6 network */
+function get_v6_ptr_zones($subnet, $bits) {
+	$result = array();
+
+	if (!is_ipaddrv6($subnet)) {
+		return $result;
+	}
+
+	if (!is_numericint($bits) || $bits > 128) {
+		return $result;
+	}
+
+	/*
+	 * Find a small nibble boundary subnet mask
+	 * e.g. a /29 will create 8 /32 PTR zones
+	 */
+	$small_sn = $bits;
+	while ($small_sn % 4 != 0) {
+		$small_sn++;
+	}
+
+	/* Get network prefix */
+	$small_subnet = Net_IPv6::getNetmask($subnet, $bits);
+
+	/*
+	 * While small network is part of bigger one, increase 4-bit in last
+	 * digit to get next small network
+	 */
+	while (Net_IPv6::isInNetmask($small_subnet, $subnet, $bits)) {
+		/* Get a pure hex value */
+		$unpacked = unpack('H*hex', inet_pton($small_subnet));
+		/* Create PTR record using $small_sn / 4 chars */
+		$result[] = implode('.', array_reverse(str_split(substr(
+		    $unpacked['hex'], 0, $small_sn / 4)))).'.ip6.arpa';
+
+		/* Detect what part of IP should be increased */
+		$change_part = (int) ($small_sn / 16);
+		if ($small_sn % 16 == 0) {
+			$change_part--;
+		}
+
+		/* Convert desired part to decimal and increase 1 */
+		$parts = explode(":", Net_IPv6::uncompress($small_subnet));
+		$dec = base_convert($parts[$change_part], 16, 10) + 1;
+		/* Move back to hex and rebuild IP address */
+		$parts[$change_part] = base_convert($dec, 10, 16);
+		$small_subnet = implode(":", $parts);
+	}
+
+	return $result;
+}
+
 /* return true if $addr is in $subnet, false if not */
 function ip_in_subnet($addr, $subnet) {
 	if (is_ipaddrv6($addr) && is_subnetv6($subnet)) {
@@ -1132,7 +1188,7 @@ function is_inrange($test, $start, $end) {
 	return is_ipaddrv6($test) ? is_inrange_v6($test, $start, $end) : is_inrange_v4($test, $start, $end);
 }
 
-function get_configured_vip_list($family = 'all') {
+function get_configured_vip_list($family = 'all', $type = VIP_ALL) {
 	global $config;
 
 	$list = array();
@@ -1142,8 +1198,16 @@ function get_configured_vip_list($family = 'all') {
 
 	$viparr = &$config['virtualip']['vip'];
 	foreach ($viparr as $vip) {
-		if ($vip['mode'] != "carp" && $vip['mode'] != "ipalias") {
-			continue;
+
+		if ($type == VIP_CARP) {
+			if ($vip['mode'] != "carp")
+				continue;
+		} elseif ($type == VIP_IPALIAS) {
+			if ($vip['mode'] != "ipalias")
+				continue;
+		} else {
+			if ($vip['mode'] != "carp" && $vip['mode'] != "ipalias")
+				continue;
 		}
 
 		if ($family == 'all' ||
@@ -1228,7 +1292,7 @@ function get_configured_vip_detail($vipinterface = '', $family = 'inet', $what =
 		break;
 	}
 
-	return ($list);
+	return (NULL);
 }
 
 /* comparison function for sorting by the order in which interfaces are normally created */

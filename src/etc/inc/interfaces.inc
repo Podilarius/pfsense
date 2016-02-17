@@ -492,8 +492,6 @@ function interface_bridge_configure(&$bridge, $checkmember = 0) {
 
 	/* Calculate smaller mtu and enforce it */
 	$smallermtu = 0;
-	$commonrx = true;
-	$commontx = true;
 	$foundgif = false;
 	foreach ($members as $member) {
 		$realif = get_real_interface($member);
@@ -522,13 +520,10 @@ function interface_bridge_configure(&$bridge, $checkmember = 0) {
 		$smallermtu = 1500;
 	}
 
-	if (platform_booting() || !empty($bridge['bridgeif'])) {
+	if (!empty($bridge['bridgeif'])) {
 		pfSense_interface_destroy($bridge['bridgeif']);
 		pfSense_interface_create($bridge['bridgeif']);
 		$bridgeif = escapeshellarg($bridge['bridgeif']);
-	} else {
-		$bridgeif = pfSense_interface_create("bridge");
-		$bridge['bridgeif'] = $bridgeif;
 	}
 
 	$bridgemtu = interface_find_child_cfgmtu($bridge['bridgeif']);
@@ -556,7 +551,22 @@ function interface_bridge_configure(&$bridge, $checkmember = 0) {
 	}
 
 	if (isset($bridge['enablestp'])) {
-		/* Choose spanning tree proto */
+		interface_bridge_configure_stp($bridge);
+	}
+
+	interface_bridge_configure_advanced($bridge);
+
+	if ($bridge['bridgeif']) {
+		interfaces_bring_up($bridge['bridgeif']);
+	} else {
+		log_error(gettext("bridgeif not defined -- could not bring interface up"));
+	}
+}
+
+function interface_bridge_configure_stp($bridge) {
+	if (isset($bridge['enablestp'])) {
+		$bridgeif = $bridge['bridgeif'];
+		/* configure spanning tree proto */
 		mwexec("/sbin/ifconfig {$bridgeif} proto " . escapeshellarg($bridge['proto']));
 
 		if (!empty($bridge['stp'])) {
@@ -610,6 +620,10 @@ function interface_bridge_configure(&$bridge, $checkmember = 0) {
 			}
 		}
 	}
+}
+
+function interface_bridge_configure_advanced($bridge) {
+	$bridgeif = $bridge['bridgeif'];
 
 	if ($bridge['maxaddr'] <> "") {
 		mwexec("/sbin/ifconfig {$bridgeif} maxaddr " . escapeshellarg($bridge['maxaddr']));
@@ -666,12 +680,6 @@ function interface_bridge_configure(&$bridge, $checkmember = 0) {
 			mwexec("/sbin/ifconfig {$bridgeif} private {$realif}");
 		}
 	}
-
-	if ($bridge['bridgeif']) {
-		interfaces_bring_up($bridge['bridgeif']);
-	} else {
-		log_error(gettext("bridgeif not defined -- could not bring interface up"));
-	}
 }
 
 function interface_bridge_add_member($bridgeif, $interface, $flagsapplied = false) {
@@ -692,6 +700,14 @@ function interface_bridge_add_member($bridgeif, $interface, $flagsapplied = fals
 	}
 
 	pfSense_bridge_add_member($bridgeif, $interface);
+	if (is_array($config['bridges']['bridged']) && count($config['bridges']['bridged'])) {
+		foreach ($config['bridges']['bridged'] as $bridge) {
+			if ($bridgeif == $bridge['bridgeif']) {
+				interface_bridge_configure_stp($bridge);
+				interface_bridge_configure_advanced($bridge);
+			}
+		}
+	}
 }
 
 function interfaces_lagg_configure($realif = "") {
@@ -2160,7 +2176,8 @@ function interfaces_sync_setup() {
 		mwexec("/sbin/ifconfig pfsync0 -syncdev -syncpeer down", false);
 	}
 
-	if ($config['virtualip']['vip']) {
+	$carplist = get_configured_vip_list('all', VIP_CARP);
+	if (isset($carplist) && is_array($carplist) && count($carplist) > 0) {
 		set_single_sysctl("net.inet.carp.allow", "1");
 	} else {
 		set_single_sysctl("net.inet.carp.allow", "0");
@@ -5037,18 +5054,24 @@ function link_interface_to_vips($int, $action = "", $vhid = '') {
 	if (is_array($config['virtualip']['vip'])) {
 		$result = array();
 		foreach ($config['virtualip']['vip'] as $vip) {
-			if ($int == $vip['interface']) {
-				if ($action == "update") {
-					interfaces_vips_configure($int);
-				} else {
-					if (empty($vhid) || ($vhid == $vip['vhid'])) {
-						$result[] = $vip;
-					}
+			if (substr($vip['interface'], 0, 4) == "_vip")
+				$iface = get_configured_vip_interface($vip['interface']);
+			else
+				$iface = $vip['interface'];
+			if ($int != $iface)
+				continue;
+			if ($action == "update") {
+				interfaces_vips_configure($int);
+			} else {
+				if (empty($vhid) || ($vhid == $vip['vhid'])) {
+					$result[] = $vip;
 				}
 			}
 		}
 		return $result;
 	}
+
+	return NULL;
 }
 
 /****f* interfaces/link_interface_to_bridge
