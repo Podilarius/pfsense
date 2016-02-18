@@ -434,6 +434,8 @@ if (($pagename === "index.php") && ($numColumns > 2)) {
 					<ul class="dropdown-menu" role="menu"><?=output_menu($item['menu'], $item['href'])?></ul>
 				</li>
 			<?php endforeach?>
+			</ul>
+			<ul class="nav navbar-nav navbar-right">
 				<?php if (are_notices_pending()):?>
 					<?php $notices = get_notices()?>
 					<li class="dropdown">
@@ -471,24 +473,32 @@ if (($pagename === "index.php") && ($numColumns > 2)) {
 
 	<?php if ($dashboard_available_widgets_hidden): ?>
 		<li>
-			<a onclick="$('#widget-available').toggle(360);" title="<?=gettext("Available Widgets")?>">
-				<i style="cursor:pointer" class="fa fa-plus"></i>
+			<a onclick="$('#widget-available').toggle(360);" title="<?=gettext("Available widgets")?>">
+				<i class="fa fa-plus icon-pointer"></i>
 			</a>
 		</li>
 	<?php endif?>
 
+	<?php if (isset($widgets)): ?>
+		<li>
+			<a href="#" title="<?=gettext("Save dashboard layout")?>" id="btnstore">
+				<i class="fa fa-save icon-pointer"></i>
+			</a>
+		</li>
+	<?php endif?>
+	
 	<?php if ($system_logs_filter_form_hidden): ?>
 		<li>
-			<a onclick="$('#filter-form').toggle(360)" title="<?=gettext("Log Filter")?>">
-				<i style="cursor:pointer" class="fa fa-filter"></i>
+			<a onclick="$('#filter-form').toggle(360)" title="<?=gettext("Log filter")?>">
+				<i class="fa fa-filter icon-pointer"></i>
 			</a>
 		</li>
 	<?php endif ?>
 
 	<?php if ($system_logs_manage_log_form_hidden): ?>
 		<li>
-			<a onclick="$('#manage-log-form').toggle(360)" title="<?=gettext("Manage Log")?>">
-				<i style="cursor:pointer" class="fa fa-wrench"></i>
+			<a onclick="$('#manage-log-form').toggle(360)" title="<?=gettext("Manage log")?>">
+				<i class="fa fa-wrench icon-pointer"></i>
 			</a>
 		</li>
 	<?php endif ?>
@@ -536,19 +546,17 @@ if ('' != ($link = get_shortcut_log_link($shortcut_section, false))) {
 	</header>
 <?php
 /* if upgrade in progress, alert user */
-if (is_subsystem_dirty('packagelock') || file_exists('/conf/needs_package_sync' && platform_booting())) {
+if (is_subsystem_dirty('packagelock') || (file_exists('/conf/needs_package_sync') && platform_booting())) {
 	if (file_exists('/conf/needs_package_sync') && platform_booting()) {
-		$warning_text = sprintf(gettext("%s is booting then packages will be reinstalled in the background.<p>Do not make changes in the GUI until this is complete."), $g['product_name']);
+		$warning_text = sprintf(gettext("<p>%s is booting, then packages will be reinstalled in the background.</p><p>Do not make changes in the GUI until this is complete.</p>"), $g['product_name']);
 	} else {
 		$pgtitle = array(gettext("System"), gettext("Package Manager"));
-		$warning_text = gettext("Packages are currently being reinstalled in the background.<p>Do not make changes in the GUI until this is complete.");
-		$warning_text .= sprintf(gettext('<p>If the above message is still displayed after a couple of hours, use the \'Clear Package Lock\' button on the <a href="diag_backup.php" title="%1$s">%1$s page</a> and reinstall packages manually.'), htmlspecialchars(gettext('Backup & Restore')));
+		$warning_text = gettext("<p>Packages are currently being reinstalled in the background.</p><p>Do not make changes in the GUI until this is complete.</p>");
+		$warning_text .= sprintf(gettext('<p>If the above message is still displayed after a couple of hours, use the \'Clear Package Lock\' button on the <a href="diag_backup.php" title="%1$s &gt; %2$s">%1$s &gt; %2$s</a> page and reinstall packages manually.</p>'), gettext('Diagnostics'), htmlspecialchars(gettext('Backup & Restore')));
 	}
 
 	print_info_box($warning_text);
 }
-
-$pgtitle_output = true;
 
 /*	If this page is being remotely managed then do not allow the loading of the contents. */
 if ($config['remote_managed_pages']['item']) {
@@ -613,7 +621,7 @@ if (are_notices_pending()):?>
 
 			<div class="modal-footer">
 				<button type="button" class="btn btn-default" data-dismiss="modal"><?=gettext("Close")?></button>
-				<button type="button" id="clearallnotices" class="btn btn-primary"><?=gettext("Mark all as read")?></button>
+				<button type="button" id="clearallnotices" class="btn btn-primary"><?=gettext("Mark All as Read")?></button>
 			</div>
 		</div>
 	</div>

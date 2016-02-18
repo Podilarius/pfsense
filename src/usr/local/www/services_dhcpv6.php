@@ -99,9 +99,12 @@ $iflist = array_merge($iflist, get_configured_pppoe_server_interfaces());
 if (!$if || !isset($iflist[$if])) {
 	foreach ($iflist as $ifent => $ifname) {
 		$oc = $config['interfaces'][$ifent];
+		$valid_if_ipaddrv6 = (bool) (is_ipaddrv6($oc['ipaddrv6']) &&
+		    !is_linklocal($oc['ipaddrv6']));
 
-		if ((is_array($config['dhcpdv6'][$ifent]) && !isset($config['dhcpdv6'][$ifent]['enable']) && !(is_ipaddrv6($oc['ipaddrv6']) && (!is_linklocal($oc['ipaddrv6'])))) ||
-		    (!is_array($config['dhcpdv6'][$ifent]) && !(is_ipaddrv6($oc['ipaddrv6']) && (!is_linklocal($oc['ipaddrv6']))))) {
+		if ((!is_array($config['dhcpdv6'][$ifent]) ||
+		    !isset($config['dhcpdv6'][$ifent]['enable'])) &&
+		    !$valid_if_ipaddrv6) {
 			continue;
 		}
 		$if = $ifent;
@@ -205,6 +208,32 @@ if ($_POST) {
 		if (($_POST['prefixrange_to'] && !is_ipaddrv6($_POST['prefixrange_to']))) {
 			$input_errors[] = gettext("A valid prefix range must be specified.");
 		}
+
+		if ($_POST['prefixrange_from'] && $_POST['prefixrange_to'] &&
+		    $_POST['prefixrange_length']) {
+			$netmask = Net_IPv6::getNetmask($_POST['prefixrange_from'],
+			    $_POST['prefixrange_length']);
+			$netmask = Net_IPv6::compress($netmask);
+
+			if ($netmask != Net_IPv6::compress(strtolower(
+			    $_POST['prefixrange_from']))) {
+				$input_errors[] = sprintf(gettext(
+				    "Prefix Delegation From address is not a valid IPv6 Netmask for %s"),
+				    $netmask . '/' . $_POST['prefixrange_length']);
+			}
+
+			$netmask = Net_IPv6::getNetmask($_POST['prefixrange_to'],
+			    $_POST['prefixrange_length']);
+			$netmask = Net_IPv6::compress($netmask);
+
+			if ($netmask != Net_IPv6::compress(strtolower(
+			    $_POST['prefixrange_to']))) {
+				$input_errors[] = sprintf(gettext(
+				    "Prefix Delegation To address is not a valid IPv6 Netmask for %s"),
+				    $netmask . '/' . $_POST['prefixrange_length']);
+			}
+		}
+
 		if (($_POST['range_from'] && !is_ipaddrv6($_POST['range_from']))) {
 			$input_errors[] = gettext("A valid range must be specified.");
 		}
@@ -478,10 +507,12 @@ $i = 0;
 
 foreach ($iflist as $ifent => $ifname) {
 	$oc = $config['interfaces'][$ifent];
+	$valid_if_ipaddrv6 = (bool) (is_ipaddrv6($oc['ipaddrv6']) &&
+	    !is_linklocal($oc['ipaddrv6']));
 
-
-	if ((is_array($config['dhcpdv6'][$ifent]) && !isset($config['dhcpdv6'][$ifent]['enable']) && !(is_ipaddrv6($oc['ipaddrv6']) && (!is_linklocal($oc['ipaddrv6'])))) ||
-	    (!is_array($config['dhcpdv6'][$ifent]) && !(is_ipaddrv6($oc['ipaddrv6']) && (!is_linklocal($oc['ipaddrv6']))))) {
+	if ((!is_array($config['dhcpdv6'][$ifent]) ||
+	    !isset($config['dhcpdv6'][$ifent]['enable'])) &&
+	    !$valid_if_ipaddrv6) {
 		continue;
 	}
 
@@ -576,7 +607,7 @@ $f1 = new Form_Input(
 	$pconfig['range_from']
 );
 
-$f1->setHelp('To');
+$f1->setHelp('From');
 
 $f2 = new Form_Input(
 	'range_to',
@@ -585,7 +616,7 @@ $f2 = new Form_Input(
 	$pconfig['range_to']
 );
 
-$f2->setHelp('From');
+$f2->setHelp('To');
 
 $group = new Form_Group('Range');
 
@@ -601,7 +632,7 @@ $f1 = new Form_Input(
 	$pconfig['prefixrange_from']
 );
 
-$f1->setHelp('To');
+$f1->setHelp('From');
 
 $f2 = new Form_Input(
 	'prefixrange_to',
@@ -610,7 +641,8 @@ $f2 = new Form_Input(
 	$pconfig['prefixrange_to']
 );
 
-$f2->setHelp('From');
+$f2->setHelp('To');
+
 $group = new Form_Group('Prefix Delegation Range');
 
 $group->add($f1);
