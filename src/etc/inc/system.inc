@@ -420,13 +420,23 @@ function system_hosts_generate() {
 		if (isset($dnsmasqcfg['regdhcpstatic']) && is_array($config['dhcpdv6'])) {
 			foreach ($config['dhcpdv6'] as $dhcpif => $dhcpifconf) {
 				if (is_array($dhcpifconf['staticmap']) && isset($dhcpifconf['enable'])) {
+					$isdelegated = $config['interfaces'][$dhcpif]['ipaddrv6'] == 'track6';
 					foreach ($dhcpifconf['staticmap'] as $host) {
-						if ($host['ipaddrv6'] && $host['hostname'] && $host['domain']) {
-							$dhosts .= "{$host['ipaddrv6']}	{$host['hostname']}.{$host['domain']} {$host['hostname']}\n";
-						} else if ($host['ipaddrv6'] && $host['hostname'] && $dhcpifconf['domain']) {
-							$dhosts .= "{$host['ipaddrv6']}	{$host['hostname']}.{$dhcpifconf['domain']} {$host['hostname']}\n";
-						} else if ($host['ipaddrv6'] && $host['hostname']) {
-							$dhosts .= "{$host['ipaddrv6']}	{$host['hostname']}.{$syscfg['domain']} {$host['hostname']}\n";
+						$ipaddrv6 = $host['ipaddrv6'];
+						if ($ipaddrv6 && $host['hostname']) {
+							if ($isdelegated) {
+								$trackifname = $config['interfaces'][$dhcpif]['track6-interface'];
+								$trackcfg = $config['interfaces'][$trackifname];
+								$pdlen = 64 - $trackcfg['dhcp6-ia-pd-len'];
+								$ipaddrv6 = merge_ipv6_delegated_prefix(get_interface_ipv6($dhcpif), $ipaddrv6, $pdlen);
+							}
+							if ($host['domain']) {
+								$dhosts .= "{$ipaddrv6}	{$host['hostname']}.{$host['domain']} {$host['hostname']}\n";
+							} else if ($dhcpifconf['domain']) {
+								$dhosts .= "{$ipaddrv6}	{$host['hostname']}.{$dhcpifconf['domain']} {$host['hostname']}\n";
+							} else {
+								$dhosts .= "{$ipaddrv6}	{$host['hostname']}.{$syscfg['domain']} {$host['hostname']}\n";
+							}
 						}
 					}
 				}

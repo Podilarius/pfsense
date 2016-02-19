@@ -99,8 +99,9 @@ $iflist = array_merge($iflist, get_configured_pppoe_server_interfaces());
 if (!$if || !isset($iflist[$if])) {
 	foreach ($iflist as $ifent => $ifname) {
 		$oc = $config['interfaces'][$ifent];
-		$valid_if_ipaddrv6 = (bool) (is_ipaddrv6($oc['ipaddrv6']) &&
-		    !is_linklocal($oc['ipaddrv6']));
+		$valid_if_ipaddrv6 = (bool) ($oc['ipaddrv6'] == 'track6' ||
+		    (is_ipaddrv6($oc['ipaddrv6']) &&
+		    !is_linklocal($oc['ipaddrv6'])));
 
 		if ((!is_array($config['dhcpdv6'][$ifent]) ||
 		    !isset($config['dhcpdv6'][$ifent]['enable'])) &&
@@ -151,8 +152,17 @@ if (is_array($config['dhcpdv6'][$if])) {
 	$a_maps = &$config['dhcpdv6'][$if]['staticmap'];
 }
 
-$ifcfgip = get_interface_ipv6($if);
-$ifcfgsn = get_interface_subnetv6($if);
+if ($config['interfaces'][$if]['ipaddrv6'] == 'track6') {
+	$trackifname = $config['interfaces'][$if]['track6-interface'];
+	$trackcfg = $config['interfaces'][$trackifname];
+	$ifcfgsn = 64 - $trackcfg['dhcp6-ia-pd-len'];
+	$ifcfgip = '::';
+
+	$str_help_mask = dhcpv6_pd_str_help($ifcfgsn);
+} else {
+	$ifcfgip = get_interface_ipv6($if);
+	$ifcfgsn = get_interface_subnetv6($if);
+}
 
 /*	 set the enabled flag which will tell us if DHCP relay is enabled
  *	 on any interface. We will use this to disable DHCP server since
@@ -234,11 +244,25 @@ if ($_POST) {
 			}
 		}
 
-		if (($_POST['range_from'] && !is_ipaddrv6($_POST['range_from']))) {
-			$input_errors[] = gettext("A valid range must be specified.");
+		if ($_POST['range_from']) {
+			if (!is_ipaddrv6($_POST['range_from'])) {
+				$input_errors[] = gettext("A valid range must be specified.");
+			} elseif ($config['interfaces'][$if]['ipaddrv6'] == 'track6' &&
+			    !Net_IPv6::isInNetmask($_POST['range_from'], '::', $ifcfgsn)) {
+				$input_errors[] = sprintf(gettext(
+				    "The prefix (upper %s bits) must be zero.  Use the form %s"),
+				    $ifcfgsn, $str_help_mask);
+			}
 		}
-		if (($_POST['range_to'] && !is_ipaddrv6($_POST['range_to']))) {
-			$input_errors[] = gettext("A valid range must be specified.");
+		if ($_POST['range_to']) {
+			if (!is_ipaddrv6($_POST['range_to'])) {
+				$input_errors[] = gettext("A valid range must be specified.");
+			} elseif ($config['interfaces'][$if]['ipaddrv6'] == 'track6' &&
+			    !Net_IPv6::isInNetmask($_POST['range_to'], '::', $ifcfgsn)) {
+				$input_errors[] = sprintf(gettext(
+				    "The prefix (upper %s bits) must be zero.  Use the form %s"),
+				    $ifcfgsn, $str_help_mask);
+			}
 		}
 		if (($_POST['gateway'] && !is_ipaddrv6($_POST['gateway']))) {
 			$input_errors[] = gettext("A valid IPv6 address must be specified for the gateway.");
@@ -507,8 +531,9 @@ $i = 0;
 
 foreach ($iflist as $ifent => $ifname) {
 	$oc = $config['interfaces'][$ifent];
-	$valid_if_ipaddrv6 = (bool) (is_ipaddrv6($oc['ipaddrv6']) &&
-	    !is_linklocal($oc['ipaddrv6']));
+	$valid_if_ipaddrv6 = (bool) ($oc['ipaddrv6'] == 'track6' ||
+	    (is_ipaddrv6($oc['ipaddrv6']) &&
+	    !is_linklocal($oc['ipaddrv6'])));
 
 	if ((!is_array($config['dhcpdv6'][$ifent]) ||
 	    !isset($config['dhcpdv6'][$ifent]['enable'])) &&
