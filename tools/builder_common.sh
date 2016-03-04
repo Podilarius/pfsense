@@ -138,7 +138,8 @@ core_pkg_create() {
 		-i '' \
 		-e "s,%%PRODUCT_NAME%%,${PRODUCT_NAME},g" \
 		-e "s,%%PRODUCT_URL%%,${PRODUCT_URL},g" \
-		-e "s,%%FLAVOR%%,${_flavor},g" \
+		-e "s,%%FLAVOR%%,${_flavor:+-}${_flavor},g" \
+		-e "s,%%FLAVOR_DESC%%,${_flavor:+ (${_flavor})},g" \
 		-e "s,%%VERSION%%,${_version},g" \
 		${_metadir}/* \
 		${_plist} \
@@ -476,6 +477,24 @@ make_world() {
 	unset makeargs
 }
 
+nanobsd_image_filename() {
+	local _size="$1"
+	local _type="$2"
+	local _upgrade="$3"
+
+	if [ -z "$upgrade" ]; then
+		local _template=${NANOBSD_IMG_TEMPLATE}
+	else
+		local _template=${NANOBSD_UPGRADE_TEMPLATE}
+	fi
+
+	echo "$_template" | sed \
+		-e "s,%%SIZE%%,${_size},g" \
+		-e "s,%%TYPE%%,${_type},g"
+
+	return 0
+}
+
 # This routine originated in nanobsd.sh
 nanobsd_set_flash_details () {
 	a1=$(echo $1 | tr '[:upper:]' '[:lower:]')
@@ -586,8 +605,8 @@ create_nanobsd_diskimage () {
 		echo ">>> building NanoBSD(${1}) disk image with size ${_NANO_MEDIASIZE} for platform (${TARGET})..." | tee -a ${LOGFILE}
 		echo "" > $BUILDER_LOGS/nanobsd_cmds.sh
 
-		IMG="${IMAGES_FINAL_DIR}/${PRODUCT_NAME}-${PRODUCT_VERSION}-${_NANO_MEDIASIZE}-${TARGET}-${1}${TIMESTAMP_SUFFIX}.img"
-		IMGUPDATE="${IMAGES_FINAL_DIR}/${PRODUCT_NAME}-${PRODUCT_VERSION}-${_NANO_MEDIASIZE}-${TARGET}-${1}-upgrade${TIMESTAMP_SUFFIX}.img"
+		IMG="${IMAGES_FINAL_DIR}/$(nanobsd_image_filename ${_NANO_MEDIASIZE} ${1})"
+		IMGUPDATE="${IMAGES_FINAL_DIR}/$(nanobsd_image_filename ${_NANO_MEDIASIZE} ${1} 1)"
 
 		nanobsd_set_flash_details ${_NANO_MEDIASIZE}
 
@@ -1059,7 +1078,6 @@ clone_to_staging_area() {
 	local _exclude_files="${CORE_PKG_TMP}/base_exclude_files"
 	sed \
 		-e "s,%%PRODUCT_NAME%%,${PRODUCT_NAME},g" \
-		-e "s,%%FLAVOR%%,${_flavor},g" \
 		-e "s,%%VERSION%%,${_version},g" \
 		${BUILDER_TOOLS}/templates/core_pkg/base/exclude_files \
 		> ${_exclude_files}
@@ -1115,18 +1133,25 @@ clone_to_staging_area() {
 
 	local DEFAULTCONF=${STAGE_CHROOT_DIR}/conf.default/config.xml
 
+	# Save current WAN and LAN if value
+	local _old_wan_if=$(xml sel -t -v "${XML_ROOTOBJ}/interfaces/wan/if" ${DEFAULTCONF})
+	local _old_lan_if=$(xml sel -t -v "${XML_ROOTOBJ}/interfaces/lan/if" ${DEFAULTCONF})
+
 	# Change default interface names to match vmware driver
-	sed -i '' -e 's,em0,vmx0,' -e 's,em1,vmx1,' ${DEFAULTCONF}
-	core_pkg_create default-config-vmware "" ${CORE_PKG_VERSION} ${STAGE_CHROOT_DIR}
+	xml ed -P -L -u "${XML_ROOTOBJ}/interfaces/wan/if" -v "vmx0" ${DEFAULTCONF}
+	xml ed -P -L -u "${XML_ROOTOBJ}/interfaces/lan/if" -v "vmx1" ${DEFAULTCONF}
+	core_pkg_create default-config "vmware" ${CORE_PKG_VERSION} ${STAGE_CHROOT_DIR}
 
 	# Restore default values to be used by serial package
-	sed -i '' -e 's,vmx0,em0,' -e 's,vmx1,em1,' ${DEFAULTCONF}
+	xml ed -P -L -u "${XML_ROOTOBJ}/interfaces/wan/if" -v "${_old_wan_if}" ${DEFAULTCONF}
+	xml ed -P -L -u "${XML_ROOTOBJ}/interfaces/lan/if" -v "${_old_lan_if}" ${DEFAULTCONF}
 
 	# Activate serial console in config.xml
-	# If it was there before, clear the setting to be sure we don't add it twice.
-	sed -i "" -e "/		<enableserial\/>/d" ${DEFAULTCONF}
-	# Enable serial in the config
-	sed -i "" -e "s/	<\/system>/		<enableserial\/>\\$(echo -e \\\n)	<\/system>/" ${DEFAULTCONF}
+	xml ed -L -P -d "${XML_ROOTOBJ}/system/enableserial" ${DEFAULTCONF}
+	xml ed -P -s "${XML_ROOTOBJ}/system" -t elem -n "enableserial" \
+		${DEFAULTCONF} > ${DEFAULTCONF}.tmp
+	xml fo -t ${DEFAULTCONF}.tmp > ${DEFAULTCONF}
+	rm -f ${DEFAULTCONF}.tmp
 
 	echo force > ${STAGE_CHROOT_DIR}/cf/conf/enableserial_force
 
@@ -1165,13 +1190,28 @@ create_final_staging_area() {
 }
 
 customize_stagearea_for_image() {
+	local _image_type="$1"
+	local _default_config=""
+
+	if [ -n "$2" ]; then
+		_default_config="$2"
+	elif [ "${_image_type}" = "nanobsd" -o \
+	     "${_image_type}" = "memstickserial" -o \
+	     "${_image_type}" = "memstickadi" ]; then
+		_default_config="default-config-serial"
+	elif [ "${_image_type}" = "ova" ]; then
+		_default_config="default-config-vmware"
+	else
+		_default_config="default-config"
+	fi
+
 	# Prepare final stage area
 	create_final_staging_area
 
 	pkg_chroot_add ${FINAL_CHROOT_DIR} rc
 
-	if [ "${1}" = "nanobsd" -o \
-	     "${1}" = "nanobsd-vga" ]; then
+	if [ "${_image_type}" = "nanobsd" -o \
+	     "${_image_type}" = "nanobsd-vga" ]; then
 
 		mkdir -p ${FINAL_CHROOT_DIR}/root/var/db \
 			 ${FINAL_CHROOT_DIR}/root/var/cache \
@@ -1193,24 +1233,16 @@ customize_stagearea_for_image() {
 		pkg_chroot_add ${FINAL_CHROOT_DIR} repo-devel
 	fi
 
-	if [ "${1}" = "iso" -o \
-	     "${1}" = "memstick" -o \
-	     "${1}" = "memstickserial" -o \
-	     "${1}" = "memstickadi" ]; then
+	if [ "${_image_type}" = "iso" -o \
+	     "${_image_type}" = "memstick" -o \
+	     "${_image_type}" = "memstickserial" -o \
+	     "${_image_type}" = "memstickadi" ]; then
 		install_bsdinstaller
 		mkdir -p ${FINAL_CHROOT_DIR}/pkgs
 		cp ${CORE_PKG_REAL_PATH}/All/*default-config*.txz ${FINAL_CHROOT_DIR}/pkgs
 	fi
 
-	if [ "${1}" = "nanobsd" -o \
-	     "${1}" = "memstickserial" -o \
-	     "${1}" = "memstickadi" ]; then
-		pkg_chroot_add ${FINAL_CHROOT_DIR} default-config-serial
-	elif [ "${1}" = "ova" ]; then
-		pkg_chroot_add ${FINAL_CHROOT_DIR} default-config-vmware
-	else
-		pkg_chroot_add ${FINAL_CHROOT_DIR} default-config
-	fi
+	pkg_chroot_add ${FINAL_CHROOT_DIR} ${_default_config}
 }
 
 create_distribution_tarball() {
@@ -2084,9 +2116,12 @@ poudriere_update_jails() {
 	for jail_arch in ${_archs}; do
 		jail_name=$(poudriere_jail_name ${jail_arch})
 
+		local _create_or_update="-u"
+		local _create_or_update_text="Updating"
 		if ! poudriere jail -i -j "${jail_name}" >/dev/null 2>&1; then
-			echo ">>> Poudriere jail ${jail_name} not found, skipping..." | tee -a ${LOGFILE}
-			continue
+			echo ">>> Poudriere jail ${jail_name} not found, creating..." | tee -a ${LOGFILE}
+			_create_or_update="-c -v ${FREEBSD_PARENT_BRANCH} -a ${jail_arch} -m svn"
+			_create_or_update_text="Creating"
 		fi
 
 		if [ "${jail_arch}" = "arm.armv6" ]; then
@@ -2095,10 +2130,10 @@ poudriere_update_jails() {
 			native_xtools=""
 		fi
 
-		echo -n ">>> Updating jail ${jail_name}, it may take some time... " | tee -a ${LOGFILE}
-		if ! script -aq ${LOGFILE} poudriere jail -u -j "${jail_name}" -P ${_jail_patch} ${native_xtools} >/dev/null 2>&1; then
+		echo -n ">>> ${_create_or_update_text} jail ${jail_name}, it may take some time... " | tee -a ${LOGFILE}
+		if ! script -aq ${LOGFILE} poudriere jail ${_create_or_update} -j "${jail_name}" -P ${_jail_patch} ${native_xtools} >/dev/null 2>&1; then
 			echo "" | tee -a ${LOGFILE}
-			echo ">>> ERROR: Error updating jail ${jail_name}, aborting..." | tee -a ${LOGFILE}
+			echo ">>> ERROR: Error ${_create_or_update_text} jail ${jail_name}, aborting..." | tee -a ${LOGFILE}
 			print_error_pfS
 		fi
 		echo "Done!" | tee -a ${LOGFILE}
@@ -2252,8 +2287,8 @@ snapshots_create_latest_symlink() {
 snapshots_copy_to_staging_nanobsd() {
 	for NANOTYPE in nanobsd nanobsd-vga; do
 		for FILESIZE in ${1}; do
-			FILENAMEFULL="${PRODUCT_NAME}-${PRODUCT_VERSION}-${FILESIZE}-${TARGET}-${NANOTYPE}${TIMESTAMP_SUFFIX}.img.gz"
-			FILENAMEUPGRADE="${PRODUCT_NAME}-${PRODUCT_VERSION}-${FILESIZE}-${TARGET}-${NANOTYPE}-upgrade${TIMESTAMP_SUFFIX}.img.gz"
+			FILENAMEFULL="$(nanobsd_image_filename ${FILESIZE} ${NANOTYPE}).gz"
+			FILENAMEUPGRADE="$(nanobsd_image_filename ${FILESIZE} ${NANOTYPE} 1).gz"
 			mkdir -p $STAGINGAREA/nanobsd
 			mkdir -p $STAGINGAREA/nanobsdupdates
 
@@ -2332,11 +2367,11 @@ snapshots_scp_files() {
 	ssh ${RSYNCUSER}@${RSYNCIP} "mkdir -p ${RSYNCPATH}/.updaters"
 	# ensure permissions are correct for r+w
 	ssh ${RSYNCUSER}@${RSYNCIP} "chmod -R ug+rw ${RSYNCPATH}/."
-	rsync $RSYNC_COPY_ARGUMENTS $STAGINGAREA/${PRODUCT_NAME}-*iso* \
+	rsync $RSYNC_COPY_ARGUMENTS $STAGINGAREA/${PRODUCT_NAME}${PRODUCT_NAME_SUFFIX}-*iso* \
 		${RSYNCUSER}@${RSYNCIP}:${RSYNCPATH}/installer/
-	rsync $RSYNC_COPY_ARGUMENTS $STAGINGAREA/${PRODUCT_NAME}-memstick* \
+	rsync $RSYNC_COPY_ARGUMENTS $STAGINGAREA/${PRODUCT_NAME}${PRODUCT_NAME_SUFFIX}-memstick* \
 		${RSYNCUSER}@${RSYNCIP}:${RSYNCPATH}/installer/
-	rsync $RSYNC_COPY_ARGUMENTS $STAGINGAREA/${PRODUCT_NAME}-*Update* \
+	rsync $RSYNC_COPY_ARGUMENTS $STAGINGAREA/${PRODUCT_NAME}${PRODUCT_NAME_SUFFIX}-*Update* \
 		${RSYNCUSER}@${RSYNCIP}:${RSYNCPATH}/updates/
 	rsync $RSYNC_COPY_ARGUMENTS $STAGINGAREA/nanobsd/* \
 		${RSYNCUSER}@${RSYNCIP}:${RSYNCPATH}/nanobsd/
@@ -2365,13 +2400,13 @@ snapshots_scp_files() {
 		ssh ${RSYNCUSER}@${RSYNCIP} "rm -f ${RSYNCPATH}/.updaters/latest-nanobsd-vga-${i}.img.gz"
 		ssh ${RSYNCUSER}@${RSYNCIP} "rm -f ${RSYNCPATH}/.updaters/latest-nanobsd-vga-${i}.img.gz.sha256"
 
-		FILENAMEUPGRADE="${PRODUCT_NAME}-${PRODUCT_VERSION}-${i}-${TARGET}-nanobsd-upgrade${TIMESTAMP_SUFFIX}.img.gz"
+		FILENAMEUPGRADE="$(nanobsd_image_filename ${i} nanobsd 1).gz"
 		ssh ${RSYNCUSER}@${RSYNCIP} "ln -s ${RSYNCPATH}/updates/${FILENAMEUPGRADE} \
 			${RSYNCPATH}/.updaters/latest-nanobsd-${i}.img.gz"
 		ssh ${RSYNCUSER}@${RSYNCIP} "ln -s ${RSYNCPATH}/updates/${FILENAMEUPGRADE}.sha256 \
 			${RSYNCPATH}/.updaters/latest-nanobsd-${i}.img.gz.sha256"
 
-		FILENAMEUPGRADE="${PRODUCT_NAME}-${PRODUCT_VERSION}-${i}-${TARGET}-nanobsd-vga-upgrade${TIMESTAMP_SUFFIX}.img.gz"
+		FILENAMEUPGRADE="$(nanobsd_image_filename ${i} nanobsd-vga 1).gz"
 		ssh ${RSYNCUSER}@${RSYNCIP} "ln -s ${RSYNCPATH}/updates/${FILENAMEUPGRADE} \
 			${RSYNCPATH}/.updaters/latest-nanobsd-vga-${i}.img.gz"
 		ssh ${RSYNCUSER}@${RSYNCIP} "ln -s ${RSYNCPATH}/updates/${FILENAMEUPGRADE}.sha256 \

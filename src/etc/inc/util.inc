@@ -425,6 +425,16 @@ function gen_subnet_mask($bits) {
 	return long2ip(gen_subnet_mask_long($bits));
 }
 
+/* Convert a prefix length to an IPv6 address-like mask notation. Very rare but at least ntp needs it. See #4463 */
+function gen_subnet_mask_v6($bits) {
+	/* Binary representation of the prefix length */
+	$bin = str_repeat('1', $bits);
+	/* Pad right with zeroes to reach the full address length */
+	$bin = str_pad($bin, 128, '0', STR_PAD_RIGHT);
+	/* Convert back to an IPv6 address style notation */
+	return Net_IPv6::_bin2Ip($bin);
+}
+
 /* Convert long int to IPv4 address
    Returns '' if not valid IPv4 (including if any bits >32 are non-zero) */
 function long2ip32($ip) {
@@ -1106,14 +1116,17 @@ function is_portoralias($port) {
 }
 
 /* create ranges of sequential port numbers (200:215) and remove duplicates */
-function group_ports($ports) {
+function group_ports($ports, $kflc = false) {
 	if (!is_array($ports) || empty($ports)) {
 		return;
 	}
 
 	$uniq = array();
+	$comments = array();
 	foreach ($ports as $port) {
-		if (is_portrange($port)) {
+		if (($kflc) && (strpos($port, '#') === 0)) {	// Keep Full Line Comments (lines beginning with #).
+			$comments[] = $port;
+		} else if (is_portrange($port)) {
 			list($begin, $end) = explode(":", $port);
 			if ($begin > $end) {
 				$aux = $begin;
@@ -1155,7 +1168,7 @@ function group_ports($ports) {
 		}
 	}
 
-	return $result;
+	return array_merge($comments, $result);
 }
 
 /* returns true if $val is a valid shaper bandwidth value */

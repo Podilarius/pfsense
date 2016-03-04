@@ -941,7 +941,7 @@ function openvpn_reconfigure($mode, $settings) {
 		if (!empty($settings['tunnel_network'])) {
 			list($ip, $cidr) = explode('/', $settings['tunnel_network']);
 			$mask = gen_subnet_mask($cidr);
-			list($ip1, $ip2) = openvpn_get_interface_ip($tunnel_ip, $cidr);
+			list($ip1, $ip2) = openvpn_get_interface_ip($ip, $cidr);
 			if ($settings['dev_mode'] == 'tun') {
 				$conf .= "ifconfig {$ip2} {$ip1}\n";
 			} else {
@@ -959,7 +959,7 @@ function openvpn_reconfigure($mode, $settings) {
 			}
 		}
 
-		if ($settings['auth_user'] || $settings['auth_pass']) {
+		if (($settings['auth_user'] || $settings['auth_pass']) && $settings['mode'] == "p2p_tls") {
 			$up_file = "{$g['varetc_path']}/openvpn/{$mode_id}.up";
 			$conf .= "auth-user-pass {$up_file}\n";
 			if ($settings['auth_user']) {
