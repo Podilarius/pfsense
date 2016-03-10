@@ -826,8 +826,10 @@ foreach ($pconfig['altnames']['item'] as $item) {
 
 	$group->add(new Form_Button(
 		'deleterow' . $counter,
-		'Delete'
-	))->removeClass('btn-primary')->addClass('btn-warning');
+		'Delete',
+		null,
+		'fa-trash'
+	))->addClass('btn-warning');
 
 	$group->addClass('repeatable');
 
@@ -838,8 +840,10 @@ foreach ($pconfig['altnames']['item'] as $item) {
 
 $section->addInput(new Form_Button(
 	'addrow',
-	'Add'
-))->removeClass('btn-primary')->addClass('btn-success');
+	'Add',
+	null,
+	'fa-plus'
+))->addClass('btn-success');
 
 $form->add($section);
 $section = new Form_Section('External Signing Request');
@@ -947,10 +951,7 @@ $form->add($section);
 print $form;
 
 } else if ($act == "csr" || (($_POST['save'] == gettext("Update")) && $input_errors)) {
-	$form = new Form(new Form_Button(
-		'save',
-		'Update'
-	));
+	$form = new Form(false);
 
 	$section = new Form_Section("Complete Signing Request for " . $pconfig['descr']);
 
@@ -993,6 +994,14 @@ print $form;
 	 }
 
 	$form->add($section);
+
+	$form->addGlobal(new Form_Button(
+		'Submit',
+		'Update',
+		null,
+		'fa-save'
+	))->addClass('btn-primary');
+
 	print($form);
 } else {
 ?>

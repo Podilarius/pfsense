@@ -402,8 +402,6 @@ print_flags() {
 	printf "           Git Branch or Tag: %s\n" $GIT_REPO_BRANCH_OR_TAG
 	printf "            MODULES_OVERRIDE: %s\n" $MODULES_OVERRIDE
 	printf "    VMDK_DISK_CAPACITY_IN_GB: %s\n" $VMDK_DISK_CAPACITY_IN_GB
-	printf "   OVA_FIRST_PART_SIZE_IN_GB: %s\n" $OVA_FIRST_PART_SIZE_IN_GB
-	printf "    OVA_SWAP_PART_SIZE_IN_GB: %s\n" $OVA_SWAP_PART_SIZE_IN_GB
 	printf "                 OVFTEMPLATE: %s\n" $OVFTEMPLATE
 	printf "                     OVFVMDK: %s\n" $OVFVMDK
 	printf "                    SRC_CONF: %s\n" $SRC_CONF
@@ -845,6 +843,26 @@ create_ova_image() {
 
 	mkdir -p ${OVA_TMP}
 
+	if [ -z "${OVA_SWAP_PART_SIZE_IN_GB}" -o "${OVA_SWAP_PART_SIZE_IN_GB}" = "0" ]; then
+		# first partition size (freebsd-ufs)
+		local OVA_FIRST_PART_SIZE_IN_GB=${VMDK_DISK_CAPACITY_IN_GB}
+		# Calculate real first partition size, removing 128 blocks (65536 bytes) beginning/loader
+		local OVA_FIRST_PART_SIZE=$((${OVA_FIRST_PART_SIZE_IN_GB}*1024*1024*1024-65536))
+		# Unset swap partition size variable
+		unset OVA_SWAP_PART_SIZE
+		# Parameter used by mkimg
+		unset OVA_SWAP_PART_PARAM
+	else
+		# first partition size (freebsd-ufs)
+		local OVA_FIRST_PART_SIZE_IN_GB=$((VMDK_DISK_CAPACITY_IN_GB-OVA_SWAP_PART_SIZE_IN_GB))
+		# Use first partition size in g
+		local OVA_FIRST_PART_SIZE="${OVA_FIRST_PART_SIZE_IN_GB}g"
+		# Calculate real swap size, removing 128 blocks (65536 bytes) beginning/loader
+		local OVA_SWAP_PART_SIZE=$((${OVA_SWAP_PART_SIZE_IN_GB}*1024*1024*1024-65536))
+		# Parameter used by mkimg
+		local OVA_SWAP_PART_PARAM="-p freebsd-swap/swap0::${OVA_SWAP_PART_SIZE}"
+	fi
+
 	# Prepare folder to be put in image
 	customize_stagearea_for_image "ova"
 	install_default_kernel ${DEFAULT_KERNEL} "no"
@@ -852,14 +870,16 @@ create_ova_image() {
 	# Fill fstab
 	echo ">>> Installing platform specific items..." | tee -a ${LOGFILE}
 	echo "/dev/gpt/${PRODUCT_NAME}	/	ufs		rw	0	0" > ${FINAL_CHROOT_DIR}/etc/fstab
-	echo "/dev/gpt/swap0	none	swap	sw	0	0" >> ${FINAL_CHROOT_DIR}/etc/fstab
+	if [ -n "${OVA_SWAP_PART_SIZE}" ]; then
+		echo "/dev/gpt/swap0	none	swap	sw	0	0" >> ${FINAL_CHROOT_DIR}/etc/fstab
+	fi
 
 	# Create / partition
 	echo -n ">>> Creating / partition... " | tee -a ${LOGFILE}
 	makefs \
 		-B little \
 		-o label=${PRODUCT_NAME} \
-		-s ${OVA_FIRST_PART_SIZE_IN_GB}g \
+		-s ${OVA_FIRST_PART_SIZE} \
 		${OVA_TMP}/${OVFUFS} \
 		${FINAL_CHROOT_DIR} 2>&1 >> ${LOGFILE}
 
@@ -881,7 +901,7 @@ create_ova_image() {
 		-b /boot/pmbr \
 		-p freebsd-boot:=/boot/gptboot \
 		-p freebsd-ufs/${PRODUCT_NAME}:=${OVA_TMP}/${OVFUFS} \
-		-p freebsd-swap/swap0::${OVA_SWAP_PART_SIZE} \
+		${OVA_SWAP_PART_PARAM} \
 		-o ${OVA_TMP}/${OVFRAW} 2>&1 >> ${LOGFILE}
 
 	if [ $? -ne 0 -o ! -f ${OVA_TMP}/${OVFRAW} ]; then
@@ -1299,10 +1319,8 @@ create_memstick_image() {
 		return
 	fi
 
-	if [ ! -d ${FINAL_CHROOT_DIR}/boot ]; then
-		customize_stagearea_for_image "memstick"
-		install_default_kernel ${DEFAULT_KERNEL}
-	fi
+	customize_stagearea_for_image "memstick"
+	install_default_kernel ${DEFAULT_KERNEL}
 
 	echo cdrom > $FINAL_CHROOT_DIR/etc/platform
 
@@ -1341,10 +1359,8 @@ create_memstick_serial_image() {
 		return
 	fi
 
-	if [ ! -d ${FINAL_CHROOT_DIR}/boot ]; then
-		customize_stagearea_for_image "memstickserial"
-		install_default_kernel ${DEFAULT_KERNEL}
-	fi
+	customize_stagearea_for_image "memstickserial"
+	install_default_kernel ${DEFAULT_KERNEL}
 
 	echo cdrom > $FINAL_CHROOT_DIR/etc/platform
 
@@ -1403,10 +1419,8 @@ create_memstick_adi_image() {
 		return
 	fi
 
-	if [ ! -d ${FINAL_CHROOT_DIR}/boot ]; then
-		customize_stagearea_for_image "memstickadi"
-		install_default_kernel ${DEFAULT_KERNEL}
-	fi
+	customize_stagearea_for_image "memstickadi"
+	install_default_kernel ${DEFAULT_KERNEL}
 
 	echo cdrom > $FINAL_CHROOT_DIR/etc/platform
 
@@ -1906,6 +1920,7 @@ poudriere_rename_ports() {
 	for d in $(find ${_ports_dir} -depth 2 -type d -name '*pfSense*'); do
 		local _pdir=$(dirname ${d})
 		local _pname=$(echo $(basename ${d}) | sed "s,pfSense,${PRODUCT_NAME},")
+		local _plist=""
 
 		if [ -e ${_pdir}/${_pname} ]; then
 			rm -rf ${_pdir}/${_pname}
@@ -1913,11 +1928,15 @@ poudriere_rename_ports() {
 
 		cp -r ${d} ${_pdir}/${_pname}
 
+		if [ -f ${_pdir}/${_pname}/pkg-plist ]; then
+			_plist=${_pdir}/${_pname}/pkg-plist
+		fi
+
 		sed -i '' -e "s,pfSense,${PRODUCT_NAME},g" \
 			  -e "s,https://www.pfsense.org,${PRODUCT_URL},g" \
 			  -e "/^MAINTAINER=/ s,^.*$,MAINTAINER=	${PRODUCT_EMAIL}," \
 			${_pdir}/${_pname}/Makefile \
-			${_pdir}/${_pname}/pkg-descr
+			${_pdir}/${_pname}/pkg-descr ${_plist}
 
 		# PHP module is special
 		if echo "${_pname}" | grep -q "^php[0-9]*-${PRODUCT_NAME}-module"; then
@@ -2330,6 +2349,13 @@ snapshots_copy_to_staging_iso_updates() {
 		sha256 ${UPDATES_TARBALL_FILENAME} > ${UPDATES_TARBALL_FILENAME}.sha256
 		cp -l ${UPDATES_TARBALL_FILENAME}* $STAGINGAREA/ 2>/dev/null
 		snapshots_create_latest_symlink ${STAGINGAREA}/$(basename ${UPDATES_TARBALL_FILENAME})
+	fi
+
+	if [ -f "${OVAPATH}" ]; then
+		mkdir -p ${STAGINGAREA}/virtualization
+		sha256 ${OVAPATH} > ${OVAPATH}.sha256
+		cp -l ${OVAPATH}* $STAGINGAREA/virtualization 2>/dev/null
+		snapshots_create_latest_symlink ${STAGINGAREA}/virtualization/$(basename ${OVAPATH})
 	fi
 
 	# NOTE: Updates need a file with output similar to date output

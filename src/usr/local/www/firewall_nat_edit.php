@@ -657,10 +657,7 @@ if ($input_errors) {
 	print_input_errors($input_errors);
 }
 
-$form = new Form(new Form_Button(
-	'Submit',
-	gettext("Save")
-));
+$form = new Form();
 
 $section = new Form_Section('Edit Redirect Entry');
 
@@ -724,10 +721,12 @@ $section->addInput(new Form_Select(
 
 $btnsrcadv = new Form_Button(
 	'srcadv',
-	'Advanced'
+	'Advanced',
+	null,
+	'fa-cog'
 );
 
-$btnsrcadv->removeClass('btn-primary')->addClass('btn-default');
+$btnsrcadv->addClass('btn-info');
 
 $section->addInput(new Form_StaticText(
 	'Source',
@@ -1276,7 +1275,9 @@ events.push(function() {
 	typesel_change();
 	proto_change();
 	nordr_change();
-	hideSource(true);
+
+	var source_defined = <?= ($pconfig['srcnot'] || ($pconfig['src'] != "any") || ($pconfig['srcbeginport'] != "any") || ($pconfig['srcendport'] != "any"))? 1:0 ?>;
+	hideSource(!source_defined);
 
 	// --------- Autocomplete -----------------------------------------------------------------------------------------
 	var addressarray = <?= json_encode(get_alias_list(array("host", "network", "openvpn", "urltable"))) ?>;

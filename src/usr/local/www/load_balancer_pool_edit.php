@@ -335,10 +335,7 @@ if ($input_errors) {
 	print_input_errors($input_errors);
 }
 
-$form = new Form(new Form_Button(
-	'Submit',
-	gettext("Save")
-));
+$form = new Form();
 
 $section = new Form_Section('Add/Edit Load Balancer - Pool Entry');
 
@@ -415,8 +412,10 @@ $group->add(new Form_IpAddress(
 
 $group->add(new Form_Button(
 	'btnaddtopool',
-	'Add to pool'
-))->removeClass('btn-primary')->addClass('btn-default');
+	'Add to pool',
+	null,
+	'fa-plus'
+))->addClass('btn-success');
 
 $section->add($group);
 
@@ -458,13 +457,17 @@ $group = new Form_Group('');
 
 $group->add(new Form_Button(
 	'removedisabled',
-	'Remove'
-))->removeClass('btn-primary')->addClass('btn-default btn-sm');
+	'Remove',
+	null,
+	'fa-trash'
+))->addClass('btn-danger btn-sm');
 
 $group->add(new Form_Button(
 	'removeenabled',
-	'Remove'
-))->removeClass('btn-primary')->addClass('btn-default btn-sm');
+	'Remove',
+	null,
+	'fa-trash'
+))->addClass('btn-danger btn-sm');
 
 $section->add($group);
 
@@ -472,13 +475,17 @@ $group = new Form_Group('');
 
 $group->add(new Form_Button(
 	'movetoenabled',
-	'Move to enabled list >'
-))->removeClass('btn-primary')->addClass('btn-default btn-sm');
+	'Move to enabled list',
+	null,
+	'fa-angle-double-right'
+))->addClass('btn-info btn-sm');
 
 $group->add(new Form_Button(
 	'movetodisabled',
-	'< Move to disabled list'
-))->removeClass('btn-primary')->addClass('btn-default btn-sm');
+	'Move to disabled list',
+	null,
+	'fa-angle-double-left'
+))->addClass('btn-info btn-sm');
 
 $section->add($group);
 

@@ -201,7 +201,7 @@ if (!empty($cpzone)): ?>
 <?php
 	endif;
 ?>
-				<th></th>
+				<th><?=gettext("Actions")?></th>
 			</tr>
 <?php
 
@@ -237,19 +237,18 @@ if (!empty($cpzone)): ?>
 				echo htmlspecialchars(date("m/d/Y H:i:s", $last_act));
 			}
 ?>
-
 				</td>
 <?php
-	   else:
+		else:
 ?>
-				<td colspan="2">
+				<td>
 					<?=htmlspecialchars(date("m/d/Y H:i:s", $cpent[0]))?>
 				</td>
 <?php
-	   endif;
+		endif;
 ?>
 				<td>
-					<a href="?zone=<?=htmlspecialchars($cpzone)?>&amp;order=<?=$_GET['order']?>&amp;showact=<?=htmlspecialchars($_GET['showact'])?>&amp;act=del&amp;id=<?=$cpent[5]?>" class="btn btn-xs btn-danger"><?=gettext("Disconnect")?></a>
+					<a href="?zone=<?=htmlspecialchars($cpzone)?>&amp;order=<?=$_GET['order']?>&amp;showact=<?=htmlspecialchars($_GET['showact'])?>&amp;act=del&amp;id=<?=$cpent[5]?>"><i class="fa fa-trash" title="<?=gettext("Disconnect this User")?>"></i></a>
 				</td>
 			</tr>
 <?php
@@ -275,12 +274,18 @@ endif;
 if (!empty($cpzone)):
 	if ($_GET['showact']): ?>
 		<input type="hidden" name="showact" value="0" />
-		<input type="submit" class="btn btn-default" value="<?=gettext("Don't show last activity")?>" />
+		<button type="submit" class="btn btn-info" value="<?=gettext("Don't show last activity")?>">
+			<i class="fa fa-minus-circle icon-embed-btn"></i>
+			<?=gettext("Hide Last Activity")?>
+		</button>
 <?php
 	else:
 ?>
 		<input type="hidden" name="showact" value="1" />
-		<input type="submit" class="btn btn-default" value="<?=gettext("Show last activity")?>" />
+		<button type="submit" class="btn btn-info" value="<?=gettext("Show last activity")?>">
+			<i class="fa fa-plus-circle icon-embed-btn"></i>
+			<?=gettext("Show Last Activity")?>
+		</button>
 <?php
 	endif;
 ?>

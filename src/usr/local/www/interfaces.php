@@ -1711,10 +1711,7 @@ if ($savemsg) {
 }
 
 
-$form = new Form(new Form_Button(
-	'Submit',
-	gettext("Save")
-));
+$form = new Form();
 
 $section = new Form_Section('General Configuration');
 
@@ -1757,10 +1754,12 @@ $macaddress = new Form_Input(
 
 $btnmymac = new Form_Button(
 	'btnmymac',
-	'Copy My MAC'
+	'Copy My MAC',
+	null,
+	'fa-clone'
 	);
 
-$btnmymac->removeClass('btn-primary')->addClass('btn-success btn-sm');
+$btnmymac->addClass('btn-success btn-sm');
 
 $group = new Form_Group('MAC controls');
 $group->add($macaddress);
@@ -1817,8 +1816,10 @@ $group->add(new Form_Select(
 
 $group->add(new Form_Button(
 	'addgw',
-	'Add a new gateway'
-))->removeClass('btn-primary')->setAttribute('data-target', '#newgateway')->setAttribute('data-toggle', 'modal');
+	'Add a new gateway',
+	null,
+	'fa-plus'
+))->addClass('btn-success')->setAttribute('data-target', '#newgateway')->setAttribute('data-toggle', 'modal');
 
 $group->setHelp('If this interface is an Internet connection, select an existing Gateway from the list or add a new one using the "Add" button.' . '<br />' .
 				'On local LANs the upstream gateway should be "none".' .
@@ -1848,8 +1849,10 @@ $group->add(new Form_Select(
 
 $group->add(new Form_Button(
 	'addgw6',
-	'Add a new gateway'
-))->removeClass('btn-primary')->setAttribute('data-target', '#newgateway6')->setAttribute('data-toggle', 'modal');
+	'Add a new gateway',
+	null,
+	'fa-plus'
+))->addClass('btn-success')->setAttribute('data-target', '#newgateway6')->setAttribute('data-toggle', 'modal');
 
 $group->setHelp('If this interface is an Internet connection, select an existing Gateway from the list or add a new one using the "Add" button.' . '<br />' .
 				'On local LANs the upstream gateway should be "none". ');
@@ -1888,17 +1891,21 @@ $modal->addInput(new Form_Input(
 
 $btnaddgw6 = new Form_Button(
 	'add6',
-	'Add'
+	'Add',
+	null,
+	'fa-plus'
 );
 
-$btnaddgw6->removeClass('btn-primary')->addClass('btn-success');
+$btnaddgw6->addClass('btn-success');
 
 $btncnxgw6 = new Form_Button(
 	'cnx6',
-	'Cancel'
+	'Cancel',
+	null,
+	'fa-undo'
 );
 
-$btncnxgw6->removeClass('btn-primary')->addClass('btn-default');
+$btncnxgw6->addClass('btn-warning');
 
 $modal->addInput(new Form_StaticText(
 	null,
@@ -2552,8 +2559,9 @@ $section->addInput(new Form_Select(
 $section->addInput(new Form_Button(
 	'btnadvppp',
 	'Advanced PPP',
-	isset($pconfig['pppid']) ? 'interfaces_ppps_edit.php?id=' . htmlspecialchars($pconfig['pppid']) : 'interfaces_ppps_edit.php'
-))->setHelp('Create a new PPP configuration');
+	isset($pconfig['pppid']) ? 'interfaces_ppps_edit.php?id=' . htmlspecialchars($pconfig['pppid']) : 'interfaces_ppps_edit.php',
+	'fa-cog'
+))->addClass('btn-info')->setHelp('Create a new PPP configuration');
 
 $form->add($section);
 
@@ -2674,17 +2682,12 @@ $group->add(new Form_MultiCheckbox(
 
 $section->add($group);
 
-if (isset($pconfig['pppid'])) {
-	$section->addInput(new Form_StaticText(
-		'Advanced and MLPPP',
-		'<a href="/interfaces_ppps_edit.php?id=' . htmlspecialchars($pconfig['pppid']) . '" class="navlnk">Click here for additional PPPoE configuration options. Save first if you made changes.</a>'
-	));
-} else {
-	$section->addInput(new Form_StaticText(
-		'Advanced and MLPPP',
-		'<a href="/interfaces_ppps_edit.php" class="navlnk">Click here for additional PPPoE configuration options and for MLPPP configuration.</a>'
-	));
-}
+$section->addInput(new Form_Button(
+	'btnadvppp',
+	'Advanced and MLPPP',
+	isset($pconfig['pppid']) ? 'interfaces_ppps_edit.php?id=' . htmlspecialchars($pconfig['pppid']) : 'interfaces_ppps_edit.php',
+	'fa-cog'
+))->addClass('btn-info')->setHelp('Click for additional PPPoE configuration options. Save first if changes have been made.');
 
 $form->add($section);
 
@@ -2736,23 +2739,18 @@ $section->addInput(new Form_Input(
 ))->setHelp('If no qualifying outgoing packets are transmitted for the specified number of seconds, the connection is brought down. ' .
 			'An idle timeout of zero disables this feature.');
 
-if (isset($pconfig['pppid'])) {
-	if (isset($pconfig['pptp_localip'][1]) || isset($pconfig['pptp_subnet'][1]) || isset($pconfig['pptp_remote'][1])) {
-		$mlppp_text = gettext("There are additional Local and Remote IP addresses defined for MLPPP.") . "<br />";
-	} else {
-		$mlppp_text = "";
-	}
-
-	$section->addInput(new Form_StaticText(
-		'Advanced and MLPPP',
-		$mlppp_text . '<a href="/interfaces_ppps_edit.php?id=' . htmlspecialchars($pconfig['pppid']) . '" class="navlnk">Click here for additional PPTP and L2TP configuration options. Save first if you made changes.</a>'
-	));
+if (isset($pconfig['pptp_localip'][1]) || isset($pconfig['pptp_subnet'][1]) || isset($pconfig['pptp_remote'][1])) {
+	$mlppp_text = gettext("There are additional Local and Remote IP addresses defined for MLPPP.") . "<br />";
 } else {
-	$section->addInput(new Form_StaticText(
-		'Advanced and MLPPP',
-		'<a href="/interfaces_ppps_edit.php" class="navlnk">Click here for additional PPTP and L2TP configuration options.</a>'
-	));
+	$mlppp_text = "";
 }
+
+$section->addInput(new Form_Button(
+	'btnadvppp',
+	'Advanced and MLPPP',
+	isset($pconfig['pppid']) ? 'interfaces_ppps_edit.php?id=' . htmlspecialchars($pconfig['pppid']) : 'interfaces_ppps_edit.php',
+	'fa-cog'
+))->addClass('btn-info')->setHelp($mlppp_text . 'Click for additional PPTP and L2TP configuration options. Save first if changes have been made.');
 
 $form->add($section);
 
@@ -3200,17 +3198,21 @@ $modal->addInput(new Form_Input(
 
 $btnaddgw = new Form_Button(
 	'add',
-	'Add'
+	'Add',
+	null,
+	'fa-plus'
 );
 
-$btnaddgw->removeClass('btn-primary')->addClass('btn-success');
+$btnaddgw->addClass('btn-success');
 
 $btncnxgw = new Form_Button(
 	'cnx',
-	'Cancel'
+	'Cancel',
+	null,
+	'fa-undo'
 );
 
-$btncnxgw->removeClass('btn-primary')->addClass('btn-default');
+$btncnxgw->addClass('btn-warning');
 
 $modal->addInput(new Form_StaticText(
 	null,

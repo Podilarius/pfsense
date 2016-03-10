@@ -590,10 +590,7 @@ $tab_array[] = array(gettext("DHCPv6 Server"),		 true,	"services_dhcpv6.php?if={
 $tab_array[] = array(gettext("Router Advertisements"), false, "services_router_advertisements.php?if={$if}");
 display_top_tabs($tab_array, false, 'nav nav-tabs');
 
-$form = new Form(new Form_Button(
-	'Submit',
-	'Save'
-));
+$form = new Form();
 
 $section = new Form_Section('DHCPv6 Options');
 
@@ -757,14 +754,16 @@ $section->addInput(new Form_Checkbox(
 
 $btndyndns = new Form_Button(
 	'btndyndns',
-	'Advanced'
+	'Advanced',
+	null,
+	'fa-cog'
 );
 
-$btndyndns->removeClass('btn-primary')->addClass('btn-default btn-sm');
+$btndyndns->addClass('btn-info btn-sm');
 
 $section->addInput(new Form_StaticText(
 	'Dynamic DNS',
-	$btndyndns . '&nbsp;' . 'Show dynamic DNS settings'
+	$btndyndns
 ));
 
 $section->addInput(new Form_Checkbox(
@@ -823,14 +822,16 @@ $section->addInput(new Form_Checkbox(
 
 $btnntp = new Form_Button(
 	'btnntp',
-	'Advanced'
+	'Advanced',
+	null,
+	'fa-cog'
 );
 
-$btnntp->removeClass('btn-primary')->addClass('btn-default btn-sm');
+$btnntp->addClass('btn-info btn-sm');
 
 $section->addInput(new Form_StaticText(
 	'NTP servers',
-	$btnntp . '&nbsp;' . 'Show NTP Configuration'
+	$btnntp
 ));
 
 $group = new Form_Group('NTP Servers');
@@ -857,14 +858,16 @@ $section->add($group);
 
 $btnldap = new Form_Button(
 	'btnldap',
-	'Advanced'
+	'Advanced',
+	null,
+	'fa-cog'
 );
 
-$btnldap->removeClass('btn-primary')->addClass('btn-default btn-sm');
+$btnldap->addClass('btn-info btn-sm');
 
 $section->addInput(new Form_StaticText(
 	'LDAP',
-	$btnldap . '&nbsp;' . 'Show LDAP Configuration'
+	$btnldap
 ));
 
 $section->addInput(new Form_Input(
@@ -876,14 +879,16 @@ $section->addInput(new Form_Input(
 
 $btnnetboot = new Form_Button(
 	'btnnetboot',
-	'Advanced'
+	'Advanced',
+	null,
+	'fa-cog'
 );
 
-$btnnetboot->removeClass('btn-primary')->addClass('btn-default btn-sm');
+$btnnetboot->addClass('btn-info btn-sm');
 
 $section->addInput(new Form_StaticText(
 	'Network booting',
-	$btnnetboot . '&nbsp;' . 'Show Network booting'
+	$btnnetboot
 ));
 
 $section->addInput(new Form_Checkbox(
@@ -902,14 +907,16 @@ $section->addInput(new Form_Input(
 
 $btnadnl = new Form_Button(
 	'btnadnl',
-	'Advanced'
+	'Advanced',
+	null,
+	'fa-cog'
 );
 
-$btnadnl->removeClass('btn-primary')->addClass('btn-default btn-sm');
+$btnadnl->addClass('btn-info btn-sm');
 
 $section->addInput(new Form_StaticText(
 	'Additional BOOTP/DHCP Options',
-	$btnadnl . '&nbsp;' . 'Additional BOOTP/DHCP Options'
+	$btnadnl
 ));
 
 $form->add($section);
@@ -947,10 +954,12 @@ foreach ($pconfig['numberoptions']['item'] as $item) {
 
 	$btn = new Form_Button(
 		'deleterow' . $counter,
-		'Delete'
+		'Delete',
+		null,
+		'fa-trash'
 	);
 
-	$btn->removeClass('btn-primary')->addClass('btn-warning');
+	$btn->addClass('btn-warning');
 	$group->add($btn);
 	$section->add($group);
 	$counter++;
@@ -959,7 +968,9 @@ foreach ($pconfig['numberoptions']['item'] as $item) {
 
 $btnaddopt = new Form_Button(
 	'addrow',
-	'Add Option'
+	'Add Option',
+	null,
+	'fa-plus'
 );
 
 $btnaddopt->removeClass('btn-primary')->addClass('btn-success btn-sm');
@@ -1129,6 +1140,8 @@ events.push(function() {
 	function do_toggle() {
 		if ($('#enable').prop('checked')) {
 			$('.form-group:not(:first-child)').show();
+			hideClass('adnloptions', <?php echo json_encode($noopts); ?>);
+			hideInput('addrow', <?php echo json_encode($noopts); ?>);
 		} else {
 			$('.form-group:not(:first-child)').hide();
 		}

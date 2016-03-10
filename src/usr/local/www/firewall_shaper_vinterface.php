@@ -425,6 +425,7 @@ display_top_tabs($tab_array);
 				<td class="col-md-1">
 					<?=$tree?>
 					<a href="firewall_shaper_vinterface.php?pipe=new&amp;action=add" class="btn btn-sm btn-success">
+						<i class="fa fa-plus icon-embed-btn"></i>
 						<?=gettext('New Limiter')?>
 					</a>
 				</td>
@@ -446,8 +447,9 @@ if ($dfltmsg) {
 			$sform->addGlobal(new Form_Button(
 				'add',
 				'Add new Queue',
-				$url
-			))->removeClass('btn-default')->addClass('btn-success');
+				$url,
+				'fa-plus'
+			))->addClass('btn-success');
 		}
 
 		if ($action != "add") {
@@ -460,8 +462,9 @@ if ($dfltmsg) {
 			$sform->addGlobal(new Form_Button(
 				'delete',
 				($queue && ($qname != $pipe)) ? 'Delete this queue':'Delete Limiter',
-				$url
-			))->removeClass('btn-default')->addClass('btn-danger');
+				$url,
+				'fa-trash'
+			))->addClass('btn-danger');
 		}
 	}
 

@@ -630,12 +630,25 @@ if ($pkg['savehelp'] != "") {
 	$savehelp = $pkg['savehelp'];
 }
 
+$saveicon = "fa-save";
+if ($pkg['saveicon'] != "") {
+	$saveicon = $pkg['saveicon'];
+}
+
+$savebtnclass = "btn-primary";
+if ($pkg['savebtnclass'] != "") {
+	$savebtnclass = $pkg['savebtnclass'];
+}
+
 $grouping = false; // Indicates the elements we are composing are part of a combined group
 
 $savebutton = new Form_Button(
 	'submit',
-	$savevalue
+	$savevalue,
+	null,
+	$saveicon
 );
+$savebutton->addClass($savebtnclass);
 
 if ($savehelp) {
 	$savebutton->setHelp($savehelp);
@@ -1294,10 +1307,22 @@ foreach ($pkg['fields']['field'] as $pkga) {
 
 		// Create form button
 		case "button":
+			$newbtnicon = "fa-save";
+			if ($pkga['buttonicon'] != "") {
+				$newbtnicon = $pkga['buttonicon'];
+			}
+			$newbtnclass = "btn-primary";
+			if ($pkga['buttonclass'] != "") {
+				$newbtnclass = $pkga['buttonclass'];
+			}
+
 			$newbtn = new Form_Button(
 				$pkga['fieldname'],
-				$pkga['fieldname']
+				$pkga['fieldname'],
+				null,
+				$newbtnicon
 			);
+			$newbtn->addClass($newbtnclass);
 
 			if (grouping) {
 				$group->add(new Form_StaticText(
@@ -1444,8 +1469,10 @@ foreach ($pkg['fields']['field'] as $pkga) {
 			// Add row button
 			$section->addInput(new Form_Button(
 				'addrow',
-				'Add'
-			))->removeClass('btn-primary')->addClass('btn-success');
+				'Add',
+				null,
+				'fa-plus'
+			))->addClass('btn-success');
 
 			break;
 
@@ -1483,8 +1510,10 @@ $form->addGlobal(new Form_Input(
 if (!empty($advanced)) {
 	$form->addGlobal(new Form_Button(
 		'showadv',
-		'Show advanced options'
-	))->removeClass('btn-primary')->addClass('btn-default');
+		'Show Advanced Options',
+		null,
+		'fa-cog'
+	))->addClass('btn-info');
 
 	$form->add($advanced);
 }

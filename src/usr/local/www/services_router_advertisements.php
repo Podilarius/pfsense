@@ -289,10 +289,7 @@ $tab_array[] = array(gettext("DHCPv6 Server"),		 false, "services_dhcpv6.php?if=
 $tab_array[] = array(gettext("Router Advertisements"), true,  "services_router_advertisements.php?if={$if}");
 display_top_tabs($tab_array, false, 'nav nav-tabs');
 
-$form = new Form(new Form_Button(
-	'Submit',
-	gettext("Save")
-));
+$form = new Form();
 
 $section = new Form_Section('Advertisements');
 
@@ -358,7 +355,9 @@ foreach ($pconfig['subnets'] as $subnet) {
 
 	$group->add(new Form_Button(
 		'deleterow' . $counter,
-		'Delete'
+		'Delete',
+		null,
+		'fa-trash'
 	))->removeClass('btn-primary')->addClass('btn-warning');
 
 	$group->addClass('repeatable');
@@ -370,8 +369,10 @@ foreach ($pconfig['subnets'] as $subnet) {
 
 $section->addInput(new Form_Button(
 	'addrow',
-	'Add'
-))->removeClass('btn-primary')->addClass('btn-success');
+	'Add',
+	null,
+	'fa-plus'
+))->addClass('btn-success');
 
 $form->add($section);
 
