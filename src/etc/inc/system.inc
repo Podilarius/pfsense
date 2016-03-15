@@ -1324,7 +1324,12 @@ EOD;
 		$nginx_config .= "\t\tssl_session_timeout     10m;\n";
 		$nginx_config .= "\t\tkeepalive_timeout       70;\n";
 		$nginx_config .= "\t\tssl_session_cache       shared:SSL:10m;\n";
-		$nginx_config .= "\t\tssl_protocols   TLSv1 TLSv1.1 TLSv1.2;\n";
+		if ($captive_portal !== false) {
+			// leave TLSv1.0 for CP for now for compatibility
+			$nginx_config .= "\t\tssl_protocols   TLSv1 TLSv1.1 TLSv1.2;\n";
+		} else {
+			$nginx_config .= "\t\tssl_protocols   TLSv1.1 TLSv1.2;\n";
+		}
 		$nginx_config .= "\t\tssl_ciphers \"EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH\";\n";
 		$nginx_config .= "\t\tssl_prefer_server_ciphers       on;\n";
 		$nginx_config .= "\t\tadd_header Strict-Transport-Security \"max-age=31536000\";\n";
@@ -2123,6 +2128,7 @@ function system_check_reset_button() {
 		case 'FW7541':
 		case 'APU':
 		case 'RCC-VE':
+		case 'RCC':
 		case 'RCC-DFF':
 			break;
 		default:
@@ -2186,12 +2192,15 @@ function system_identify_specific_platform() {
 		case 'DFFv2':
 			return (array('name' => 'RCC-DFF', 'descr' => 'Netgate RCC-DFF'));
 			break;
+		case 'RCC':
+			return (array('name' => 'RCC', 'descr' => 'Netgate XG-2758'));
+			break;
 		case 'SYS-5018A-FTN4':
 		case 'A1SAi':
 			return (array('name' => 'C2758', 'descr' => 'Super Micro C2758'));
 			break;
 		case 'SYS-5018D-FN4T':
-			return (array('name' => 'D1540-XG', 'descr' => 'Super Micro D1540-XG'));
+			return (array('name' => 'XG-1540', 'descr' => 'Super Micro XG-1540'));
 			break;
 	}
 

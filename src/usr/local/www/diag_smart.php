@@ -294,7 +294,7 @@ switch ($action) {
 	if (!empty($pconfig['smartmonemail'])) {
 		$form->addGlobal(new Form_Button(
 			'test',
-			'Send test email',
+			gettext('Send test email'),
 			null,
 			'fa-send'
 		))->addClass('btn-info');
@@ -314,9 +314,9 @@ switch ($action) {
 
 		$btnview = new Form_Button(
 			'submit',
-			'View',
+			gettext('View'),
 			null,
-			'fa-file-o'
+			'fa-file-text-o'
 		);
 		$btnview->addClass('btn-primary');
 		$btnview->setAttribute('id');
@@ -394,7 +394,7 @@ switch ($action) {
 
 		$btntest = new Form_Button(
 			'submit',
-			'Test',
+			gettext('Test'),
 			null,
 			'fa-wrench'
 		);
@@ -467,9 +467,9 @@ switch ($action) {
 
 		$btnview =  new Form_Button(
 			'submit',
-			'View',
+			gettext('View'),
 			null,
-			'fa-file-o'
+			'fa-file-text-o'
 		);
 		$btnview->addClass('btn-primary');
 		$btnview->setAttribute('id');
@@ -521,7 +521,7 @@ switch ($action) {
 // Abort
 		$btnabort = new Form_Button(
 			'submit',
-			'Abort',
+			gettext('Abort'),
 			null,
 			'fa-times'
 		);

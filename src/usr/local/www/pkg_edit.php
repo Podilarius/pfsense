@@ -678,6 +678,9 @@ if ($pkg['advanced_options'] == "enabled") {
 $js_array = array();
 
 // Now loop through all of the fields defined in the XML
+if (!is_array($pkg['fields']['field'])) {
+	$pkg['fields']['field'] = array();
+}
 foreach ($pkg['fields']['field'] as $pkga) {
 
 	$action = "";
@@ -1457,7 +1460,7 @@ foreach ($pkg['fields']['field'] as $pkga) {
 					// Delete row button
 					$group->add(new Form_Button(
 						'deleterow' . $rowcounter,
-						'Delete',
+						gettext('Delete'),
 						null,
 						'fa-trash'
 					))->removeClass('btn-primary')->addClass('btn-warning btn-sm');
@@ -1469,7 +1472,7 @@ foreach ($pkg['fields']['field'] as $pkga) {
 			// Add row button
 			$section->addInput(new Form_Button(
 				'addrow',
-				'Add',
+				gettext('Add'),
 				null,
 				'fa-plus'
 			))->addClass('btn-success');
@@ -1497,7 +1500,9 @@ foreach ($pkg['fields']['field'] as $pkga) {
 	$i++;
 } // e-o-foreach field described in the XML
 
-$form->add($section);
+if ($section) {
+	$form->add($section);
+}
 
 $form->addGlobal(new Form_Input(
 	'id',
@@ -1510,7 +1515,7 @@ $form->addGlobal(new Form_Input(
 if (!empty($advanced)) {
 	$form->addGlobal(new Form_Button(
 		'showadv',
-		'Show Advanced Options',
+		gettext('Show Advanced Options'),
 		null,
 		'fa-cog'
 	))->addClass('btn-info');
