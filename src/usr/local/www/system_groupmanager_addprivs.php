@@ -212,23 +212,23 @@ $section->addInput(new Form_Input(
 
 $btnfilter = new Form_Button(
 	'btnfilter',
-	gettext('Filter'),
+	'Filter',
 	null,
 	'fa-filter'
 );
 
-$btnfilter->addClass('btn btn-info');
+$btnfilter->setAttribute('type','button')->addClass('btn btn-info');
 
 $form->addGlobal($btnfilter);
 
 $btnclear = new Form_Button(
 	'btnclear',
-	gettext('Clear'),
+	'Clear',
 	null,
 	'fa-times'
 );
 
-$btnclear->addClass('btn btn-warning');
+$btnclear->setAttribute('type','button')->addClass('btn btn-warning');
 
 $form->addGlobal($btnclear);
 $form->add($section);
@@ -287,8 +287,6 @@ events.push(function() {
 		});
 	});
 
-	$('#btnfilter').prop('type', 'button');
-
 	$('#btnfilter').click(function() {
 		searchterm = $('#filtertxt').val().toLowerCase();
 		copyselect(true);
@@ -300,8 +298,6 @@ events.push(function() {
 			}
 		});
 	});
-
-	$('#btnclear').prop('type', 'button');
 
 	$('#btnclear').click(function() {
 		// Copy all options from shadow to sysprivs

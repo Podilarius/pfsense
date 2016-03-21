@@ -205,7 +205,7 @@ if (file_exists('/conf/trigger_initial_wizard')) {
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<link rel="stylesheet" href="/bootstrap/css/pfSense.css" />
+	<link rel="stylesheet" href="/css/pfSense.css" />
 	<title><?=$g['product_name']?>.localdomain - <?=$g['product_name']?> first time setup</title>
 	<meta http-equiv="refresh" content="1;url=wizard.php?xml=setup_wizard.xml" />
 </head>
@@ -389,10 +389,11 @@ foreach ($widgets as $widgetname => $widgetconfig) {
 	$columnWidth = 12 / $numColumns;
 
 	for ($currentColumnNumber = 1; $currentColumnNumber <= $numColumns; $currentColumnNumber++) {
-		echo '<div class="col-md-' . $columnWidth . '" id="widgets-col' . $currentColumnNumber . '">';
+
 
 		//if col$currentColumnNumber exists
 		if (isset($widgetColumns['col'.$currentColumnNumber])) {
+			echo '<div class="col-md-' . $columnWidth . '" id="widgets-col' . $currentColumnNumber . '">';
 			$columnWidgets = $widgetColumns['col'.$currentColumnNumber];
 
 			foreach ($columnWidgets as $widgetname => $widgetconfig) {
@@ -429,10 +430,11 @@ foreach ($widgets as $widgetname => $widgetconfig) {
 				</div>
 				<?php
 			}
+			echo "</div>";
 		} else {
 			echo '<div class="col-md-' . $columnWidth . '" id="widgets-col' . $currentColumnNumber . '"></div>';
 		}
-		echo "</div>";
+
 	}
 ?>
 
@@ -482,7 +484,10 @@ events.push(function() {
 		handle: '.panel-heading',
 		cursor: 'grabbing',
 		connectWith: '.container .col-md-<?=$columnWidth?>',
-		update: function(){dirty = true;}
+		update: function(){
+			dirty = true;
+			$('#btnstore').removeClass('invisible');
+		}
 	});
 
 	// On clicking a widget to install . .
@@ -498,6 +503,7 @@ events.push(function() {
 	$('#btnstore').click(function() {
 		updateWidgets();
 		dirty = false;
+		$(this).addClass('invisible');
 		$('[name=widgetForm]').submit();
 	});
 
@@ -507,6 +513,14 @@ events.push(function() {
 			return ("<?=gettext('You have moved one or more widgets but have not yet saved')?>");
 		} else {
 			return undefined;
+		}
+	});
+
+	// Show the fa-save icon in the breadcrumb bar if the user opens or closes a panel (In case he/she wants to save the new state)
+	// (Sometimes this will cause us to see the icon when we don't need it, but better that than the other way round)
+	$('.panel').on('hidden.bs.collapse shown.bs.collapse', function (e) {
+	    if (e.currentTarget.id != 'widget-available') {
+			$('#btnstore').removeClass("invisible");
 		}
 	});
 });

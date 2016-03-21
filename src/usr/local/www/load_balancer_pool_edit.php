@@ -243,7 +243,7 @@ events.push(function() {
 		var len = From.length;
 		var option;
 
-		if (len > 1) {
+		if (len > 0) {
 			for (i=0; i<len; i++) {
 				if (From.eq(i).is(':selected')) {
 					option = From.eq(i).val();
@@ -281,13 +281,6 @@ events.push(function() {
 			}
 		}
 	}
-
-	// Make buttons plain buttons, not a submit
-	$("#btnaddtopool").prop('type','button');
-	$("#removeenabled").prop('type','button');
-	$("#removedisabled").prop('type','button');
-	$("#movetodisabled").prop('type','button');
-	$("#movetoenabled").prop('type','button');
 
 	// On click . .
 	$("#btnaddtopool").click(function() {
@@ -412,10 +405,10 @@ $group->add(new Form_IpAddress(
 
 $group->add(new Form_Button(
 	'btnaddtopool',
-	gettext('Add to pool'),
+	'Add to pool',
 	null,
 	'fa-plus'
-))->addClass('btn-success');
+))->setAttribute('type','button')->addClass('btn-success');
 
 $section->add($group);
 
@@ -457,17 +450,17 @@ $group = new Form_Group('');
 
 $group->add(new Form_Button(
 	'removedisabled',
-	gettext('Remove'),
+	'Remove',
 	null,
 	'fa-trash'
-))->addClass('btn-danger btn-sm');
+))->setAttribute('type','button')->addClass('btn-danger btn-sm');
 
 $group->add(new Form_Button(
 	'removeenabled',
-	gettext('Remove'),
+	'Remove',
 	null,
 	'fa-trash'
-))->addClass('btn-danger btn-sm');
+))->setAttribute('type','button')->addClass('btn-danger btn-sm');
 
 $section->add($group);
 
@@ -475,17 +468,17 @@ $group = new Form_Group('');
 
 $group->add(new Form_Button(
 	'movetoenabled',
-	gettext('Move to enabled list'),
+	'Move to enabled list',
 	null,
 	'fa-angle-double-right'
-))->addClass('btn-info btn-sm');
+))->setAttribute('type','button')->addClass('btn-info btn-sm');
 
 $group->add(new Form_Button(
 	'movetodisabled',
-	gettext('Move to disabled list'),
+	'Move to disabled list',
 	null,
 	'fa-angle-double-left'
-))->addClass('btn-info btn-sm');
+))->setAttribute('type','button')->addClass('btn-info btn-sm');
 
 $section->add($group);
 

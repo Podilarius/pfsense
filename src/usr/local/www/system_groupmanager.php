@@ -177,7 +177,7 @@ if (isset($_POST['save'])) {
 
 	do_input_validation($_POST, $reqdfields, $reqdfieldsn, $input_errors);
 
-	if (preg_match("/[^a-zA-Z0-9\.\-_ ]/", $_POST['groupname'])) {
+	if (preg_match("/[^a-zA-Z0-9\.\-_]/", $_POST['groupname'])) {
 		$input_errors[] = gettext("The group name contains invalid characters.");
 	}
 
@@ -449,17 +449,17 @@ if ($pconfig['gid'] != 1998) { // all users group
 
 	$group->add(new Form_Button(
 		'movetoenabled',
-		gettext('Move to "Members"'),
+		'Move to "Members"',
 		null,
 		'fa-angle-double-right'
-	))->removeClass('btn-primary')->addClass('btn-info btn-sm');
+	))->setAttribute('type','button')->removeClass('btn-primary')->addClass('btn-info btn-sm');
 
 	$group->add(new Form_Button(
 		'movetodisabled',
-		gettext('Move to "Not members'),
+		'Move to "Not members',
 		null,
 		'fa-angle-double-left'
-	))->removeClass('btn-primary')->addClass('btn-info btn-sm');
+	))->setAttribute('type','button')->removeClass('btn-primary')->addClass('btn-info btn-sm');
 
 	$group->setHelp('Hold down CTRL (pc)/COMMAND (mac) key to select multiple items');
 	$section->add($group);
@@ -483,11 +483,6 @@ print $form;
 <script type="text/javascript">
 //<![CDATA[
 events.push(function() {
-
-	// Make buttons plain buttons, not submit
-	$("#movetodisabled").prop('type','button');
-	$("#movetoenabled").prop('type','button');
-
 
 	// On click . .
 	$("#movetodisabled").click(function() {

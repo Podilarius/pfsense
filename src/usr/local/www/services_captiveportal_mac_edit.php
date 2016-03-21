@@ -246,12 +246,12 @@ $macaddress = new Form_Input(
 
 $btnmymac = new Form_Button(
 	'btnmymac',
-	gettext('Copy My MAC'),
+	'Copy My MAC',
 	null,
 	'fa-clone'
 	);
 
-$btnmymac->removeClass('btn-primary')->addClass('btn-success btn-sm');
+$btnmymac->setAttribute('type','button')->removeClass('btn-primary')->addClass('btn-success btn-sm');
 
 $group = new Form_Group('MAC Address');
 $group->add($macaddress);
@@ -312,9 +312,6 @@ print($form);
 <script type="text/javascript">
 //<![CDATA[
 events.push(function() {
-	// Make the ‘Copy My MAC’ button a plain button, not a submit button
-	$("#btnmymac").prop('type','button');
-
 	// On click, copy the hidden 'mymac' text to the 'mac' input
 	$("#btnmymac").click(function() {
 		$('#mac').val('<?=$mymac?>');

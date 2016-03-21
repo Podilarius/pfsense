@@ -882,7 +882,7 @@ if (!is_numeric($pool) && !($act == "newpool")) {
 
 	$btnaddpool = new Form_Button(
 		'btnaddpool',
-		gettext('Add pool'),
+		'Add pool',
 		'services_dhcp.php?if=' . htmlspecialchars($if) . '&act=newpool',
 		'fa-plus'
 	);
@@ -999,12 +999,12 @@ if (!is_numeric($pool) && !($act == "newpool")) {
 // DDNS
 $btnadv = new Form_Button(
 	'btnadvdns',
-	gettext('Advanced'),
+	'Display Advanced',
 	null,
 	'fa-cog'
 );
 
-$btnadv->addClass('btn-info btn-sm');
+$btnadv->setAttribute('type','button')->addClass('btn-info btn-sm');
 
 $section->addInput(new Form_StaticText(
 	'Dynamic DNS',
@@ -1049,12 +1049,12 @@ $section->addInput(new Form_Input(
 // Advanced MAC
 $btnadv = new Form_Button(
 	'btnadvmac',
-	gettext('Advanced'),
+	'Display Advanced',
 	null,
 	'fa-cog'
 );
 
-$btnadv->addClass('btn-info btn-sm');
+$btnadv->setAttribute('type','button')->addClass('btn-info btn-sm');
 
 $section->addInput(new Form_StaticText(
 	'MAC address control',
@@ -1078,12 +1078,12 @@ $section->addInput(new Form_Input(
 // Advanced NTP
 $btnadv = new Form_Button(
 	'btnadvntp',
-	gettext('Advanced'),
+	'Display Advanced',
 	null,
 	'fa-cog'
 );
 
-$btnadv->addClass('btn-info btn-sm');
+$btnadv->setAttribute('type','button')->addClass('btn-info btn-sm');
 
 $section->addInput(new Form_StaticText(
 	'NTP',
@@ -1105,12 +1105,12 @@ $section->addInput(new Form_IpAddress(
 // Advanced TFTP
 $btnadv = new Form_Button(
 	'btnadvtftp',
-	gettext('Advanced'),
+	'Display Advanced',
 	null,
 	'fa-cog'
 );
 
-$btnadv->addClass('btn-info btn-sm');
+$btnadv->setAttribute('type','button')->addClass('btn-info btn-sm');
 
 $section->addInput(new Form_StaticText(
 	'TFTP',
@@ -1126,12 +1126,12 @@ $section->addInput(new Form_IpAddress(
 // Advanced LDAP
 $btnadv = new Form_Button(
 	'btnadvldap',
-	gettext('Advanced'),
+	'Display Advanced',
 	null,
 	'fa-cog'
 );
 
-$btnadv->addClass('btn-info btn-sm');
+$btnadv->setAttribute('type','button')->addClass('btn-info btn-sm');
 
 $section->addInput(new Form_StaticText(
 	'LDAP',
@@ -1145,22 +1145,22 @@ $section->addInput(new Form_Input(
 	$pconfig['ldap']
 ))->setHelp('Leave blank to disable. Enter a full URI for the LDAP server in the form ldap://ldap.example.com/dc=example,dc=com ');
 
-$form->add($section);
-
 // Advanced Additional options
 $btnadv = new Form_Button(
 	'btnadvopts',
-	gettext('Advanced'),
+	'Display Advanced',
 	null,
 	'fa-cog'
 );
 
-$btnadv->addClass('btn-info btn-sm');
+$btnadv->setAttribute('type','button')->addClass('btn-info btn-sm');
 
 $section->addInput(new Form_StaticText(
 	'Additional BOOTP/DHCP Options',
 	$btnadv
 ));
+
+$form->add($section);
 
 $section = new Form_Section('Additional BOOTP/DHCP Options');
 $section->addClass('adnlopts');
@@ -1218,7 +1218,7 @@ foreach ($pconfig['numberoptions']['item'] as $item) {
 
 	$group->add(new Form_Button(
 		'deleterow' . $counter,
-		gettext('Delete'),
+		'Delete',
 		null,
 		'fa-trash'
 	))->addClass('btn-warning');
@@ -1230,7 +1230,7 @@ foreach ($pconfig['numberoptions']['item'] as $item) {
 
 $section->addInput(new Form_Button(
 	'addrow',
-	gettext('Add'),
+	'Add',
 	null,
 	'fa-plus'
 ))->addClass('btn-success');
@@ -1343,7 +1343,7 @@ if (!is_numeric($pool) && !($act == "newpool")) {
 		foreach ($a_maps as $mapent) {
 ?>
 					<tr>
-						<td align="center" ondblclick="document.location='services_dhcp_edit.php?if=<?=htmlspecialchars($if)?>&amp;id=<?=$i?>';">
+						<td class="text-center" ondblclick="document.location='services_dhcp_edit.php?if=<?=htmlspecialchars($if)?>&amp;id=<?=$i?>';">
 							<?php if (isset($mapent['arp_table_static_entry'])): ?>
 								<i class="fa fa-check"></i>
 							<?php endif; ?>
@@ -1394,127 +1394,175 @@ events.push(function() {
 	// Show advanced DNS options ======================================================================================
 	var showadvdns = false;
 
-	function show_advdns() {
+	function show_advdns(ispageload) {
+		var text;
+		// On page load decide the initial state based on the data.
+		if (ispageload) {
 <?php
-		if (!$pconfig['ddnsupdate'] && empty($pconfig['ddnsdomain']) && empty($pconfig['ddnsdomainprimary']) &&
-		    empty($pconfig['ddnsdomainkeyname']) && empty($pconfig['ddnsdomainkey'])) {
-			$hide = false;
-		} else {
-			$hide = true;
-		}
+			if (!$pconfig['ddnsupdate'] && empty($pconfig['ddnsdomain']) && empty($pconfig['ddnsdomainprimary']) &&
+			    empty($pconfig['ddnsdomainkeyname']) && empty($pconfig['ddnsdomainkey'])) {
+				$showadv = false;
+			} else {
+				$showadv = true;
+			}
 ?>
-		var hide = <?php if ($hide) {echo 'true';} else {echo 'false';} ?>;
+			showadvdns = <?php if ($showadv) {echo 'true';} else {echo 'false';} ?>;
+		} else {
+			// It was a click, swap the state.
+			showadvdns = !showadvdns;
+		}
 
-		hideCheckbox('ddnsupdate', !showadvdns && !hide);
-		hideInput('ddnsdomain', !showadvdns && !hide);
-		hideInput('ddnsdomainprimary', !showadvdns && !hide);
-		hideInput('ddnsdomainkeyname', !showadvdns && !hide);
-		hideInput('ddnsdomainkey', !showadvdns && !hide);
-		hideInput('btnadvdns', hide);
-		showadvdns = !showadvdns;
+		hideCheckbox('ddnsupdate', !showadvdns);
+		hideInput('ddnsdomain', !showadvdns);
+		hideInput('ddnsdomainprimary', !showadvdns);
+		hideInput('ddnsdomainkeyname', !showadvdns);
+		hideInput('ddnsdomainkey', !showadvdns);
+
+		if (showadvdns) {
+			text = "<?=gettext('Hide Advanced');?>";
+		} else {
+			text = "<?=gettext('Display Advanced');?>";
+		}
+		$('#btnadvdns').html('<i class="fa fa-cog"></i> ' + text);
 	}
-
-	$('#btnadvdns').prop('type', 'button');
 
 	$('#btnadvdns').click(function(event) {
 		show_advdns();
 	});
 
- // Show advanced MAC options ======================================================================================
+	// Show advanced MAC options ======================================================================================
 	var showadvmac = false;
 
-	function show_advmac() {
+	function show_advmac(ispageload) {
+		var text;
+		// On page load decide the initial state based on the data.
+		if (ispageload) {
 <?php
-		if (empty($pconfig['mac_allow']) && empty($pconfig['mac_deny'])) {
-			$hide = false;
-		} else {
-			$hide = true;
-		}
+			if (empty($pconfig['mac_allow']) && empty($pconfig['mac_deny'])) {
+				$showadv = false;
+			} else {
+				$showadv = true;
+			}
 ?>
-		var hide = <?php if ($hide) {echo 'true';} else {echo 'false';} ?>;
+			showadvmac = <?php if ($showadv) {echo 'true';} else {echo 'false';} ?>;
+		} else {
+			// It was a click, swap the state.
+			showadvmac = !showadvmac;
+		}
 
-		hideInput('mac_allow', !showadvmac && !hide);
-		hideInput('mac_deny', !showadvmac && !hide);
+		hideInput('mac_allow', !showadvmac);
+		hideInput('mac_deny', !showadvmac);
 
-		showadvmac = !showadvmac;
+		if (showadvmac) {
+			text = "<?=gettext('Hide Advanced');?>";
+		} else {
+			text = "<?=gettext('Display Advanced');?>";
+		}
+		$('#btnadvmac').html('<i class="fa fa-cog"></i> ' + text);
 	}
-
-	$('#btnadvmac').prop('type', 'button');
 
 	$('#btnadvmac').click(function(event) {
-		show_advmac(true);
+		show_advmac();
 	});
 
-  // Show advanced NTP options ======================================================================================
+	// Show advanced NTP options ======================================================================================
 	var showadvntp = false;
 
-	function show_advntp() {
+	function show_advntp(ispageload) {
+		var text;
+		// On page load decide the initial state based on the data.
+		if (ispageload) {
 <?php
-		if (empty($pconfig['ntp1']) && empty($pconfig['ntp2'])) {
-			$hide = false;
-		} else {
-			$hide = true;
-		}
+			if (empty($pconfig['ntp1']) && empty($pconfig['ntp2'])) {
+				$showadv = false;
+			} else {
+				$showadv = true;
+			}
 ?>
-		var hide = <?php if ($hide) {echo 'true';} else {echo 'false';} ?>;
+			showadvntp = <?php if ($showadv) {echo 'true';} else {echo 'false';} ?>;
+		} else {
+			// It was a click, swap the state.
+			showadvntp = !showadvntp;
+		}
 
-		hideInput('ntp1', !showadvntp && !hide);
-		hideInput('ntp2', !showadvntp && !hide);
-		hideInput('btnadvntp', hide);
+		hideInput('ntp1', !showadvntp);
+		hideInput('ntp2', !showadvntp);
 
-		showadvntp = !showadvntp;
+		if (showadvntp) {
+			text = "<?=gettext('Hide Advanced');?>";
+		} else {
+			text = "<?=gettext('Display Advanced');?>";
+		}
+		$('#btnadvntp').html('<i class="fa fa-cog"></i> ' + text);
 	}
-
-	$('#btnadvntp').prop('type', 'button');
 
 	$('#btnadvntp').click(function(event) {
 		show_advntp();
 	});
 
-   // Show advanced TFTP options ======================================================================================
-	var showtftp = false;
+	// Show advanced TFTP options ======================================================================================
+	var showadvtftp = false;
 
-	function show_advtftp() {
+	function show_advtftp(ispageload) {
+		var text;
+		// On page load decide the initial state based on the data.
+		if (ispageload) {
 <?php
-		if (empty($pconfig['tftp'])) {
-			$hide = false;
-		} else {
-			$hide = true;
-		}
+			if (empty($pconfig['tftp'])) {
+				$showadv = false;
+			} else {
+				$showadv = true;
+			}
 ?>
-		var hide = <?php if ($hide) {echo 'true';} else {echo 'false';} ?>;
+			showadvtftp = <?php if ($showadv) {echo 'true';} else {echo 'false';} ?>;
+		} else {
+			// It was a click, swap the state.
+			showadvtftp = !showadvtftp;
+		}
 
-		hideInput('tftp', !showtftp & !hide);
+		hideInput('tftp', !showadvtftp);
 
-		showtftp = !showtftp;
+		if (showadvtftp) {
+			text = "<?=gettext('Hide Advanced');?>";
+		} else {
+			text = "<?=gettext('Display Advanced');?>";
+		}
+		$('#btnadvtftp').html('<i class="fa fa-cog"></i> ' + text);
 	}
-
-	$('#btnadvtftp').prop('type', 'button');
 
 	$('#btnadvtftp').click(function(event) {
 		show_advtftp();
 	});
 
-   // Show advanced LDAP options ======================================================================================
+	// Show advanced LDAP options ======================================================================================
 	var showadvldap = false;
 
-	function show_advldap() {
+	function show_advldap(ispageload) {
+		var text;
+		// On page load decide the initial state based on the data.
+		if (ispageload) {
 <?php
-		if (empty($pconfig['ldap'])) {
-			$hide = false;
-		} else {
-			$hide = true;
-		}
+			if (empty($pconfig['ldap'])) {
+				$showadv = false;
+			} else {
+				$showadv = true;
+			}
 ?>
-		var hide = <?php if ($hide) {echo 'true';} else {echo 'false';} ?>;
+			showadvldap = <?php if ($showadv) {echo 'true';} else {echo 'false';} ?>;
+		} else {
+			// It was a click, swap the state.
+			showadvldap = !showadvldap;
+		}
 
-		hideInput('ldap', !showadvldap && !hide);
-		hideInput('btnadvldap', hide);
+		hideInput('ldap', !showadvldap);
 
-		showadvldap = !showadvldap;
+		if (showadvldap) {
+			text = "<?=gettext('Hide Advanced');?>";
+		} else {
+			text = "<?=gettext('Display Advanced');?>";
+		}
+		$('#btnadvldap').html('<i class="fa fa-cog"></i> ' + text);
 	}
-
-	$('#btnadvldap').prop('type', 'button');
 
 	$('#btnadvldap').click(function(event) {
 		show_advldap();
@@ -1523,24 +1571,33 @@ events.push(function() {
 	// Show advanced additional opts options ===========================================================================
 	var showadvopts = false;
 
-	function show_advopts() {
+	function show_advopts(ispageload) {
+		var text;
+		// On page load decide the initial state based on the data.
+		if (ispageload) {
 <?php
-		if (empty($pconfig['numberoptions']) ||
-		    (empty($pconfig['numberoptions']['item'][0]['number']) && (empty($pconfig['numberoptions']['item'][0]['value'])))) {
-			$hide = false;
-		} else {
-			$hide = true;
-		}
+			if (empty($pconfig['numberoptions']) ||
+			    (empty($pconfig['numberoptions']['item'][0]['number']) && (empty($pconfig['numberoptions']['item'][0]['value'])))) {
+				$showadv = false;
+			} else {
+				$showadv = true;
+			}
 ?>
-		var hide = <?php if ($hide) {echo 'true';} else {echo 'false';} ?>;
+			showadvopts = <?php if ($showadv) {echo 'true';} else {echo 'false';} ?>;
+		} else {
+			// It was a click, swap the state.
+			showadvopts = !showadvopts;
+		}
 
-		hideClass('adnlopts', !showadvopts && !hide);
-		hideInput('btnadvopts', hide);
+		hideClass('adnlopts', !showadvopts);
 
-		showadvopts = !showadvopts;
+		if (showadvopts) {
+			text = "<?=gettext('Hide Advanced');?>";
+		} else {
+			text = "<?=gettext('Display Advanced');?>";
+		}
+		$('#btnadvopts').html('<i class="fa fa-cog"></i> ' + text);
 	}
-
-	$('#btnadvopts').prop('type', 'button');
 
 	$('#btnadvopts').click(function(event) {
 		show_advopts();
@@ -1548,12 +1605,12 @@ events.push(function() {
 
 	// ---------- On initial page load ------------------------------------------------------------
 
-	show_advdns();
-	show_advmac();
-	show_advntp();
-	show_advtftp();
-	show_advldap();
-	show_advopts();
+	show_advdns(true);
+	show_advmac(true);
+	show_advntp(true);
+	show_advtftp(true);
+	show_advldap(true);
+	show_advopts(true);
 
 	// Suppress "Delete row" button if there are fewer than two rows
 	checkLastRow();

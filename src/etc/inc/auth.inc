@@ -143,7 +143,7 @@ if (function_exists("display_error_form") && !isset($config['system']['webgui'][
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<link rel="stylesheet" href="/bootstrap/css/pfSense.css" />
+	<link rel="stylesheet" href="/css/pfSense.css" />
 	<title><?=gettext("Redirecting..."); ?></title>
 </head>
 <body id="error" class="no-menu">
@@ -742,16 +742,11 @@ function local_group_set($group, $reset = false) {
 		return;
 	}
 
-	/* read from group db */
-	$fd = popen("/usr/sbin/pw groupshow {$group_name} 2>&1", "r");
-	$pwread = fgets($fd);
-	pclose($fd);
-
 	/* determine add or mod */
-	if (!strncmp($pwread, "pw:", 3)) {
-		$group_op = "groupadd";
+	if (mwexec("/usr/sbin/pw groupshow -g {$group_gid} 2>&1") == 0) {
+		$group_op = "groupmod -l";
 	} else {
-		$group_op = "groupmod";
+		$group_op = "groupadd -n";
 	}
 
 	/* add or mod group db */

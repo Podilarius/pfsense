@@ -1088,6 +1088,7 @@ $section->addInput(new Form_Input(
 			 &nbsp;&nbsp;&nbsp;&lt;input name=&quot;auth_pass&quot; type=&quot;password&quot;&gt;<br />
 			 &nbsp;&nbsp;&nbsp;&lt;input name=&quot;auth_voucher&quot; type=&quot;text&quot;&gt;<br />
 			 &nbsp;&nbsp;&nbsp;&lt;input name=&quot;redirurl&quot; type=&quot;hidden&quot; value=&quot;$PORTAL_REDIRURL$&quot;&gt;<br />
+			 &nbsp;&nbsp;&nbsp;&lt;input name=&quot;zone&quot; type=&quot;hidden&quot; value=&quot;$PORTAL_ZONE$&quot;&gt;<br />
 			 &nbsp;&nbsp;&nbsp;&lt;input name=&quot;accept&quot; type=&quot;submit&quot; value=&quot;Continue&quot;&gt;<br />
 			 &lt;/form&gt;')->addClass('btn btn-info btn-sm');
 
@@ -1105,21 +1106,21 @@ if ($pconfig['page']['htmltext']) {
 	$group = new Form_Group('Current Portal Page');
 	$group->add(new Form_Button(
 		'btnview',
-		gettext('View'),
+		'View',
 		$href,
 		'fa-file-text-o'
 	))->addClass('btn btn-info btn-xs')->setAttribute("target", "_blank");
 
 	$group->add(new Form_Button(
 		'btndownload',
-		gettext('Download'),
+		'Download',
 		'?zone=' . $cpzone . '&act=gethtmlhtml',
 		'fa-download'
 	))->addClass('btn btn-primary btn-xs')->setAttribute("target", "_blank");
 
 	$group->add(new Form_Button(
 		'btndownload',
-		gettext('Restore Default Page'),
+		'Restore Default Page',
 		'?zone=' . $cpzone . '&act=delhtmlhtml',
 		'fa-undo'
 	))->addClass('btn btn-danger btn-xs')->setAttribute("target", "_blank");
@@ -1139,21 +1140,21 @@ if ($pconfig['page']['errtext']) {
 	$group = new Form_Group('Current Auth Error Page');
 	$group->add(new Form_Button(
 		'btnview',
-		gettext('View'),
+		'View',
 		'?zone=' . $cpzone . '&act=viewerrhtml',
 		'fa-file-text-o'
 	))->addClass('btn btn-info btn-xs')->setAttribute("target", "_blank");
 
 	$group->add(new Form_Button(
 		'btndownload',
-		gettext('Download'),
+		'Download',
 		'?zone=' . $cpzone . '&act=geterrhtml',
 		'fa-download'
 	))->addClass('btn btn-primary btn-xs')->setAttribute("target", "_blank");
 
 	$group->add(new Form_Button(
 		'btndownload',
-		gettext('Restore Default Page'),
+		'Restore Default Page',
 		'?zone=' . $cpzone . '&act=delerrhtml',
 		'fa-undo'
 	))->addClass('btn btn-danger btn-xs')->setAttribute("target", "_blank");
@@ -1171,21 +1172,21 @@ if ($pconfig['page']['logouttext']) {
 	$group = new Form_Group('Current Logout Page');
 	$group->add(new Form_Button(
 		'btnview',
-		gettext('View'),
+		'View',
 		'?zone=' . $cpzone . '&act=viewlogouthtml',
 		'fa-file-text-o'
 	))->addClass('btn btn-info btn-xs')->setAttribute("target", "_blank");
 
 	$group->add(new Form_Button(
 		'btndownload',
-		gettext('Download'),
+		'Download',
 		'?zone=' . $cpzone . '&act=getlogouthtml',
 		'fa-download'
 	))->addClass('btn btn-primary btn-xs')->setAttribute("target", "_blank");
 
 	$group->add(new Form_Button(
 		'btndownload',
-		gettext('Restore Default Page'),
+		'Restore Default Page',
 		'?zone=' . $cpzone . '&act=dellogouthtml',
 		'fa-undo'
 	))->addClass('btn btn-danger btn-xs')->setAttribute("target", "_blank");

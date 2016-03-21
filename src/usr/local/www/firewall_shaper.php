@@ -440,7 +440,7 @@ $tab_array[] = array(gettext("Wizards"), false, "firewall_shaper_wizards.php");
 display_top_tabs($tab_array);
 
 ?>
-<script type="text/javascript" src="./tree/tree.js"></script>
+<script type="text/javascript" src="./vendor/tree/tree.js"></script>
 
 <div class="table-responsive">
 	<table class="table">
@@ -476,7 +476,7 @@ if (!$dfltmsg && $sform)  {
 
 			$sform->addGlobal(new Form_Button(
 				'add',
-				gettext('Add new Queue'),
+				'Add new Queue',
 				$url,
 				'fa-plus'
 			))->addClass('btn-success');
@@ -491,7 +491,7 @@ if (!$dfltmsg && $sform)  {
 
 		$sform->addGlobal(new Form_Button(
 			'delete',
-			$queue ? gettext('Delete this queue'):gettext('Disable shaper on interface'),
+			$queue ? 'Delete this queue':'Disable shaper on interface',
 			$url,
 			'fa-trash'
 		))->addClass('btn-danger');

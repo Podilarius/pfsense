@@ -985,8 +985,11 @@ ova_setup_ovf_template() {
 		-e "s,%%OS_TYPE%%,${_os_type},g" \
 		-e "s,%%OS_DESCR%%,${_os_descr},g" \
 		-e "s,%%PRODUCT_NAME%%,${PRODUCT_NAME},g" \
+		-e "s,%%PRODUCT_NAME_SUFFIX%%,${PRODUCT_NAME_SUFFIX},g" \
 		-e "s,%%PRODUCT_VERSION%%,${PRODUCT_VERSION},g" \
 		-e "s,%%PRODUCT_URL%%,${PRODUCT_URL},g" \
+		-e "s#%%VENDOR_NAME%%#${VENDOR_NAME}#g" \
+		-e "s#%%OVF_INFO%%#${OVF_INFO}#g" \
 		-e "/^%%PRODUCT_LICENSE%%/r ${BUILDER_ROOT}/license.txt" \
 		-e "/^%%PRODUCT_LICENSE%%/d" \
 		${OVFTEMPLATE} > ${OVA_TMP}/${PRODUCT_NAME}.ovf
@@ -1669,7 +1672,13 @@ install_pkg_install_ports() {
 		mkdir -p ${SCRATCHDIR}/pkg_cache
 
 	echo ">>> Installing built ports (packages) in chroot (${STAGE_CHROOT_DIR})... (starting)"
+	# First mark all packages as automatically installed
+	pkg_chroot ${STAGE_CHROOT_DIR} set -A 1 -a
+	# Install all necessary packages
 	pkg_chroot ${STAGE_CHROOT_DIR} install ${MAIN_PKG} ${custom_package_list}
+	# Make sure required packages are set as non-automatic
+	pkg_chroot ${STAGE_CHROOT_DIR} set -A 0 pkg ${MAIN_PKG} ${custom_package_list}
+	# Remove unnecessary packages
 	pkg_chroot ${STAGE_CHROOT_DIR} autoremove
 	echo ">>> Installing built ports (packages) in chroot (${STAGE_CHROOT_DIR})... (finshied)"
 }
@@ -2198,11 +2207,9 @@ poudriere_bulk() {
 
 	# Change version of pfSense meta ports for snapshots
 	if [ -z "${_IS_RELEASE}" ]; then
-		for meta_pkg in ${PRODUCT_NAME} ${PRODUCT_NAME}-vmware; do
-			local _meta_pkg_version="$(echo "${PRODUCT_VERSION}" | sed 's,DEVELOPMENT,ALPHA,')-${DATESTRING}"
-			sed -i '' -e "/^DISTVERSION/ s,^.*,DISTVERSION=	${_meta_pkg_version}," \
-				/usr/local/poudriere/ports/${POUDRIERE_PORTS_NAME}/security/${meta_pkg}/Makefile
-		done
+		local _meta_pkg_version="$(echo "${PRODUCT_VERSION}" | sed 's,DEVELOPMENT,ALPHA,')-${DATESTRING}"
+		sed -i '' -e "/^DISTVERSION/ s,^.*,DISTVERSION=	${_meta_pkg_version}," \
+			/usr/local/poudriere/ports/${POUDRIERE_PORTS_NAME}/security/${PRODUCT_NAME}/Makefile
 	fi
 
 	for jail_arch in ${_archs}; do

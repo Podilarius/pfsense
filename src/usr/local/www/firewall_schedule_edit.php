@@ -468,17 +468,17 @@ $group = new Form_Group(null);
 
 $group->add(new Form_Button(
 	'btnaddtime',
-	gettext('Add Time'),
+	'Add Time',
 	null,
 	'fa-plus'
-))->addClass('btn-success btn-sm');
+))->setAttribute('type','button')->addClass('btn-success btn-sm');
 
 $group->add(new Form_Button(
 	'btnclrsel',
-	gettext('Clear selection'),
+	'Clear selection',
 	null,
 	'fa-undo'
-))->addClass('btn-info btn-sm');
+))->setAttribute('type','button')->addClass('btn-info btn-sm');
 
 $section->add($group);
 
@@ -625,7 +625,7 @@ if ($getSchedule) {
 
 			$group = new Form_Group('');
 			$group->add(new Form_Input(
-				'tempFriendlyTime',
+				'tempFriendlyTime' . $counter,
 				null,
 				'text',
 				$tempFriendlyTime
@@ -654,10 +654,10 @@ if ($getSchedule) {
 
 			$group->add(new Form_Button(
 				'Delete' . $counter,
-				gettext('Delete'),
+				'Delete',
 				null,
 				'fa-trash'
-			))->addClass('btn-xs btn-warning');
+			))->setAttribute('type','button')->addClass('btn-xs btn-warning');
 
 			$group->add(new Form_Input(
 				'schedule' . $counter,
@@ -695,23 +695,15 @@ events.push(function() {
 		update_month();
 	});
 
-	// Make the ‘clear’ button a plain button, not a submit button
-	$('#btnclrsel').prop('type', 'button');
-
 	$('#btnclrsel').click(function() {
 		clearCalendar();
 		clearTime();
 		clearDescr();
 	});
 
-	// Make the ‘Add time’ button a plain button, not a submit button
-	$('#btnaddtime').prop('type', 'button');
-
 	$('#btnaddtime').click(function() {
 		processEntries();
 	});
-
-	$('[id^=Delete]').prop('type', 'button');
 
 	$('[id^=Delete]').click(function(event) {
 		fse_delete_row(event.target.id.slice(6));
@@ -1138,9 +1130,9 @@ function insertElements(tempFriendlyTime, starttimehour, starttimemin, stoptimeh
 	// Template for the schedule definition. '@' will be replaced with the row number using .replace()
 	rowhtml =
 	'<div class="form-group schedulegrp' + counter + '">' +
-		'<label for="tempFriendlyTime" class="col-sm-2 control-label"></label>' +
+		'<label for="tempFriendlyTime@" class="col-sm-2 control-label"></label>' +
 		'<div class="col-sm-2">' +
-			'<input class="form-control" name="tempFriendlyTime" id="tempFriendlyTime" type="text" value="' + tempFriendlyTime + '"/>' +
+			'<input class="form-control" name="tempFriendlyTime@" id="tempFriendlyTime@" type="text" value="' + tempFriendlyTime + '"/>' +
 			'<span class="help-block">Day(s)</span>' +
 		'</div>' +
 		'<div class="col-sm-2">' +

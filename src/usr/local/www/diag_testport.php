@@ -71,6 +71,8 @@ $allowautocomplete = true;
 $pgtitle = array(gettext("Diagnostics"), gettext("Test Port"));
 require("guiconfig.inc");
 
+include("head.inc");
+
 define('NC_TIMEOUT', 10);
 $do_testport = false;
 $retval = 1;
@@ -216,8 +218,6 @@ if ($_POST || $_REQUEST['host']) {
 	}
 }
 
-include("head.inc");
-
 // Handle the display of all messages here where the user can readily see them
 if ($input_errors) {
 	print_input_errors($input_errors);
@@ -299,7 +299,7 @@ $form->add($section);
 
 $form->addGlobal(new Form_Button(
 	'Submit',
-	gettext('Test'),
+	'Test',
 	null,
 	'fa-wrench'
 ))->addClass('btn-primary');

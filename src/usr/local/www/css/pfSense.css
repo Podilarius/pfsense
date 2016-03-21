@@ -1,5 +1,5 @@
-@import url("/bootstrap/css/bootstrap.min.css");
-@import url("/bootstrap/fonts/roboto.css");
+@import url("/vendor/bootstrap/css/bootstrap.min.css");
+@import url("/css/fonts/roboto.css");
 
 html {
     position: relative;
@@ -43,9 +43,9 @@ h1 a:link, h1 a:visited {
     text-decoration: none !important;
 }
 
-h1 a:hover, h1 a:active { 
-    color: #000000; 
-    text-decoration: none !important; 
+h1 a:hover, h1 a:active {
+    color: #000000;
+    text-decoration: none !important;
 }
 
 .container.fixed {
@@ -159,6 +159,10 @@ tr.disabled th {
 
 .dropdown-menu>li>a {
     padding: 5px 20px;
+}
+
+.navbar-right>li>a {
+    padding: 14px 15px 10px 15px;
 }
 /* end navigation */
 
@@ -579,11 +583,6 @@ footer a {
     color: #e0e0e0;
 }
 
-/* ipsec widget placeholder */
-#ipsec-Overview, #ipsec-tunnel, #ipsec-mobile {
-    background-color:#EEEEEE;
-}
-
 /* All pfSense textareas benefit from using a fixed width font **/
 textarea
 {
@@ -625,7 +624,7 @@ ul.tree li.closed ul {
 
 ul.tree li {
     list-style: none;
-    background: url(../../tree/i-repeater.gif) 0 0 repeat-y;
+    background: url(../../vendor/tree/i-repeater.gif) 0 0 repeat-y;
     display: block;
     width: auto;
 }
@@ -637,12 +636,12 @@ ul.tree li.last {
 
 /* Span-A: I/L/I glpyhs */
 ul.tree span.a {
-    background: url(../../tree/t.gif) 0 50% no-repeat;
+    background: url(../../vendor/tree/t.gif) 0 50% no-repeat;
     display: block;
 }
 
 ul.tree span.a.last {
-    background: url(../../tree/l.gif) 0 50% no-repeat;
+    background: url(../../vendor/tree/l.gif) 0 50% no-repeat;
 }
 
 /* Span-B: Plus/Minus icon */
@@ -651,12 +650,12 @@ ul.tree span.b {
 }
 
 ul.tree span.a.children span.b {
-    background: url(../../tree/minus.gif) 0 50% no-repeat;
+    background: url(../../vendor/tree/minus.gif) 0 50% no-repeat;
     cursor: pointer;
 }
 
 ul.tree li.closed span.a.children span.b {
-    background: url(../../tree/plus.gif) 0 50% no-repeat;
+    background: url(../../vendor/tree/plus.gif) 0 50% no-repeat;
     cursor: pointer;
 }
 
@@ -666,7 +665,7 @@ ul.tree span.c {
 }
 
 ul.tree span.a.children span.c {
-    background: url(../../tree/i-bottom.gif) 0 50% no-repeat;
+    background: url(../../vendor/tree/i-bottom.gif) 0 50% no-repeat;
 }
 
 ul.tree span.a.spanClosed span.c {
@@ -679,15 +678,15 @@ ul.tree a  {
     overflow: hidden;
     padding: 3px 0px 3px 18px;
     line-height: 16px;
-    background: url(../../tree/page-file.png) 0 0 no-repeat;
+    background: url(../../vendor/tree/page-file.png) 0 0 no-repeat;
 }
 
 ul.tree span.a.children a {
-    background-image: url(../../tree/page-openfoldericon.png);
+    background-image: url(../../vendor/tree/page-openfoldericon.png);
 }
 
 ul.tree span.a.children.spanClosed a {
-    background-image: url(../../tree/page-foldericon.png);
+    background-image: url(../../vendor/tree/page-foldericon.png);
 }
 
 /* Unformatted tree */
