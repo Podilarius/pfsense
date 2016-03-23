@@ -995,7 +995,10 @@ function system_syslogd_start() {
 		}
 
 		$syslogconf .= "!filterlog\n";
-		$syslogconf .= "*.* 								{$log_directive}{$g['varlog_path']}/filter.log\n";
+		if (!isset($syslogcfg['disablelocallogging'])) {
+			$syslogconf .= "*.* 								{$log_directive}{$g['varlog_path']}/filter.log\n";
+		}
+
 		if (isset($syslogcfg['filter'])) {
 			$syslogconf .= system_syslogd_get_remote_servers($syslogcfg, "*.*");
 		}
@@ -1327,8 +1330,6 @@ EOD;
 		$nginx_config .= "\t\tadd_header Strict-Transport-Security \"max-age=31536000\";\n";
 		$nginx_config .= "\t\tadd_header X-Content-Type-Options nosniff;\n";
 		$nginx_config .= "\t\tssl_session_tickets off;\n";
-		$nginx_config .= "\t\tssl_stapling on;\n";
-		$nginx_config .= "\t\tssl_stapling_verify on;\n";
 		$nginx_config .= "\t\tssl_dhparam /etc/dh-parameters.4096;\n";
 	} else {
 		$nginx_config .= "\n";

@@ -869,7 +869,7 @@ create_ova_image() {
 
 	# Fill fstab
 	echo ">>> Installing platform specific items..." | tee -a ${LOGFILE}
-	echo "/dev/gpt/${PRODUCT_NAME}	/	ufs		rw	0	0" > ${FINAL_CHROOT_DIR}/etc/fstab
+	echo "/dev/gpt/${PRODUCT_NAME}	/	ufs		rw	1	1" > ${FINAL_CHROOT_DIR}/etc/fstab
 	if [ -n "${OVA_SWAP_PART_SIZE}" ]; then
 		echo "/dev/gpt/swap0	none	swap	sw	0	0" >> ${FINAL_CHROOT_DIR}/etc/fstab
 	fi
@@ -878,7 +878,7 @@ create_ova_image() {
 	echo -n ">>> Creating / partition... " | tee -a ${LOGFILE}
 	makefs \
 		-B little \
-		-o label=${PRODUCT_NAME} \
+		-o label=${PRODUCT_NAME},version=2 \
 		-s ${OVA_FIRST_PART_SIZE} \
 		${OVA_TMP}/${OVFUFS} \
 		${FINAL_CHROOT_DIR} 2>&1 >> ${LOGFILE}
@@ -889,6 +889,14 @@ create_ova_image() {
 		fi
 		echo "Failed!" | tee -a ${LOGFILE}
 		echo ">>> ERROR: Error creating vmdk / partition. STOPPING!" | tee -a ${LOGFILE}
+		print_error_pfS
+	fi
+	echo "Done!" | tee -a ${LOGFILE}
+
+	echo -n ">>> Enabling SUJ on recently created disk... " | tee -a ${LOGFILE}
+	if ! tunefs -j enable ${OVA_TMP}/${OVFUFS} 2>&1 >>${LOGFILE}; then
+		echo "Failed!" | tee -a ${LOGFILE}
+		echo ">>> ERROR: Error enabling SUJ on disk. STOPPING!" | tee -a ${LOGFILE}
 		print_error_pfS
 	fi
 	echo "Done!" | tee -a ${LOGFILE}
@@ -1080,7 +1088,6 @@ clone_to_staging_area() {
 	fi
 
 	if [ -f ${STAGE_CHROOT_DIR}/etc/master.passwd ]; then
-		chroot ${STAGE_CHROOT_DIR} cap_mkdb /etc/master.passwd
 		chroot ${STAGE_CHROOT_DIR} pwd_mkdb /etc/master.passwd
 	fi
 	mkdir -p ${STAGE_CHROOT_DIR}/etc/mtree
@@ -1333,7 +1340,7 @@ create_memstick_image() {
 
 	create_distribution_tarball
 
-	makefs -B little -o label=${PRODUCT_NAME} ${MEMSTICKPATH} ${FINAL_CHROOT_DIR}
+	makefs -B little -o label=${PRODUCT_NAME},version=2 ${MEMSTICKPATH} ${FINAL_CHROOT_DIR}
 	if [ $? -ne 0 ]; then
 		if [ -f ${MEMSTICKPATH} ]; then
 			rm -f $MEMSTICKPATH
@@ -1393,7 +1400,7 @@ create_memstick_serial_image() {
 
 	create_distribution_tarball
 
-	makefs -B little -o label=${PRODUCT_NAME} ${MEMSTICKSERIALPATH} ${FINAL_CHROOT_DIR}
+	makefs -B little -o label=${PRODUCT_NAME},version=2 ${MEMSTICKSERIALPATH} ${FINAL_CHROOT_DIR}
 	if [ $? -ne 0 ]; then
 		if [ -f ${MEMSTICKSERIALPATH} ]; then
 			rm -f $MEMSTICKSERIALPATH
@@ -1455,7 +1462,7 @@ create_memstick_adi_image() {
 
 	create_distribution_tarball
 
-	makefs -B little -o label=${PRODUCT_NAME} ${MEMSTICKADIPATH} ${FINAL_CHROOT_DIR}
+	makefs -B little -o label=${PRODUCT_NAME},version=2 ${MEMSTICKADIPATH} ${FINAL_CHROOT_DIR}
 	if [ $? -ne 0 ]; then
 		if [ -f ${MEMSTICKADIPATH} ]; then
 			rm -f $MEMSTICKADIPATH
