@@ -4729,14 +4729,7 @@ function upgrade_147_to_148() {
 		foreach ($config['system']['group'] as $idx => $grp) {
 			if (strstr($grp['name'], " ")) {
 				$cleargroups = true;
-				$newgrpname = str_replace(" ", "_", $grp['name']);
-				// In the unlikely event that there is already a group with this name
-				// just replace the whole thing with a unique string
-				if (in_array($newgrpname, $exgrps)) {
-					$config['system']['group'][$idx]['name'] = uniqid();
-				} else {
-					$config['system']['group'][$idx]['name'] = $newgrpname;
-				}
+				$config['system']['group'][$idx]['scope'] = "remote";
 			}
 		}
 
@@ -4749,6 +4742,34 @@ function upgrade_147_to_148() {
 			foreach ($config['system']['group'] as $grp) {
 				mwexec("/usr/sbin/pw groupdel -g {$grp['gid']}");
 			}
+		}
+	}
+}
+
+function upgrade_148_to_149() {
+	global $config;
+	global $altq_list_queues;
+
+        if (!isset($config['shaper']['queue']) || !is_array($config['shaper']['queue']))
+                return;
+
+	read_altq_config();
+
+	/* Set root queue bandwidth. */
+	foreach ($altq_list_queues as $altq) {
+		$sum = $altq->GetTotalBw();
+		while ($sum > get_queue_bandwidth($altq)) {
+			if (intval(($sum / 1000) * 1.2) < (1024 * 1024)) {
+				/* 1Gb where possible. */
+				$bw = 1024 * 1024;
+			} else {
+				/* Increase by 20% until it fits. */
+				$bw = intval(($sum / 1000) * 1.2);
+			}
+			$altq->SetBandwidth($bw);
+			$altq->SetBwscale("Kb");
+			$altq->wconfig();
+			$sum = $altq->GetTotalBw();
 		}
 	}
 }
